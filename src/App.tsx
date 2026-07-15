@@ -23768,8 +23768,8 @@ export function ControlePagamentosView({
             (action.colaboradorId
               ? users.find((u) => u.uid === action.colaboradorId)?.name
               : null) ||
-            creatorObj?.name ||
-            "Gestor Comercial",
+            (creatorObj?.role === "FDV/Comercial" || creatorObj?.role === "Gestor Comercial" ? creatorObj?.name : null) ||
+            "Sem FDV Responsável",
           tipoAcao: action.nome,
           dataInicio: action.dataInicio,
           dataFim: action.dataFim,
@@ -24056,7 +24056,7 @@ export function ControlePagamentosView({
                   <th className="px-5 py-4">Chave Pix</th>
                   <th className="px-5 py-4 text-center">Diárias</th>
                   <th className="px-5 py-4 text-center">Horas</th>
-                  <th className="px-5 py-4">Solicitante</th>
+                  <th className="px-5 py-4">Responsável (FDV)</th>
                   <th className="px-5 py-4">Região</th>
                   <th className="px-5 py-4">Ação</th>
                   <th className="px-5 py-4">Datas</th>
