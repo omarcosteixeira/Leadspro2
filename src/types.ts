@@ -559,9 +559,9 @@ export interface Ligacao {
   candidatoId: string; // Lead ID or BaseEntry ID
   candidatoNome: string;
   candidatoTelefone: string;
-  origem: 'Lead' | 'Base';
+  origem: 'Lead' | 'Base' | 'FiesProuni' | 'Gap';
   origemId: string; // acaoId or baseName
-  status: 'Não atendeu' | 'Sem interesse' | 'Interesse' | 'Convertido';
+  status: 'Não atendeu' | 'Sem interesse' | 'Interesse' | 'Convertido' | 'Vai enviar a documentação via whatsapp/email' | 'Vai entregar pessoalmente na unidade';
   observacao?: string;
   atendenteId: string;
   atendenteNome: string;

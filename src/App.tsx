@@ -2160,6 +2160,8 @@ function FiesProuniView({
   const [listaFilter, setListaFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [bolsaFilter, setBolsaFilter] = useState("");
+  const [cursoFilter, setCursoFilter] = useState("");
+  const [situacaoFilter, setSituacaoFilter] = useState("");
   const [vagasPeriodoFilter, setVagasPeriodoFilter] = useState("");
   const [vagasMetodologiaFilter, setVagasMetodologiaFilter] = useState("");
   const [vagasBolsaFilter, setVagasBolsaFilter] = useState("");
@@ -2210,13 +2212,17 @@ function FiesProuniView({
     const matchesLista = !listaFilter || item.lista === listaFilter;
     const matchesStatus = !statusFilter || item.status === statusFilter;
     const matchesBolsa = !bolsaFilter || item.bolsa === bolsaFilter;
+    const matchesCurso = !cursoFilter || item.curso === cursoFilter;
+    const matchesSituacao = !situacaoFilter || item.situacao === situacaoFilter;
     return (
       matchesSearch &&
       matchesPeriodo &&
       matchesTipo &&
       matchesLista &&
       matchesStatus &&
-      matchesBolsa
+      matchesBolsa &&
+      matchesCurso &&
+      matchesSituacao
     );
   });
 
@@ -2225,6 +2231,15 @@ function FiesProuniView({
   ).sort();
   const uniqueStatuses = Array.from(
     new Set(data.map((i) => i.status).filter(Boolean)),
+  ).sort();
+  const uniquePeriodos = Array.from(
+    new Set(data.map((i) => i.periodo).filter(Boolean)),
+  ).sort();
+  const uniqueCursos = Array.from(
+    new Set(data.map((i) => i.curso).filter(Boolean)),
+  ).sort();
+  const uniqueSituacoes = Array.from(
+    new Set(data.map((i) => i.situacao).filter(Boolean)),
   ).sort();
 
   const stats = {
@@ -2812,9 +2827,21 @@ function FiesProuniView({
               onChange={(e) => setPeriodoFilter(e.target.value)}
             >
               <option value="">Todos os Períodos</option>
-              {periodos.map((p) => (
-                <option key={p.id} value={p.nome}>
-                  {p.nome}
+              {uniquePeriodos.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+            <select
+              className="px-4 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 max-w-[200px]"
+              value={cursoFilter}
+              onChange={(e) => setCursoFilter(e.target.value)}
+            >
+              <option value="">Todos os Cursos</option>
+              {uniqueCursos.map((c) => (
+                <option key={c} value={c}>
+                  {c}
                 </option>
               ))}
             </select>
@@ -2835,6 +2862,18 @@ function FiesProuniView({
               <option value="">Todas as Bolsas</option>
               <option value="INTEGRAL">INTEGRAL</option>
               <option value="PARCIAL">PARCIAL</option>
+            </select>
+            <select
+              className="px-4 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+              value={situacaoFilter}
+              onChange={(e) => setSituacaoFilter(e.target.value)}
+            >
+              <option value="">Todas as Situações</option>
+              {uniqueSituacoes.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
             </select>
             <select
               className="px-4 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
@@ -6404,6 +6443,8 @@ export default function App() {
                 bases={bases}
                 acoes={calendarioAcoes}
                 ligacoes={ligacoes}
+                fiesProuni={fiesProuni}
+                gap={gap}
                 profile={profile!}
                 onSaveLigacao={handleSaveLigacao}
                 onToast={showToast}

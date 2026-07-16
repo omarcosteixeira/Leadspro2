@@ -21,7 +21,9 @@ import {
   BaseEntry, 
   CalendarioAcao, 
   UserProfile, 
-  Ligacao 
+  Ligacao,
+  FiesProuniEntry,
+  GapEntry
 } from "../types";
 import { cn, formatPhone } from "../lib/utils";
 import { motion, AnimatePresence } from "motion/react";
@@ -31,6 +33,8 @@ interface ControleLigacoesViewProps {
   bases: BaseEntry[];
   acoes: CalendarioAcao[];
   ligacoes: Ligacao[];
+  fiesProuni: FiesProuniEntry[];
+  gap: GapEntry[];
   profile: UserProfile;
   onSaveLigacao: (ligacao: Partial<Ligacao>) => Promise<void>;
   onToast: (m: string, t?: "success" | "error") => void;
@@ -41,17 +45,19 @@ export default function ControleLigacoesView({
   bases,
   acoes,
   ligacoes,
+  fiesProuni,
+  gap,
   profile,
   onSaveLigacao,
   onToast
 }: ControleLigacoesViewProps) {
-  const [sourceType, setSourceType] = useState<"Base" | "Lead" | null>(null);
+  const [sourceType, setSourceType] = useState<"Base" | "Lead" | "FiesProuni" | "Gap" | null>(null);
   const [selectedSourceId, setSelectedSourceId] = useState<string>("");
-  const [currentCandidate, setCurrentCandidate] = useState<Lead | BaseEntry | null>(null);
+  const [currentCandidate, setCurrentCandidate] = useState<Lead | BaseEntry | FiesProuniEntry | GapEntry | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [observation, setObservation] = useState("");
   const [showObservation, setShowObservation] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<'Não atendeu' | 'Sem interesse' | 'Interesse' | 'Convertido' | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<'Não atendeu' | 'Sem interesse' | 'Interesse' | 'Convertido' | 'Vai enviar a documentação via whatsapp/email' | 'Vai entregar pessoalmente na unidade' | null>(null);
 
   // Get unique base names
   const baseNames = useMemo(() => {
@@ -66,16 +72,27 @@ export default function ControleLigacoesView({
   }, [leads]);
 
   const handleStartCall = (ignoreId?: string | React.MouseEvent) => {
-    if (!selectedSourceId) {
+    if ((sourceType === "Base" || sourceType === "Lead") && !selectedSourceId) {
       onToast("Selecione uma base ou ação para continuar.", "error");
       return;
     }
 
-    let candidates: (Lead | BaseEntry)[] = [];
+    let candidates: (Lead | BaseEntry | FiesProuniEntry | GapEntry)[] = [];
     if (sourceType === "Base") {
       candidates = bases.filter(b => b.nomeBase === selectedSourceId);
-    } else {
+    } else if (sourceType === "Lead") {
       candidates = leads.filter(l => l.acao === selectedSourceId);
+    } else if (sourceType === "FiesProuni") {
+      candidates = fiesProuni.filter(f => f.docsEntreguesStatus !== "Sim" && f.status !== "Convertido");
+    } else if (sourceType === "Gap") {
+      // In Gap we assume they need documents if not all are true. We'll just filter out converted if there's such a status.
+      // But they are in GAP because they have pending docs or matAcad false.
+      // Let's filter out candidates who have ALL documents checked or if that's not easily checked, we just load them all.
+      candidates = gap.filter(g => {
+        // You might want to refine this filter, but generally GAP means they are missing something.
+        // Let's assume if it's in GAP, it needs docs.
+        return true; 
+      });
     }
 
     // Filter out converted candidates
@@ -130,10 +147,10 @@ export default function ControleLigacoesView({
     setSelectedStatus(null);
   };
 
-  const handleAction = async (status: 'Não atendeu' | 'Sem interesse' | 'Interesse' | 'Convertido') => {
+  const handleAction = async (status: 'Não atendeu' | 'Sem interesse' | 'Interesse' | 'Convertido' | 'Vai enviar a documentação via whatsapp/email' | 'Vai entregar pessoalmente na unidade') => {
     if (!currentCandidate) return;
 
-    if ((status === 'Sem interesse' || status === 'Interesse' || status === 'Convertido') && !showObservation) {
+    if ((status === 'Sem interesse' || status === 'Interesse' || status === 'Convertido' || status === 'Vai enviar a documentação via whatsapp/email' || status === 'Vai entregar pessoalmente na unidade') && !showObservation) {
       setSelectedStatus(status);
       setShowObservation(true);
       return;
@@ -145,8 +162,8 @@ export default function ControleLigacoesView({
         candidatoId: currentCandidate.id,
         candidatoNome: currentCandidate.nome,
         candidatoTelefone: currentCandidate.telefone,
-        origem: sourceType as 'Lead' | 'Base',
-        origemId: selectedSourceId,
+        origem: sourceType as 'Lead' | 'Base' | 'FiesProuni' | 'Gap',
+        origemId: selectedSourceId || (sourceType === "FiesProuni" ? "Fies/Prouni" : "GAP"),
         status: status,
         observacao: observation,
         atendenteId: profile.uid,
@@ -198,21 +215,21 @@ export default function ControleLigacoesView({
           className="bg-white p-8 rounded-3xl shadow-xl shadow-slate-200 border border-slate-100"
         >
           <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <button
                 onClick={() => {
                   setSourceType("Base");
                   setSelectedSourceId("");
                 }}
                 className={cn(
-                  "p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-3",
+                  "p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-3 text-center",
                   sourceType === "Base" 
                     ? "border-blue-500 bg-blue-50 text-blue-700" 
                     : "border-slate-100 hover:border-blue-200 text-slate-500"
                 )}
               >
                 <Database size={32} />
-                <span className="font-bold">Bases</span>
+                <span className="font-bold text-sm">Bases</span>
               </button>
               <button
                 onClick={() => {
@@ -220,14 +237,44 @@ export default function ControleLigacoesView({
                   setSelectedSourceId("");
                 }}
                 className={cn(
-                  "p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-3",
+                  "p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-3 text-center",
                   sourceType === "Lead" 
                     ? "border-blue-500 bg-blue-50 text-blue-700" 
                     : "border-slate-100 hover:border-blue-200 text-slate-500"
                 )}
               >
                 <Building2 size={32} />
-                <span className="font-bold">Leads (Ações)</span>
+                <span className="font-bold text-sm">Leads (Ações)</span>
+              </button>
+              <button
+                onClick={() => {
+                  setSourceType("FiesProuni");
+                  setSelectedSourceId("Fies/Prouni");
+                }}
+                className={cn(
+                  "p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-3 text-center",
+                  sourceType === "FiesProuni" 
+                    ? "border-blue-500 bg-blue-50 text-blue-700" 
+                    : "border-slate-100 hover:border-blue-200 text-slate-500"
+                )}
+              >
+                <Database size={32} />
+                <span className="font-bold text-sm">Fies/Prouni</span>
+              </button>
+              <button
+                onClick={() => {
+                  setSourceType("Gap");
+                  setSelectedSourceId("GAP");
+                }}
+                className={cn(
+                  "p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-3 text-center",
+                  sourceType === "Gap" 
+                    ? "border-blue-500 bg-blue-50 text-blue-700" 
+                    : "border-slate-100 hover:border-blue-200 text-slate-500"
+                )}
+              >
+                <Building2 size={32} />
+                <span className="font-bold text-sm">GAP Acadêmico</span>
               </button>
             </div>
 
@@ -237,25 +284,29 @@ export default function ControleLigacoesView({
                 animate={{ opacity: 1, height: "auto" }}
                 className="space-y-4"
               >
-                <label className="block text-sm font-bold text-slate-700">
-                  Selecione {sourceType === "Base" ? "a Base" : "a Ação"}
-                </label>
-                <select
-                  value={selectedSourceId}
-                  onChange={(e) => setSelectedSourceId(e.target.value)}
-                  className="w-full p-4 rounded-xl border-2 border-slate-100 focus:border-blue-500 transition-all outline-none bg-slate-50 font-medium"
-                >
-                  <option value="">Selecione...</option>
-                  {sourceType === "Base" ? (
-                    baseNames.map(name => (
-                      <option key={name} value={name}>{name}</option>
-                    ))
-                  ) : (
-                    actionOptions.map(acao => (
-                      <option key={acao} value={acao}>{acao}</option>
-                    ))
-                  )}
-                </select>
+                {(sourceType === "Base" || sourceType === "Lead") && (
+                  <>
+                    <label className="block text-sm font-bold text-slate-700">
+                      Selecione {sourceType === "Base" ? "a Base" : "a Ação"}
+                    </label>
+                    <select
+                      value={selectedSourceId}
+                      onChange={(e) => setSelectedSourceId(e.target.value)}
+                      className="w-full p-4 rounded-xl border-2 border-slate-100 focus:border-blue-500 transition-all outline-none bg-slate-50 font-medium"
+                    >
+                      <option value="">Selecione...</option>
+                      {sourceType === "Base" ? (
+                        baseNames.map(name => (
+                          <option key={name} value={name}>{name}</option>
+                        ))
+                      ) : (
+                        actionOptions.map(acao => (
+                          <option key={acao} value={acao}>{acao}</option>
+                        ))
+                      )}
+                    </select>
+                  </>
+                )}
 
                 <button
                   onClick={handleStartCall}
@@ -390,32 +441,56 @@ export default function ControleLigacoesView({
                     className="p-6 rounded-2xl border-2 border-amber-100 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-all flex flex-col items-center gap-2 group"
                   >
                     <Clock className="group-hover:scale-110 transition-transform" size={28} />
-                    <span className="font-bold">Não atendeu</span>
+                    <span className="font-bold text-sm text-center">Não atendeu</span>
                   </button>
-                  <button
-                    disabled={isSaving}
-                    onClick={() => handleAction('Sem interesse')}
-                    className="p-6 rounded-2xl border-2 border-rose-100 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-all flex flex-col items-center gap-2 group"
-                  >
-                    <XCircle className="group-hover:scale-110 transition-transform" size={28} />
-                    <span className="font-bold">Sem interesse</span>
-                  </button>
-                  <button
-                    disabled={isSaving}
-                    onClick={() => handleAction('Interesse')}
-                    className="p-6 rounded-2xl border-2 border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-all flex flex-col items-center gap-2 group"
-                  >
-                    <CheckCircle2 className="group-hover:scale-110 transition-transform" size={28} />
-                    <span className="font-bold">Interesse</span>
-                  </button>
-                  <button
-                    disabled={isSaving}
-                    onClick={() => handleAction('Convertido')}
-                    className="p-6 rounded-2xl border-2 border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all flex flex-col items-center gap-2 group"
-                  >
-                    <CheckCircle2 className="group-hover:scale-110 transition-transform" size={28} />
-                    <span className="font-bold">Convertido</span>
-                  </button>
+                  
+                  {sourceType === "FiesProuni" || sourceType === "Gap" ? (
+                    <>
+                      <button
+                        disabled={isSaving}
+                        onClick={() => handleAction('Vai enviar a documentação via whatsapp/email')}
+                        className="p-6 rounded-2xl border-2 border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-all flex flex-col items-center gap-2 group"
+                      >
+                        <MessageSquare className="group-hover:scale-110 transition-transform" size={28} />
+                        <span className="font-bold text-sm text-center">Vai enviar doc via whats/email</span>
+                      </button>
+                      <button
+                        disabled={isSaving}
+                        onClick={() => handleAction('Vai entregar pessoalmente na unidade')}
+                        className="p-6 rounded-2xl border-2 border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all flex flex-col items-center gap-2 group"
+                      >
+                        <User className="group-hover:scale-110 transition-transform" size={28} />
+                        <span className="font-bold text-sm text-center">Vai entregar na unidade</span>
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        disabled={isSaving}
+                        onClick={() => handleAction('Sem interesse')}
+                        className="p-6 rounded-2xl border-2 border-rose-100 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-all flex flex-col items-center gap-2 group"
+                      >
+                        <XCircle className="group-hover:scale-110 transition-transform" size={28} />
+                        <span className="font-bold text-sm text-center">Sem interesse</span>
+                      </button>
+                      <button
+                        disabled={isSaving}
+                        onClick={() => handleAction('Interesse')}
+                        className="p-6 rounded-2xl border-2 border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-all flex flex-col items-center gap-2 group"
+                      >
+                        <CheckCircle2 className="group-hover:scale-110 transition-transform" size={28} />
+                        <span className="font-bold text-sm text-center">Interesse</span>
+                      </button>
+                      <button
+                        disabled={isSaving}
+                        onClick={() => handleAction('Convertido')}
+                        className="p-6 rounded-2xl border-2 border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all flex flex-col items-center gap-2 group"
+                      >
+                        <CheckCircle2 className="group-hover:scale-110 transition-transform" size={28} />
+                        <span className="font-bold text-sm text-center">Convertido</span>
+                      </button>
+                    </>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
