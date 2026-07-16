@@ -160,6 +160,7 @@ import {
   AnalysisScheme,
   PeriodAnalysis,
 } from "./types";
+import { OPENROUTER_MODELS } from "./ai-config";
 import CrescimentoAnualAdmin from "./components/CrescimentoAnualAdmin";
 import { ProfileModal } from "./components/ProfileModal";
 import { PublicRegistrationForm } from "./components/PublicRegistrationForm";
@@ -10332,7 +10333,7 @@ function HistoricoView({
         botConfig={botConfig}
         onSendBot={(msg) => {
           if (selectedLead) {
-            onSendBot(selectedLead.telefone, msg);
+            onSendBot(selectedLead.telefone, Array.isArray(msg) ? msg[0] : msg);
           }
         }}
       />
@@ -10346,14 +10347,18 @@ function HistoricoView({
           // not used for mass send
         }}
         botConfig={botConfig}
-        onSendBot={(msgTemplate) => {
+        onSendBot={(msgTemplates) => {
+          const templates = Array.isArray(msgTemplates) ? msgTemplates : [msgTemplates];
           const selectedLeadObjs = leads.filter(
             (l) => selectedEntries.includes(l.id) && !invalidLeadIds.has(l.id),
           );
-          const messagesPayload = selectedLeadObjs.map((l) => ({
-            telefone: l.telefone,
-            message: replaceMessageVariables(msgTemplate, l),
-          }));
+          const messagesPayload = selectedLeadObjs.map((l, idx) => {
+            const template = templates[idx % templates.length];
+            return {
+              telefone: l.telefone,
+              message: replaceMessageVariables(template, l),
+            };
+          });
           onMassSendBot(messagesPayload);
           setMassSelectorOpen(false);
           setSelectedEntries([]);
@@ -12389,7 +12394,7 @@ function BasesView({
         botConfig={botConfig}
         onSendBot={(msg) => {
           if (selectedEntry) {
-            onSendBot(selectedEntry.telefone, msg);
+            onSendBot(selectedEntry.telefone, Array.isArray(msg) ? msg[0] : msg);
           }
         }}
       />
@@ -12401,14 +12406,18 @@ function BasesView({
         messages={whatsappMessages.filter((m) => m.tipo === "bases")}
         onSelect={(msg) => {}}
         botConfig={botConfig}
-        onSendBot={(msgTemplate) => {
+        onSendBot={(msgTemplates) => {
+          const templates = Array.isArray(msgTemplates) ? msgTemplates : [msgTemplates];
           const selectedLeadObjs = bases.filter(
             (b) => selectedEntries.includes(b.id) && !invalidBaseIds.has(b.id),
           );
-          const messagesPayload = selectedLeadObjs.map((l) => ({
-            telefone: l.telefone,
-            message: replaceMessageVariables(msgTemplate, l),
-          }));
+          const messagesPayload = selectedLeadObjs.map((l, idx) => {
+            const template = templates[idx % templates.length];
+            return {
+              telefone: l.telefone,
+              message: replaceMessageVariables(template, l),
+            };
+          });
           onMassSendBot(messagesPayload);
           setMassSelectorOpen(false);
           setSelectedEntries([]);
@@ -13291,7 +13300,7 @@ function BasesRenovacaoView({
         botConfig={botConfig}
         onSendBot={(msg) => {
           if (selectedEntry) {
-            onSendBot(selectedEntry.telefone, msg);
+            onSendBot(selectedEntry.telefone, Array.isArray(msg) ? msg[0] : msg);
           }
         }}
       />
@@ -13303,14 +13312,18 @@ function BasesRenovacaoView({
         messages={whatsappMessages.filter((m) => m.tipo === "bases_renovacao")}
         onSelect={(msg) => {}}
         botConfig={botConfig}
-        onSendBot={(msgTemplate) => {
+        onSendBot={(msgTemplates) => {
+          const templates = Array.isArray(msgTemplates) ? msgTemplates : [msgTemplates];
           const selectedLeadObjs = bases.filter((b) =>
             selectedEntries.includes(b.id),
           );
-          const messagesPayload = selectedLeadObjs.map((l) => ({
-            telefone: l.telefone,
-            message: replaceMessageVariables(msgTemplate, l),
-          }));
+          const messagesPayload = selectedLeadObjs.map((l, idx) => {
+            const template = templates[idx % templates.length];
+            return {
+              telefone: l.telefone,
+              message: replaceMessageVariables(template, l),
+            };
+          });
           onMassSendBot(messagesPayload);
           setMassSelectorOpen(false);
           setSelectedEntries([]);
@@ -20313,13 +20326,13 @@ function AdminView({
                                     </p>
                                     <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0 mt-2.5">
                                       <a
-                                        href="https://console.developers.google.com/apis/api/identitytoolkit.googleapis.com/overview?project=gestaopro-761e1"
+                                        href="https://console.developers.google.com/apis/api/identitytoolkit.googleapis.com/overview?project=gestaodeleadspro-d4230"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center justify-center space-x-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors text-[11px]"
                                       >
                                         <span>
-                                          Ativar no Principal (gestaopro-761e1)
+                                          Ativar no Principal (gestaodeleadspro-d4230)
                                         </span>
                                       </a>
                                       <a
@@ -22800,6 +22813,45 @@ function AdminView({
 
                 <div className="pt-4 border-t border-slate-100">
                   <label className="block text-sm font-bold text-slate-700 mb-1">
+                    Modelo de IA (OpenRouter)
+                  </label>
+                  <select
+                    value={botConfig.aiModel || ""}
+                    onChange={async (e) => {
+                      const newModel = e.target.value;
+                      try {
+                        await setDoc(
+                          doc(db, COLLECTIONS.BOT_CONFIG, "main"),
+                          {
+                            aiModel: newModel,
+                            updatedAt: serverTimestamp(),
+                          },
+                          { merge: true },
+                        );
+                        onToast("Modelo de IA atualizado!");
+                      } catch (err: any) {
+                        onToast(
+                          `Erro ao salvar modelo de IA: ${err.message}`,
+                          "error",
+                        );
+                      }
+                    }}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white"
+                  >
+                    <option value="">Selecione um modelo (Padrão: Gemini 2.0 Flash)</option>
+                    {OPENROUTER_MODELS.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Escolha qual modelo será usado para as análises inteligentes.
+                  </p>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100">
+                  <label className="block text-sm font-bold text-slate-700 mb-1">
                     URL do Bot do Telegram (Railway)
                   </label>
                   <input
@@ -23748,6 +23800,9 @@ export function ControlePagamentosView({
 
         const custoTotal = diarias * valorDia;
 
+        const collaborators = (action.colaboradoresIds || []).map(id => users.find(u => u.uid === id)).filter(Boolean);
+        const fdvResponsavel = collaborators.find(u => u?.role === "FDV (Comercial)" || u?.role === "Gestor Comercial");
+        
         result.push({
           actionId: action.id,
           promoterUid: pUid,
@@ -23762,13 +23817,14 @@ export function ControlePagamentosView({
           diarias,
           horas: horasAtuadas,
           solicitante:
+            fdvResponsavel?.name ||
             (action.colaboradoresNomes?.length
               ? action.colaboradoresNomes.join(", ")
               : action.colaboradorNome) ||
             (action.colaboradorId
               ? users.find((u) => u.uid === action.colaboradorId)?.name
               : null) ||
-            (creatorObj?.role === "FDV/Comercial" || creatorObj?.role === "Gestor Comercial" ? creatorObj?.name : null) ||
+            (creatorObj?.role === "FDV (Comercial)" || creatorObj?.role === "Gestor Comercial" ? creatorObj?.name : null) ||
             "Sem FDV Responsável",
           tipoAcao: action.nome,
           dataInicio: action.dataInicio,

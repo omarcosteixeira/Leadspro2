@@ -54,7 +54,7 @@ import {
   Ligacao,
   AnalysisScheme
 } from "../types";
-import jsPDF from "jspdf";
+import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { InsumosDashboard } from "./InsumosDashboard";
 
@@ -128,13 +128,27 @@ export function RelatoriosView({
     setIsExporting(true);
     onToast("Gerando PDF...");
 
+    // Wait a bit for charts to finish animations
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
     try {
+      console.log("Starting PDF generation for tab:", activeTab);
       const canvas = await html2canvas(dashboardRef.current, {
         scale: 2,
         useCORS: true,
         logging: false,
+        backgroundColor: "#f8fafc", // slate-50
+        windowWidth: dashboardRef.current.scrollWidth,
+        windowHeight: dashboardRef.current.scrollHeight,
       });
+      
+      console.log("Canvas generated:", canvas.width, "x", canvas.height);
       const imgData = canvas.toDataURL("image/png");
+      
+      if (!imgData || imgData === "data:,") {
+        throw new Error("Failed to generate image data from canvas");
+      }
+
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "px",
@@ -142,11 +156,13 @@ export function RelatoriosView({
       });
 
       pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
-      pdf.save(`Relatorio_${activeTab}_${new Date().toISOString().split("T")[0]}.pdf`);
+      const fileName = `Relatorio_${activeTab}_${new Date().toISOString().split("T")[0]}.pdf`;
+      pdf.save(fileName);
+      console.log("PDF saved as:", fileName);
       onToast("PDF exportado com sucesso!", "success");
     } catch (err) {
       console.error("Erro ao exportar PDF:", err);
-      onToast("Erro ao exportar PDF.", "error");
+      onToast("Erro ao exportar PDF: " + (err instanceof Error ? err.message : String(err)), "error");
     } finally {
       setIsExporting(false);
     }

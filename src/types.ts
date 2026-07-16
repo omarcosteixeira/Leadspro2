@@ -395,6 +395,7 @@ export interface BotConfig {
   botNames?: Record<string, string>;
   loginLogo?: string;
   openRouterApiKey?: string;
+  aiModel?: string;
   telegramBotUrl?: string;
   telegramApiKey?: string;
   updatedAt?: any;
