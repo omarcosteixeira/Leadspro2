@@ -11,7 +11,7 @@ interface WhatsAppMessageSelectorProps {
   leadName: string;
   leadCurso?: string;
   botConfig?: BotConfig;
-  onSendBot?: (msg: string | string[]) => void;
+  onSendBot?: (msg: string | string[], contactName?: string) => void;
   forceBotOnly?: boolean;
   leadMatricula?: string;
 }
@@ -251,7 +251,7 @@ export function WhatsAppMessageSelector({
                         if (forceBotOnly) {
                           onSendBot(selectedMessagesList.map(m => m.texto));
                         } else {
-                          onSendBot(previewText);
+                          onSendBot(previewText, leadName);
                         }
                         onClose();
                       }}
