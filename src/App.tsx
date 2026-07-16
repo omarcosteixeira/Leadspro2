@@ -3806,6 +3806,9 @@ export default function App() {
   const [whatsappMessages, setWhatsappMessages] = useState<WhatsAppMessage[]>(
     [],
   );
+  const [activeWhatsappTemplates, setActiveWhatsappTemplates] = useState<
+    Record<string, string>
+  >({});
   const [links, setLinks] = useState<LinkUtil[]>([]);
   const [mapao, setMapao] = useState<MapaoAcademicoEntry[]>([]);
   const [basesDisparo, setBasesDisparo] = useState<BaseDisparoEntry[]>([]);
@@ -6336,6 +6339,8 @@ export default function App() {
                   forecast={forecast}
                   periodos={periodos}
                   whatsappMessages={whatsappMessages}
+                  activeWhatsappTemplates={activeWhatsappTemplates}
+                  setActiveWhatsappTemplates={setActiveWhatsappTemplates}
                   empresasParceiras={empresasParceiras}
                   botConfig={botConfig}
                   botStatuses={botStatuses}
@@ -13409,6 +13414,20 @@ function GapView({
     "dashboard",
   );
 
+  const [isSelectorOpen, setIsSelectorOpen] = useState(false);
+  const [selectedEntryForWhatsapp, setSelectedEntryForWhatsapp] =
+    useState<GapEntry | null>(null);
+
+  const gapSpecificMessages = useMemo(() => {
+    return whatsappMessages
+      .filter((m) => m.tipo === "gap" || m.tipo.startsWith("gap_"))
+      .sort((a, b) => {
+        if (a.tipo === "gap" || a.tipo === "gap_0") return -1;
+        if (b.tipo === "gap" || b.tipo === "gap_0") return 1;
+        return a.tipo.localeCompare(b.tipo);
+      });
+  }, [whatsappMessages]);
+
   const handleBulkDelete = async () => {
     if (selectedEntries.length === 0) return;
     if (
@@ -14322,32 +14341,17 @@ Pela internet: https://sia.estacio.br/sianet/Logon`);
                         </select>
                       </td>
                       <td className="px-6 py-4 flex items-center space-x-2">
-                        {botConfig.url && (
-                          <button
-                            onClick={() =>
-                              onSendBot(
-                                entry.telefone,
-                                getGapWhatsAppMessage(entry),
-                              )
-                            }
-                            className="text-blue-600 hover:text-blue-700 font-bold text-sm bg-blue-50 p-2 rounded-lg"
-                            title="Enviar pelo Bot ARGO'S"
-                          >
-                            <Bot size={16} />
-                          </button>
-                        )}
-                        <a
-                          href={getWhatsAppUrl(
-                            entry.telefone,
-                            getGapWhatsAppMessage(entry),
-                          )}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-emerald-600 hover:text-emerald-700 font-bold text-sm bg-emerald-50 p-2 rounded-lg"
-                          title="Abrir WhatsApp"
+                        <button
+                          onClick={() => {
+                            setSelectedEntryForWhatsapp(entry);
+                            setIsSelectorOpen(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-700 font-bold text-sm bg-blue-50 p-2 rounded-lg flex items-center gap-1.5 transition-all hover:bg-blue-100"
+                          title="Opções de WhatsApp"
                         >
-                          <MessageSquare size={16} />
-                        </a>
+                          <Bot size={16} />
+                          <span>WhatsApp</span>
+                        </button>
                         <button
                           onClick={() => {
                             setEditingEntry(entry);
@@ -14681,6 +14685,30 @@ Pela internet: https://sia.estacio.br/sianet/Logon`);
             )}
           </AnimatePresence>
         </>
+      )}
+
+      {isSelectorOpen && selectedEntryForWhatsapp && (
+        <WhatsAppMessageSelector
+          isOpen={isSelectorOpen}
+          onClose={() => {
+            setIsSelectorOpen(false);
+            setSelectedEntryForWhatsapp(null);
+          }}
+          messages={gapSpecificMessages}
+          onSelect={(msg) => {
+            const url = getWhatsAppUrl(selectedEntryForWhatsapp.telefone, msg);
+            window.open(url, "_blank");
+          }}
+          leadName={selectedEntryForWhatsapp.nome}
+          leadCurso={selectedEntryForWhatsapp.curso}
+          leadMatricula={selectedEntryForWhatsapp.numeroMatricula}
+          botConfig={botConfig}
+          onSendBot={(msg) => {
+            if (typeof msg === "string") {
+              onSendBot(selectedEntryForWhatsapp.telefone, msg);
+            }
+          }}
+        />
       )}
     </div>
   );
@@ -19151,6 +19179,8 @@ function AdminView({
   forecast,
   periodos,
   whatsappMessages,
+  activeWhatsappTemplates,
+  setActiveWhatsappTemplates,
   empresasParceiras,
   botConfig,
   botStatuses,
@@ -19177,6 +19207,10 @@ function AdminView({
   forecast: ForecastCaptacao[];
   periodos: PeriodoCaptacao[];
   whatsappMessages: WhatsAppMessage[];
+  activeWhatsappTemplates: Record<string, string>;
+  setActiveWhatsappTemplates: React.Dispatch<
+    React.SetStateAction<Record<string, string>>
+  >;
   empresasParceiras: EmpresaParceira[];
   botConfig: BotConfig;
   uniqueUnidades?: string[];
@@ -23243,179 +23277,251 @@ function AdminView({
                 Gerencie múltiplos modelos de mensagens para cada categoria
               </p>
             </div>
-            <div className="p-6 space-y-12">
+            <div className="p-6 space-y-8">
               {[
-                { id: "historico", label: "Histórico", multi: true },
-                { id: "bases", label: "Bases", multi: true },
+                {
+                  id: "historico",
+                  label: "Histórico",
+                  multi: true,
+                  icon: <History size={18} />,
+                },
+                {
+                  id: "bases",
+                  label: "Bases",
+                  multi: true,
+                  icon: <Database size={18} />,
+                },
                 {
                   id: "gap",
                   label: "GAP Acadêmico",
                   multi: false,
-                  subLabels: ["Padrão", "Matrícula Acadêmica OK"],
+                  icon: <GraduationCap size={18} />,
+                  subLabels: [
+                    "Padrão",
+                    "Matrícula Acadêmica OK",
+                    "Indicação de Amigo",
+                  ],
                 },
                 {
                   id: "fiesProuni",
                   label: "Fies/Prouni",
                   multi: false,
+                  icon: <FileText size={18} />,
                   subLabels: ["Padrão", "Matrícula Acadêmica OK"],
                 },
-                { id: "bases_renovacao", label: "Base Líquida", multi: true },
+                {
+                  id: "bases_renovacao",
+                  label: "Base Líquida",
+                  multi: true,
+                  icon: <RefreshCw size={18} />,
+                },
               ].map((tipo) => {
-                const messages = whatsappMessages.filter(
-                  (m) => m.tipo === tipo.id,
-                );
+                const messages = tipo.multi
+                  ? whatsappMessages.filter((m) => m.tipo === tipo.id)
+                  : (tipo.subLabels || []).map((label, idx) => {
+                      const subtypeId = `${tipo.id}_${idx}`;
+                      const msg = whatsappMessages.find(
+                        (m) => m.tipo === subtypeId,
+                      );
+                      return {
+                        id: msg?.id || subtypeId,
+                        tipo: subtypeId,
+                        texto: msg?.texto || "",
+                        nome: label,
+                        isVirtual: !msg,
+                      };
+                    });
 
-                if (tipo.multi) {
-                  return (
-                    <div
-                      key={tipo.id}
-                      className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mb-8"
-                    >
-                      <div className="flex justify-between items-center bg-slate-50 p-5 border-b border-slate-200">
-                        <div>
-                          <h4 className="text-base font-bold text-slate-800 uppercase tracking-wider">
-                            {tipo.label}
-                          </h4>
-                          <p className="text-xs text-slate-500 mt-1">
-                            Modelos de mensagens para {tipo.label.toLowerCase()}
-                          </p>
-                        </div>
-                        <button
-                          onClick={async () => {
-                            try {
-                              await addDoc(
-                                collection(db, COLLECTIONS.WHATSAPP_MESSAGES),
-                                {
-                                  tipo: tipo.id,
-                                  texto: "",
-                                  createdAt: serverTimestamp(),
-                                },
-                              );
-                              onToast("Novo modelo adicionado!");
-                            } catch (err: any) {
-                              onToast("Erro ao adicionar modelo.", "error");
-                            }
-                          }}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center space-x-2 shadow-sm transition-all"
-                        >
-                          <Plus size={16} />
-                          <span>Novo Modelo</span>
-                        </button>
-                      </div>
-                      <div className="p-6 grid grid-cols-1 gap-6 bg-slate-50/50">
-                        {messages.map((msg, idx) => (
-                          <WhatsAppMessageEditor
-                            key={msg.id}
-                            msgId={msg.id}
-                            initialText={msg.texto}
-                            label={`MODELO ${idx + 1} - ${tipo.label}`}
-                            onUpdate={async (novoTexto) => {
-                              if (novoTexto === msg.texto) return;
-                              try {
-                                await updateDoc(
-                                  doc(
-                                    db,
-                                    COLLECTIONS.WHATSAPP_MESSAGES,
-                                    msg.id,
-                                  ),
-                                  {
-                                    texto: novoTexto,
-                                    updatedAt: serverTimestamp(),
-                                  },
-                                );
-                                onToast("Modelo atualizado!");
-                              } catch (err: any) {
-                                onToast("Erro ao salvar.", "error");
-                              }
-                            }}
-                            onDelete={async () => {
-                              if (window.confirm("Excluir este modelo?")) {
-                                await deleteDoc(
-                                  doc(
-                                    db,
-                                    COLLECTIONS.WHATSAPP_MESSAGES,
-                                    msg.id,
-                                  ),
-                                );
-                                onToast("Modelo removido.");
-                              }
-                            }}
-                          />
-                        ))}
-                        {messages.length === 0 && (
-                          <div className="text-center py-8 text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-xl">
-                            Nenhum modelo cadastrado. Clique em "Novo Modelo"
-                            para adicionar.
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                }
+                // For fixed categories, we select by the subtypeId (e.g. gap_0)
+                // For multi categories, we select by the actual Firestore ID
+                const selectedKey = activeWhatsappTemplates[tipo.id];
+                const selectedMsg = messages.find((m) => 
+                  tipo.multi ? m.id === selectedKey : m.tipo === selectedKey
+                );
 
                 return (
                   <div
                     key={tipo.id}
-                    className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mb-8"
+                    className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden"
                   >
-                    <div className="bg-slate-50 p-5 border-b border-slate-200 flex justify-between items-center">
-                      <div>
-                        <h4 className="text-base font-bold text-slate-800 uppercase tracking-wider">
-                          {tipo.label}
-                        </h4>
-                        <p className="text-xs text-slate-500 mt-1">
-                          Modelos de mensagens para {tipo.label.toLowerCase()}
-                        </p>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between bg-slate-50 p-5 border-b border-slate-200 gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shadow-sm">
+                          {tipo.icon}
+                        </div>
+                        <div>
+                          <h4 className="text-base font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                            {tipo.label}
+                          </h4>
+                          <p className="text-xs text-slate-500">
+                            {messages.length} modelo(s) disponível(is)
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 flex-1 md:max-w-md">
+                        <select
+                          value={selectedKey || ""}
+                          onChange={(e) =>
+                            setActiveWhatsappTemplates((prev) => ({
+                              ...prev,
+                              [tipo.id]: e.target.value,
+                            }))
+                          }
+                          className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none shadow-sm transition-all"
+                        >
+                          <option value="">Selecione um modelo...</option>
+                          {messages.map((m, idx) => (
+                            <option key={m.id} value={tipo.multi ? m.id : m.tipo}>
+                              {m.nome || `Modelo ${idx + 1}`}
+                            </option>
+                          ))}
+                        </select>
+
+                        {tipo.multi && (
+                          <button
+                            onClick={async () => {
+                              try {
+                                const docRef = await addDoc(
+                                  collection(db, COLLECTIONS.WHATSAPP_MESSAGES),
+                                  {
+                                    tipo: tipo.id,
+                                    texto: "",
+                                    nome: `Novo Modelo ${messages.length + 1}`,
+                                    createdAt: serverTimestamp(),
+                                  },
+                                );
+                                setActiveWhatsappTemplates((prev) => ({
+                                  ...prev,
+                                  [tipo.id]: docRef.id,
+                                }));
+                                onToast("Novo modelo adicionado!");
+                              } catch (err: any) {
+                                onToast("Erro ao adicionar modelo.", "error");
+                              }
+                            }}
+                            className="bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-xl shadow-sm transition-all flex-shrink-0"
+                            title="Adicionar Novo Modelo"
+                          >
+                            <Plus size={20} />
+                          </button>
+                        )}
                       </div>
                     </div>
-                    <div className="p-6 grid grid-cols-1 gap-6 bg-slate-50/50">
-                      {tipo.subLabels?.map((label, idx) => {
-                        const subtypeId = `${tipo.id}_${idx}`;
-                        const msg = whatsappMessages.find(
-                          (m) => m.tipo === subtypeId,
-                        );
-                        return (
+
+                    <div className="p-6 bg-slate-50/30">
+                      {selectedMsg ? (
+                        <div className="space-y-6">
+                          <div className="flex items-center gap-4">
+                            <div className="flex-1">
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">
+                                Nome do Modelo
+                              </label>
+                              <input
+                                type="text"
+                                value={selectedMsg.nome || ""}
+                                readOnly={!tipo.multi}
+                                onChange={async (e) => {
+                                  if (!tipo.multi) return;
+                                  const newName = e.target.value;
+                                  try {
+                                    await updateDoc(
+                                      doc(
+                                        db,
+                                        COLLECTIONS.WHATSAPP_MESSAGES,
+                                        selectedMsg.id,
+                                      ),
+                                      { nome: newName },
+                                    );
+                                  } catch (err) {}
+                                }}
+                                className={`w-full px-4 py-2 rounded-xl border border-slate-200 text-sm font-bold ${!tipo.multi ? "bg-slate-100 text-slate-500 cursor-not-allowed" : "bg-white text-slate-800"}`}
+                                placeholder="Dê um nome a este modelo..."
+                              />
+                            </div>
+                            {tipo.multi && (
+                              <button
+                                onClick={async () => {
+                                  if (window.confirm("Excluir este modelo?")) {
+                                    await deleteDoc(
+                                      doc(
+                                        db,
+                                        COLLECTIONS.WHATSAPP_MESSAGES,
+                                        selectedMsg.id,
+                                      ),
+                                    );
+                                    setActiveWhatsappTemplates((prev) => {
+                                      const next = { ...prev };
+                                      delete next[tipo.id];
+                                      return next;
+                                    });
+                                    onToast("Modelo removido.");
+                                  }
+                                }}
+                                className="mt-5 p-2.5 text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                                title="Excluir Modelo"
+                              >
+                                <Trash2 size={20} />
+                              </button>
+                            )}
+                          </div>
+
                           <WhatsAppMessageEditor
-                            key={subtypeId}
-                            msgId={msg?.id || subtypeId}
-                            initialText={msg?.texto || ""}
-                            label={`${tipo.label} - ${label}`}
+                            key={selectedMsg.id}
+                            msgId={selectedMsg.id}
+                            initialText={selectedMsg.texto}
+                            label={`Editando: ${selectedMsg.nome || "Modelo"}`}
                             onUpdate={async (novoTexto) => {
-                              if (novoTexto === (msg?.texto || "")) return;
+                              if (novoTexto === selectedMsg.texto) return;
                               try {
-                                if (msg) {
+                                if ((selectedMsg as any).isVirtual) {
+                                  const docRef = await addDoc(
+                                    collection(
+                                      db,
+                                      COLLECTIONS.WHATSAPP_MESSAGES,
+                                    ),
+                                    {
+                                      tipo: (selectedMsg as any).tipo,
+                                      texto: novoTexto,
+                                      nome: selectedMsg.nome,
+                                      createdAt: serverTimestamp(),
+                                    },
+                                  );
+                                  // Update the selection to the new Firestore ID for consistency (though fixed categories use tipo)
+                                } else {
                                   await updateDoc(
                                     doc(
                                       db,
                                       COLLECTIONS.WHATSAPP_MESSAGES,
-                                      msg.id,
+                                      selectedMsg.id,
                                     ),
                                     {
                                       texto: novoTexto,
                                       updatedAt: serverTimestamp(),
                                     },
                                   );
-                                } else {
-                                  await addDoc(
-                                    collection(
-                                      db,
-                                      COLLECTIONS.WHATSAPP_MESSAGES,
-                                    ),
-                                    {
-                                      tipo: subtypeId,
-                                      texto: novoTexto,
-                                      createdAt: serverTimestamp(),
-                                    },
-                                  );
                                 }
-                                onToast("Mensagem atualizada!");
+                                onToast("Modelo atualizado!");
                               } catch (err: any) {
                                 onToast("Erro ao salvar.", "error");
                               }
                             }}
                           />
-                        );
-                      })}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-slate-200 rounded-3xl bg-white/50">
+                          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mb-4">
+                            <MessageSquare size={32} />
+                          </div>
+                          <h5 className="font-bold text-slate-700">
+                            Nenhum modelo selecionado
+                          </h5>
+                          <p className="text-xs text-slate-500 max-w-xs mt-1">
+                            Selecione um modelo na lista suspensa acima para
+                            visualizar e editar.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
