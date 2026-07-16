@@ -3925,9 +3925,6 @@ export default function App() {
   const [activeWhatsappTemplates, setActiveWhatsappTemplates] = useState<
     Record<string, string>
   >({});
-  const [activeWhatsappTab, setActiveWhatsappTab] = useState<
-    "historico" | "bases" | "gap" | "fiesProuni" | "bases_renovacao"
-  >("historico");
   const [links, setLinks] = useState<LinkUtil[]>([]);
   const [mapao, setMapao] = useState<MapaoAcademicoEntry[]>([]);
   const [basesDisparo, setBasesDisparo] = useState<BaseDisparoEntry[]>([]);
@@ -19406,6 +19403,9 @@ function AdminView({
   onSaveAnalysisScheme: (scheme: Partial<AnalysisScheme>) => Promise<void>;
   onDeleteAnalysisScheme: (id: string) => Promise<void>;
 }) {
+  const [activeWhatsappTab, setActiveWhatsappTab] = useState<
+    "historico" | "bases" | "gap" | "fiesProuni" | "bases_renovacao"
+  >("historico");
   const [activeTab, setActiveTab] = useState<
     | "usuarios"
     | "bomDia"
