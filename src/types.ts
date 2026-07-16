@@ -220,9 +220,11 @@ export interface FiesProuniEntry {
   cpf: string;
   telefone: string;
   tipo: 'FIES' | 'PROUNI';
-  bolsa: 'Parcial' | 'Total';
+  bolsa: 'Parcial' | 'Total' | 'PARCIAL' | 'INTEGRAL';
   metodologia: string;
   curso: string;
+  situacao?: 'Candidato' | 'Aluno (mesmo curso)' | 'Aluno (outro curso)';
+  cotaPPI?: 'Sim' | 'Não';
   inscricaoSales: string;
   numeroMatricula: string;
   tcbAssinado: boolean;

@@ -2364,7 +2364,9 @@ function FiesProuniView({
       endereco: formData.get("endereco") as string,
       status: formData.get("status") as string,
       tipo: formData.get("tipo") as "FIES" | "PROUNI",
-      bolsa: formData.get("bolsa") as "Parcial" | "Total",
+      bolsa: formData.get("bolsa") as "PARCIAL" | "INTEGRAL",
+      situacao: formData.get("situacao") as "Candidato" | "Aluno (mesmo curso)" | "Aluno (outro curso)",
+      cotaPPI: formData.get("cotaPPI") as "Sim" | "Não",
       metodologia: formData.get("metodologia") as string,
       curso: formData.get("curso") as string,
       inscricaoSales: formData.get("inscricaoSales") as string,
@@ -2434,7 +2436,7 @@ function FiesProuniView({
             tipo: (String(row["Tipo"] || "PROUNI").toUpperCase() === "FIES"
               ? "FIES"
               : "PROUNI") as "FIES" | "PROUNI",
-            bolsa: String(row["Bolsa"] || "Total") as "Parcial" | "Total",
+            bolsa: String(row["Bolsa"] || "INTEGRAL").toUpperCase().includes("PARCIAL") ? "PARCIAL" : "INTEGRAL",
             curso: String(row["Curso"] || ""),
             posicaoRanking: String(row["Ranking"] || ""),
             lista: String(row["Lista"] || ""),
@@ -2796,8 +2798,8 @@ function FiesProuniView({
               onChange={(e) => setBolsaFilter(e.target.value)}
             >
               <option value="">Todas as Bolsas</option>
-              <option value="Total">Total</option>
-              <option value="Parcial">Parcial</option>
+              <option value="INTEGRAL">INTEGRAL</option>
+              <option value="PARCIAL">PARCIAL</option>
             </select>
             <select
               className="px-4 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
@@ -2954,9 +2956,19 @@ function FiesProuniView({
                         >
                           {item.tipo}
                         </span>
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div className="text-xs text-gray-500 mt-1 font-bold">
                           {item.bolsa}
                         </div>
+                        {item.situacao && (
+                          <div className="text-[10px] text-gray-400 mt-1">
+                            Sit.: {item.situacao}
+                          </div>
+                        )}
+                        {item.cotaPPI && (
+                          <div className="text-[10px] text-gray-400">
+                            PPI: {item.cotaPPI}
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-700">
@@ -3410,11 +3422,38 @@ function FiesProuniView({
                     </label>
                     <select
                       name="bolsa"
-                      defaultValue={editingEntry?.bolsa || "Total"}
+                      defaultValue={editingEntry?.bolsa || "INTEGRAL"}
                       className="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
                     >
-                      <option value="Total">Total</option>
-                      <option value="Parcial">Parcial</option>
+                      <option value="INTEGRAL">INTEGRAL</option>
+                      <option value="PARCIAL">PARCIAL</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Situação
+                    </label>
+                    <select
+                      name="situacao"
+                      defaultValue={editingEntry?.situacao || "Candidato"}
+                      className="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="Candidato">Candidato</option>
+                      <option value="Aluno (mesmo curso)">Aluno (mesmo curso)</option>
+                      <option value="Aluno (outro curso)">Aluno (outro curso)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Cota PPI
+                    </label>
+                    <select
+                      name="cotaPPI"
+                      defaultValue={editingEntry?.cotaPPI || "Não"}
+                      className="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="Sim">Sim</option>
+                      <option value="Não">Não</option>
                     </select>
                   </div>
                   <div>
