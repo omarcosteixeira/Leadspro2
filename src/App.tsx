@@ -2490,6 +2490,8 @@ function FiesProuniView({
       Status: item.status || "",
       Tipo: item.tipo,
       Bolsa: item.bolsa,
+      Situação: item.situacao || "",
+      "Cota PPI": item.cotaPPI || "",
       Curso: item.curso,
       Ranking: item.posicaoRanking || "",
       Lista: item.lista || "",
