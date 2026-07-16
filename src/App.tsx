@@ -99,6 +99,7 @@ import {
   Eye,
   EyeOff,
   UserMinus,
+  Wrench,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -169,6 +170,7 @@ import { PublicPedidoCursoForm } from "./components/PublicPedidoCursoForm";
 import { MessageTemplateModal } from "./components/MessageTemplateModal";
 import { CursosDisponiveisView } from "./components/CursosDisponiveisView";
 import { ControleInsumosView } from "./components/ControleInsumosView";
+import { SolicitacoesManutencaoView } from "./components/SolicitacoesManutencaoView";
 import { ControleInsumosComercialView } from "./components/ControleInsumosComercialView";
 import { WhatsAppMessageEditor } from "./components/WhatsAppMessageEditor";
 import { AdminFuncionariosView } from "./components/AdminFuncionariosView";
@@ -595,6 +597,7 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.FINANCEIRO,
     ROLES.TECNICO,
   ],
+  solicitacaoManutencao: Object.values(ROLES),
   controleInsumos: [
     ROLES.ADMIN_MASTER,
     ROLES.ACADEMICO,
@@ -6090,6 +6093,11 @@ export default function App() {
                 icon: Coins,
               },
               {
+                id: "solicitacaoManutencao",
+                label: "Solicitação de Manutenção",
+                icon: Wrench,
+              },
+              {
                 id: "controleInsumos",
                 label: "Controle de Insumos",
                 icon: Boxes,
@@ -6372,6 +6380,12 @@ export default function App() {
                   users={users}
                   onToast={showToast}
                   profile={profile}
+                />
+              )}
+              {currentView === "solicitacaoManutencao" && (
+                <SolicitacoesManutencaoView
+                  profile={profile}
+                  onToast={showToast}
                 />
               )}
               {currentView === "controleInsumos" && (

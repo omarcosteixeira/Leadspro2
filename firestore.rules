@@ -307,6 +307,11 @@ service cloud.firestore {
       allow read, update, delete: if isAuthenticated() && (isPrincipal() || isComercial());
     }
 
+    match /artifacts/gestaopro-761e1/public/data/solicitacoes_manutencao/{id} {
+      allow read, create: if isAuthenticated();
+      allow update: if isAuthenticated() && (isFinanceiro() || isPrincipal() || resource.data.solicitanteId == request.auth.uid);
+      allow delete: if isAuthenticated() && (isFinanceiro() || isPrincipal() || resource.data.solicitanteId == request.auth.uid);
+    }
     match /artifacts/gestaopro-761e1/public/data/funcionarios/{id} {
       allow read: if true;
       allow write: if isAuthenticated() && (isPrincipal() || isComercial());

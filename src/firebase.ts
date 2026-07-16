@@ -89,6 +89,7 @@ export const COLLECTIONS = new Proxy({} as any, {
       PEDIDO_CURSOS: `artifacts/${currentProjectId}/public/data/pedido_cursos`,
       CONTROLE_LIGACOES: `artifacts/${currentProjectId}/public/data/controle_ligacoes`,
       CRESCIMENTO_ANUAL: `artifacts/${currentProjectId}/public/data/crescimento_anual`,
+      SOLICITACOES_MANUTENCAO: `artifacts/${currentProjectId}/public/data/solicitacoes_manutencao`,
     };
     return paths[prop];
   }

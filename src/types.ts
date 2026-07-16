@@ -584,3 +584,15 @@ export interface AnalysisScheme {
 
 
 
+
+export interface SolicitacaoManutencao {
+  id: string;
+  descricao: string;
+  local: string;
+  status: 'Pendente' | 'Aprovado' | 'Rejeitado' | 'Em Andamento' | 'Concluído';
+  solicitanteId: string;
+  solicitanteNome: string;
+  createdAt: any;
+  updatedAt?: any;
+  observacoesFinanceiro?: string;
+}
