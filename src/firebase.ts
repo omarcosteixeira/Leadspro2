@@ -14,12 +14,12 @@ export const firebaseConfigPrincipal = {
 };
 
 export const firebaseConfigComercial = {
-  apiKey: "AIzaSyBexxjzDAuNSgY90rlVqpz4AQZDE-QwSG4",
-  authDomain: "gestaodeleadspro-d4230.firebaseapp.com",
-  projectId: "gestaodeleadspro-d4230",
-  storageBucket: "gestaodeleadspro-d4230.firebasestorage.app",
-  messagingSenderId: "964003766645",
-  appId: "1:964003766645:web:75aea7b1a825ddfe44333c"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY_COMERCIAL || "AIzaSyBexxjzDAuNSgY90rlVqpz4AQZDE-QwSG4",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN_COMERCIAL || "gestaodeleadspro-d4230.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID_COMERCIAL || "gestaodeleadspro-d4230",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET_COMERCIAL || "gestaodeleadspro-d4230.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID_COMERCIAL || "964003766645",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID_COMERCIAL || "1:964003766645:web:75aea7b1a825ddfe44333c"
 };
 
 const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;

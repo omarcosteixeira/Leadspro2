@@ -115,11 +115,11 @@ service cloud.firestore {
     // ===============================================================
 
     match /artifacts/gestaodeleadspro-d4230/public/data/users/{userId} {
-      allow get: if isAuthenticated() && (userId == request.auth.uid || isMasterUser() || isComercial() || canAccessUnit(resource.data.unidade));
-      allow list: if isAuthenticated() && (isMasterUser() || isComercial() || canAccessUnit(resource.data.unidade));
-      allow create: if isAuthenticated() && isValidUser(request.resource.data) && (userId == request.auth.uid || isMasterUser() || isLider() || isGestorComercial());
-      allow update: if isAuthenticated() && isValidUser(request.resource.data) && (isMasterUser() || isLider() || isGestorComercial() || (userId == request.auth.uid && request.resource.data.role == resource.data.role && request.resource.data.unidade == resource.data.unidade));
-      allow delete: if isMasterUser() || isLider() || isGestorComercial();
+      allow get: if isAuthenticated() && (userId == request.auth.uid || isMasterUser());
+      allow list: if isAuthenticated() && isMasterUser();
+      allow create: if isAuthenticated() && (userId == request.auth.uid || isMasterUser());
+      allow update: if isAuthenticated() && (isMasterUser() || (userId == request.auth.uid && request.resource.data.role == resource.data.role));
+      allow delete: if isMasterUser();
     }
 
     match /artifacts/gestaodeleadspro-d4230/public/data/leads/{leadId} {
@@ -153,6 +153,12 @@ service cloud.firestore {
     }
 
     match /artifacts/gestaodeleadspro-d4230/public/data/fies_prouni/{entryId} {
+      allow get, list: if isAuthenticated() && (isMasterUser() || isComercial() || canAccessUnit(resource.data.unidade));
+      allow create, update: if (isMasterUser() || isComercial() || isLider() || isSalaMatricula() || isSSA()) && (isMasterUser() || isComercial() || canAccessUnit(request.resource.data.unidade));
+      allow delete: if isMasterUser() || isComercial() || isLider();
+    }
+
+    match /artifacts/gestaodeleadspro-d4230/public/data/fies_prouni_vagas/{entryId} {
       allow get, list: if isAuthenticated() && (isMasterUser() || isComercial() || canAccessUnit(resource.data.unidade));
       allow create, update: if (isMasterUser() || isComercial() || isLider() || isSalaMatricula() || isSSA()) && (isMasterUser() || isComercial() || canAccessUnit(request.resource.data.unidade));
       allow delete: if isMasterUser() || isComercial() || isLider();
