@@ -410,7 +410,6 @@ export function ControleInsumosComercialView({
           typedText: item.material,
           stockMaterials,
           openRouterApiKey: botConfig?.openRouterApiKey,
-          aiModel: botConfig?.aiModel
         }),
       });
 

@@ -1,17 +1,9 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore } from 'firebase/firestore';
-import firebaseConfigPrincipalRaw from '../firebase-applet-config.json';
+import firebaseConfigPrincipal from '../firebase-applet-config.json';
 
-export const firebaseConfigPrincipal = {
-  ...firebaseConfigPrincipalRaw,
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY_PRINCIPAL || firebaseConfigPrincipalRaw.apiKey,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN_PRINCIPAL || (firebaseConfigPrincipalRaw.projectId === 'gestaodeleadspro-d4230' ? 'gestaopro-761e1.firebaseapp.com' : firebaseConfigPrincipalRaw.authDomain),
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID_PRINCIPAL || (firebaseConfigPrincipalRaw.projectId === 'gestaodeleadspro-d4230' ? 'gestaopro-761e1' : firebaseConfigPrincipalRaw.projectId),
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET_PRINCIPAL || (firebaseConfigPrincipalRaw.projectId === 'gestaodeleadspro-d4230' ? 'gestaopro-761e1.firebasestorage.app' : firebaseConfigPrincipalRaw.storageBucket),
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID_PRINCIPAL || firebaseConfigPrincipalRaw.messagingSenderId,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID_PRINCIPAL || firebaseConfigPrincipalRaw.appId,
-};
+export { firebaseConfigPrincipal };
 
 export const firebaseConfigComercial = {
   apiKey: "AIzaSyBexxjzDAuNSgY90rlVqpz4AQZDE-QwSG4",
@@ -30,12 +22,6 @@ const activeConfig = savedServidor === 'comercial' ? firebaseConfigComercial : f
 const app = initializeApp(activeConfig);
 export const auth = getAuth(app);
 
-// Check if principal config is actually set (and not just a copy of comercial)
-const isComercialApiKey = activeConfig.apiKey === "AIzaSyBexxjzDAuNSgY90rlVqpz4AQZDE-QwSG4";
-if (savedServidor === 'principal' && isComercialApiKey) {
-  console.warn('⚠️ AVISO: O Servidor Principal está usando a Chave de API do Servidor Comercial. Os perfis do servidor principal podem não conseguir logar até que a configuração correta de gestaopro-761e1 (apiKey e appId) seja fornecida via variáveis de ambiente.');
-}
-
 // Enable robust native offline persistence for Android and PWA standalone apps
 export const db = typeof window !== 'undefined'
   ? initializeFirestore(app, {
@@ -51,54 +37,47 @@ export const secondaryApp = getApps().length > 1
   : initializeApp(activeConfig, 'secondary');
 export const secondaryAuth = getAuth(secondaryApp);
 
-// Dynamic collection paths based on active project
-export const COLLECTIONS = new Proxy({} as any, {
-  get: (_, prop: string) => {
-    // Determine the project ID based on the actual initialized app
-    const currentProjectId = app.options.projectId || 'gestaopro-761e1';
-
-    const paths: Record<string, string> = {
-      LEADS: `artifacts/${currentProjectId}/public/data/leads`,
-      USERS: `artifacts/${currentProjectId}/public/data/users`,
-      GAP: `artifacts/${currentProjectId}/public/data/gap_academico`,
-      ISENCOES: `artifacts/${currentProjectId}/public/data/isencoes`,
-      PLANNER: `artifacts/${currentProjectId}/public/data/planner`,
-      BASES: `artifacts/${currentProjectId}/public/data/bases`,
-      LINKS: `artifacts/${currentProjectId}/public/data/linksUteis`,
-      FIES_PROUNI: `artifacts/${currentProjectId}/public/data/fies_prouni`,
-      FIES_PROUNI_VAGAS: `artifacts/${currentProjectId}/public/data/fies_prouni_vagas`,
-      CAMPANHAS: `artifacts/${currentProjectId}/public/data/campanhas`,
-      BOM_DIA: `artifacts/${currentProjectId}/public/data/bom_dia`,
-      FORECAST: `artifacts/${currentProjectId}/public/data/forecast`,
-      PERIODO_CAPTACAO: `artifacts/${currentProjectId}/public/data/periodo_captacao`,
-      CALENDARIO_ACOES: `artifacts/${currentProjectId}/public/data/calendario_acoes`,
-      EMPRESAS_PARCEIRAS: `artifacts/${currentProjectId}/public/data/empresas_parceiras`,
-      WHATSAPP_MESSAGES: `artifacts/${currentProjectId}/public/data/whatsapp_messages`,
-      MAPAO_ACADEMICO: `artifacts/${currentProjectId}/public/data/mapao_academico`,
-      BASES_DISPARO: `artifacts/${currentProjectId}/public/data/bases_disparo`,
-      BASES_RENOVACAO: `artifacts/${currentProjectId}/public/data/bases_renovacao`,
-      BOT_CONFIG: `artifacts/${currentProjectId}/public/data/bot_config`,
-      BOT_REPORTS: `artifacts/${currentProjectId}/public/data/bot_reports`,
-      META_DIA: `artifacts/${currentProjectId}/public/data/meta_dia`,
-      QG_LIGACOES: `artifacts/${currentProjectId}/public/data/qg_ligacoes`,
-      SOLICITACAO_FOLGA: `artifacts/${currentProjectId}/public/data/solicitacoes_folga`,
-      CURSOS: `artifacts/${currentProjectId}/public/data/cursos`,
-      INSUMOS_PEDIDOS: `artifacts/${currentProjectId}/public/data/insumos_pedidos`,
-      INSUMOS_ESTOQUE: `artifacts/${currentProjectId}/public/data/insumos_estoque`,
-      INSUMOS_PEDIDOS_COMERCIAL: `artifacts/${currentProjectId}/public/data/insumos_pedidos_comercial`,
-      INSUMOS_ESTOQUE_COMERCIAL: `artifacts/${currentProjectId}/public/data/insumos_estoque_comercial`,
-      INSUMOS_BAIXAS: `artifacts/${currentProjectId}/public/data/insumos_baixas`,
-      INSUMOS_BAIXAS_COMERCIAL: `artifacts/${currentProjectId}/public/data/insumos_baixas_comercial`,
-      FUNCIONARIOS: `artifacts/${currentProjectId}/public/data/funcionarios`,
-      CONTROLE_CONCORRENCIA: `artifacts/${currentProjectId}/public/data/controle_concorrencia`,
-      EVASAO: `artifacts/${currentProjectId}/public/data/evasao`,
-      PEDIDO_CURSOS: `artifacts/${currentProjectId}/public/data/pedido_cursos`,
-      CONTROLE_LIGACOES: `artifacts/${currentProjectId}/public/data/controle_ligacoes`,
-      CRESCIMENTO_ANUAL: `artifacts/${currentProjectId}/public/data/crescimento_anual`,
-    };
-    return paths[prop];
-  }
-});
+// Caminhos das coleções
+const appId = activeConfig.projectId;
+export const COLLECTIONS = {
+  LEADS: `artifacts/${appId}/public/data/leads`,
+  USERS: `artifacts/${appId}/public/data/users`,
+  GAP: `artifacts/${appId}/public/data/gap_academico`,
+  ISENCOES: `artifacts/${appId}/public/data/isencoes`,
+  PLANNER: `artifacts/${appId}/public/data/planner`,
+  BASES: `artifacts/${appId}/public/data/bases`,
+  LINKS: `artifacts/${appId}/public/data/linksUteis`,
+  FIES_PROUNI: `artifacts/${appId}/public/data/fies_prouni`,
+  FIES_PROUNI_VAGAS: `artifacts/${appId}/public/data/fies_prouni_vagas`,
+  CAMPANHAS: `artifacts/${appId}/public/data/campanhas`,
+  BOM_DIA: `artifacts/${appId}/public/data/bom_dia`,
+  FORECAST: `artifacts/${appId}/public/data/forecast`,
+  PERIODO_CAPTACAO: `artifacts/${appId}/public/data/periodo_captacao`,
+  CALENDARIO_ACOES: `artifacts/${appId}/public/data/calendario_acoes`,
+  EMPRESAS_PARCEIRAS: `artifacts/${appId}/public/data/empresas_parceiras`,
+  WHATSAPP_MESSAGES: `artifacts/${appId}/public/data/whatsapp_messages`,
+  MAPAO_ACADEMICO: `artifacts/${appId}/public/data/mapao_academico`,
+  BASES_DISPARO: `artifacts/${appId}/public/data/bases_disparo`,
+  BASES_RENOVACAO: `artifacts/${appId}/public/data/bases_renovacao`,
+  BOT_CONFIG: `artifacts/${appId}/public/data/bot_config`,
+  BOT_REPORTS: `artifacts/${appId}/public/data/bot_reports`,
+  META_DIA: `artifacts/${appId}/public/data/meta_dia`,
+  QG_LIGACOES: `artifacts/${appId}/public/data/qg_ligacoes`,
+  SOLICITACAO_FOLGA: `artifacts/${appId}/public/data/solicitacoes_folga`,
+  CURSOS: `artifacts/${appId}/public/data/cursos`,
+  INSUMOS_PEDIDOS: `artifacts/${appId}/public/data/insumos_pedidos`,
+  INSUMOS_ESTOQUE: `artifacts/${appId}/public/data/insumos_estoque`,
+  INSUMOS_PEDIDOS_COMERCIAL: `artifacts/${appId}/public/data/insumos_pedidos_comercial`,
+  INSUMOS_ESTOQUE_COMERCIAL: `artifacts/${appId}/public/data/insumos_estoque_comercial`,
+  INSUMOS_BAIXAS: `artifacts/${appId}/public/data/insumos_baixas`,
+  INSUMOS_BAIXAS_COMERCIAL: `artifacts/${appId}/public/data/insumos_baixas_comercial`,
+  FUNCIONARIOS: `artifacts/${appId}/public/data/funcionarios`,
+  CONTROLE_CONCORRENCIA: `artifacts/${appId}/public/data/controle_concorrencia`,
+  EVASAO: `artifacts/${appId}/public/data/evasao`,
+  PEDIDO_CURSOS: `artifacts/${appId}/public/data/pedido_cursos`,
+  CONTROLE_LIGACOES: `artifacts/${appId}/public/data/controle_ligacoes`,
+  CRESCIMENTO_ANUAL: `artifacts/${appId}/public/data/crescimento_anual`,
+};
 
 export enum OperationType {
   CREATE = 'create',

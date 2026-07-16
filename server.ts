@@ -3,8 +3,6 @@ import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
-import { OpenRouter } from "@openrouter/sdk";
-import { OPENROUTER_MODELS, DEFAULT_MODEL } from "./src/ai-config";
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 
@@ -314,12 +312,17 @@ Caso contrário (se não houver correspondência lógica ou for um item completa
       const openRouterApiKey = req.body.openRouterApiKey || process.env.OPENROUTER_API_KEY;
       if (openRouterApiKey) {
         try {
-          console.log("[AI Match] Using OpenRouter SDK for material match...");
-          const openrouter = new OpenRouter({ apiKey: openRouterApiKey });
-          
-          const response = await openrouter.chat.send({
-            chatRequest: {
-              model: req.body.aiModel || DEFAULT_MODEL,
+          console.log("[AI Match] Using OpenRouter API for material match...");
+          const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${openRouterApiKey}`,
+              "Content-Type": "application/json",
+              "HTTP-Referer": process.env.APP_URL || "https://ais-build.app",
+              "X-Title": "Leads Pro"
+            },
+            body: JSON.stringify({
+              model: "google/gemini-2.0-flash-001", // Responsive and efficient model
               messages: [
                 {
                   role: "system",
@@ -334,20 +337,27 @@ Caso contrário (se não houver correspondência lógica ou for um item completa
                   role: "user",
                   content: prompt
                 }
-              ]
-            }
+              ],
+              response_format: { type: "json_object" }
+            }),
+            signal: AbortSignal.timeout(15000)
           });
 
-          const content = response.choices?.[0]?.message?.content;
-          if (content) {
-            const result = parseJSONRobustly(content);
-            return res.json({
-              success: true,
-              ...result
-            });
+          if (response.ok) {
+            const responseData = await response.json();
+            const content = responseData.choices?.[0]?.message?.content;
+            if (content) {
+              const result = parseJSONRobustly(content);
+              return res.json({
+                success: true,
+                ...result
+              });
+            }
+          } else {
+            console.error(`[AI Match] OpenRouter API returned error status ${response.status}`);
           }
         } catch (openRouterErr: any) {
-          console.error("[AI Match] OpenRouter SDK call failed:", openRouterErr.message);
+          console.error("[AI Match] OpenRouter call failed:", openRouterErr.message);
         }
       }
 
@@ -508,11 +518,6 @@ Caso contrário (se não houver correspondência lógica ou for um item completa
     }
   });
 
-  // API endpoint to get available AI models
-  app.get("/api/ai/models", (req, res) => {
-    res.json({ success: true, models: OPENROUTER_MODELS });
-  });
-
   // API endpoint for dynamic reports/dashboards via AI
   app.post("/api/reports/analyze", async (req, res) => {
     try {
@@ -574,12 +579,17 @@ Caso contrário (se não houver correspondência lógica ou for um item completa
       const openRouterApiKey = req.body.openRouterApiKey || process.env.OPENROUTER_API_KEY;
       if (openRouterApiKey) {
         try {
-          console.log("[AI Reports] Using OpenRouter SDK for analysis...");
-          const openrouter = new OpenRouter({ apiKey: openRouterApiKey });
-          
-          const response = await openrouter.chat.send({
-            chatRequest: {
-              model: req.body.aiModel || DEFAULT_MODEL,
+          console.log("[AI Reports] Using OpenRouter API for analysis...");
+          const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${openRouterApiKey}`,
+              "Content-Type": "application/json",
+              "HTTP-Referer": process.env.APP_URL || "https://ais-build.app",
+              "X-Title": "Leads Pro"
+            },
+            body: JSON.stringify({
+              model: "google/gemini-2.0-flash-001",
               messages: [
                 {
                   role: "system",
@@ -606,20 +616,27 @@ Retorne exclusivamente o JSON puro. Não adicione textos adicionais antes ou dep
                   role: "user",
                   content: `Pergunta do usuário: "${searchQuery}"\n\nResumo estatístico:\n${JSON.stringify(dataSummary)}`
                 }
-              ]
-            }
+              ],
+              response_format: { type: "json_object" }
+            }),
+            signal: AbortSignal.timeout(20000)
           });
 
-          const content = response.choices?.[0]?.message?.content;
-          if (content) {
-            const result = parseJSONRobustly(content);
-            return res.json({
-              success: true,
-              report: result
-            });
+          if (response.ok) {
+            const responseData = await response.json();
+            const content = responseData.choices?.[0]?.message?.content;
+            if (content) {
+              const result = parseJSONRobustly(content);
+              return res.json({
+                success: true,
+                report: result
+              });
+            }
+          } else {
+            console.error(`[AI Reports] OpenRouter API returned error status ${response.status}`);
           }
         } catch (openRouterErr: any) {
-          console.error("[AI Reports] OpenRouter SDK call failed:", openRouterErr.message);
+          console.error("[AI Reports] OpenRouter call failed:", openRouterErr.message);
         }
       }
 
@@ -771,12 +788,16 @@ Sua resposta deve ser estritamente no formato JSON. Retorne UM OBJETO com a chav
 
       const promptStr = `Localização: ${location}\nEmpresas já no sistema (NÃO INCLUIR): ${(empresasExistentes || []).join(", ")}`;
 
-      console.log("[AI Hunter] Using OpenRouter SDK for search...");
-      const openrouter = new OpenRouter({ apiKey: openRouterApiKey });
-
-      const response = await openrouter.chat.send({
-        chatRequest: {
-          model: req.body.aiModel || DEFAULT_MODEL,
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${openRouterApiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": process.env.APP_URL || "https://ais-build.app",
+          "X-Title": "Gestão Oeste pro"
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.0-flash-001",
           messages: [
             {
               role: "system",
@@ -786,11 +807,18 @@ Sua resposta deve ser estritamente no formato JSON. Retorne UM OBJETO com a chav
               role: "user",
               content: promptStr
             }
-          ]
-        }
+          ],
+          response_format: { type: "json_object" }
+        })
       });
 
-      const text = response.choices?.[0]?.message?.content;
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error?.message || "Erro na API do OpenRouter.");
+      }
+
+      const text = data.choices?.[0]?.message?.content;
       if (!text) {
         return res.status(500).json({ success: false, error: "Resposta vazia da IA." });
       }
@@ -808,58 +836,6 @@ Sua resposta deve ser estritamente no formato JSON. Retorne UM OBJETO com a chav
     } catch (err: any) {
       console.error("Erro na busca da HUNTER:", err);
       return res.status(500).json({ success: false, error: err.message });
-    }
-  });
-
-  app.post("/api/ai/variations", async (req, res) => {
-    const { message, openRouterApiKey, aiModel } = req.body;
-    
-    if (!openRouterApiKey) {
-      return res.status(400).json({ error: "OpenRouter API Key is required" });
-    }
-
-    try {
-      const openrouter = new OpenRouter({ apiKey: openRouterApiKey });
-      
-      const prompt = `Crie 4 variações diferentes da seguinte mensagem de oferta de WhatsApp, mantendo o contexto e os gatilhos mentais, mas alterando as palavras para evitar detecção de spam. Mantenha os placeholders como [nome], [curso], [matrícula] se existirem.
-      
-Mensagem original:
-"${message}"
-
-Retorne as 4 variações estritamente no formato JSON como um array de strings:
-["variação 1", "variação 2", "variação 3", "variação 4"]
-Retorne apenas o JSON puro.`;
-
-      const response = await openrouter.chat.send({
-        chatRequest: {
-          model: aiModel || DEFAULT_MODEL,
-          messages: [
-            {
-              role: "system",
-              content: "Você é um especialista em copy para WhatsApp focado em conversão e evitar banimentos."
-            },
-            {
-              role: "user",
-              content: prompt
-            }
-          ]
-        }
-      });
-
-      const text = response.choices?.[0]?.message?.content || "";
-      let variations = [];
-      try {
-        variations = JSON.parse(text);
-      } catch (parseError) {
-        // Fallback for markdown wrapped json
-        const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        variations = JSON.parse(cleanText);
-      }
-
-      res.json({ variations });
-    } catch (error: any) {
-      console.error("AI Variations Error:", error);
-      res.status(500).json({ error: error.message });
     }
   });
 

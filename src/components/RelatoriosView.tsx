@@ -128,18 +128,12 @@ export function RelatoriosView({
     setIsExporting(true);
     onToast("Gerando PDF...");
 
-    // Wait a bit for charts to finish animations
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
     try {
       console.log("Starting PDF generation for tab:", activeTab);
       const canvas = await html2canvas(dashboardRef.current, {
         scale: 2,
         useCORS: true,
-        logging: false,
-        backgroundColor: "#f8fafc", // slate-50
-        windowWidth: dashboardRef.current.scrollWidth,
-        windowHeight: dashboardRef.current.scrollHeight,
+        logging: true, // Enable html2canvas logging for debugging
       });
       
       console.log("Canvas generated:", canvas.width, "x", canvas.height);

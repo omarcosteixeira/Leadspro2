@@ -42,8 +42,7 @@ export default function NovasOportunidadesView({ data, botConfig, onToast, onAdi
         body: JSON.stringify({ 
           location: bairro, 
           empresasExistentes,
-          openRouterApiKey: botConfig?.openRouterApiKey,
-          aiModel: botConfig?.aiModel
+          openRouterApiKey: botConfig?.openRouterApiKey
         }),
       });
 

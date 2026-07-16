@@ -160,7 +160,6 @@ import {
   AnalysisScheme,
   PeriodAnalysis,
 } from "./types";
-import { OPENROUTER_MODELS } from "./ai-config";
 import CrescimentoAnualAdmin from "./components/CrescimentoAnualAdmin";
 import { ProfileModal } from "./components/ProfileModal";
 import { PublicRegistrationForm } from "./components/PublicRegistrationForm";
@@ -2146,10 +2145,8 @@ function FiesProuniView({
   whatsappMessages: WhatsAppMessage[];
   periodos: PeriodoCaptacao[];
   botConfig: BotConfig;
-  onSendBot: (tel: string, msg: string, contactName?: string) => void;
-  onMassSendBot: (
-    messages: { telefone: string; message: string; nome?: string }[],
-  ) => void;
+  onSendBot: (tel: string, msg: string) => void;
+  onMassSendBot: (messages: { telefone: string; message: string }[]) => void;
 }) {
   const [activeTab, setActiveTab] = useState<"lista" | "informacoes">(
     "informacoes",
@@ -2897,7 +2894,6 @@ function FiesProuniView({
                               return {
                                 telefone: item.telefone,
                                 message: text,
-                                nome: item.nome,
                               };
                             });
                             onMassSendBot(payloads);
@@ -3809,12 +3805,6 @@ export default function App() {
   const [whatsappMessages, setWhatsappMessages] = useState<WhatsAppMessage[]>(
     [],
   );
-  const [activeWhatsappTemplates, setActiveWhatsappTemplates] = useState<
-    Record<string, string>
-  >({});
-  const [activeWhatsappTab, setActiveWhatsappTab] = useState<
-    "historico" | "bases" | "gap" | "fiesProuni" | "bases_renovacao"
-  >("historico");
   const [links, setLinks] = useState<LinkUtil[]>([]);
   const [mapao, setMapao] = useState<MapaoAcademicoEntry[]>([]);
   const [basesDisparo, setBasesDisparo] = useState<BaseDisparoEntry[]>([]);
@@ -4032,11 +4022,7 @@ export default function App() {
     }
   };
 
-  const handleSendBotMessage = async (
-    telefone: string,
-    message: string,
-    contactName?: string,
-  ) => {
+  const handleSendBotMessage = async (telefone: string, message: string) => {
     const currentBotNumber = profile?.botNumber;
     let safeBotNumber = currentBotNumber
       ? currentBotNumber.replace(/\D/g, "")
@@ -4086,7 +4072,6 @@ export default function App() {
           botNumber: safeBotNumber,
           number: rawPhone,
           message: finalMessage,
-          contactName: contactName || "",
           force: true,
           manual: true,
         },
@@ -4297,7 +4282,7 @@ export default function App() {
   };
 
   const handleMassSendBotMessages = async (
-    messages: { telefone: string; message: string; nome?: string }[],
+    messages: { telefone: string; message: string }[],
   ) => {
     if (massSendProgress.active) {
       showToast("Já existe um envio em massa em andamento.", "error");
@@ -4400,11 +4385,7 @@ export default function App() {
       }));
 
       try {
-        await handleSendBotMessage(
-          messages[i].telefone,
-          messages[i].message,
-          messages[i].nome,
-        );
+        await handleSendBotMessage(messages[i].telefone, messages[i].message);
       } catch (e) {
         console.error("Error sending bot message in mass: ", e);
       }
@@ -6354,8 +6335,6 @@ export default function App() {
                   forecast={forecast}
                   periodos={periodos}
                   whatsappMessages={whatsappMessages}
-                  activeWhatsappTemplates={activeWhatsappTemplates}
-                  setActiveWhatsappTemplates={setActiveWhatsappTemplates}
                   empresasParceiras={empresasParceiras}
                   botConfig={botConfig}
                   botStatuses={botStatuses}
@@ -6626,19 +6605,6 @@ function AuthScreen({
               Comercial
             </button>
           </div>
-
-          {/* Alerta de Configuração se os projetos forem idênticos no modo Principal */}
-          {servidor === "principal" &&
-            firebaseConfigPrincipal.apiKey === "AIzaSyBexxjzDAuNSgY90rlVqpz4AQZDE-QwSG4" && (
-              <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-200 text-[10px] font-bold leading-relaxed flex items-start gap-2 animate-pulse">
-                <AlertCircle size={14} className="flex-shrink-0 mt-0.5" />
-                <p>
-                  O servidor Principal está usando as credenciais do servidor
-                  Comercial. Configure as variáveis de ambiente (API Key e App
-                  ID) do projeto gestaopro-761e1 para habilitar o acesso.
-                </p>
-              </div>
-            )}
 
           <form onSubmit={handleSubmit} className="space-y-4 font-sans">
             {!isLogin && (
@@ -9240,10 +9206,8 @@ function HistoricoView({
   users: UserProfile[];
   whatsappMessages: WhatsAppMessage[];
   botConfig: BotConfig;
-  onSendBot: (tel: string, msg: string, contactName?: string) => void;
-  onMassSendBot: (
-    messages: { telefone: string; message: string; nome?: string }[],
-  ) => void;
+  onSendBot: (tel: string, msg: string) => void;
+  onMassSendBot: (messages: { telefone: string; message: string }[]) => void;
   gap: GapEntry[];
   basesRenovacao: BaseEntry[];
   calendarioAcoes?: CalendarioAcao[];
@@ -10366,13 +10330,9 @@ function HistoricoView({
           }
         }}
         botConfig={botConfig}
-        onSendBot={(msg, contactName) => {
+        onSendBot={(msg) => {
           if (selectedLead) {
-            onSendBot(
-              selectedLead.telefone,
-              Array.isArray(msg) ? msg[0] : msg,
-              contactName || selectedLead.nome,
-            );
+            onSendBot(selectedLead.telefone, msg);
           }
         }}
       />
@@ -10386,18 +10346,14 @@ function HistoricoView({
           // not used for mass send
         }}
         botConfig={botConfig}
-        onSendBot={(msgTemplates) => {
-          const templates = Array.isArray(msgTemplates) ? msgTemplates : [msgTemplates];
+        onSendBot={(msgTemplate) => {
           const selectedLeadObjs = leads.filter(
             (l) => selectedEntries.includes(l.id) && !invalidLeadIds.has(l.id),
           );
-          const messagesPayload = selectedLeadObjs.map((l, idx) => {
-            const template = templates[idx % templates.length];
-            return {
-              telefone: l.telefone,
-              message: replaceMessageVariables(template, l),
-            };
-          });
+          const messagesPayload = selectedLeadObjs.map((l) => ({
+            telefone: l.telefone,
+            message: replaceMessageVariables(msgTemplate, l),
+          }));
           onMassSendBot(messagesPayload);
           setMassSelectorOpen(false);
           setSelectedEntries([]);
@@ -10640,10 +10596,8 @@ function BasesView({
   onToast: (m: string, t?: "success" | "error") => void;
   whatsappMessages: WhatsAppMessage[];
   botConfig: BotConfig;
-  onSendBot: (tel: string, msg: string, contactName?: string) => void;
-  onMassSendBot: (
-    messages: { telefone: string; message: string; nome?: string }[],
-  ) => void;
+  onSendBot: (tel: string, msg: string) => void;
+  onMassSendBot: (messages: { telefone: string; message: string }[]) => void;
   gap: GapEntry[];
   basesRenovacao: BaseEntry[];
   profile: UserProfile;
@@ -12433,13 +12387,9 @@ function BasesView({
           }
         }}
         botConfig={botConfig}
-        onSendBot={(msg, contactName) => {
+        onSendBot={(msg) => {
           if (selectedEntry) {
-            onSendBot(
-              selectedEntry.telefone,
-              Array.isArray(msg) ? msg[0] : msg,
-              contactName || selectedEntry.nome,
-            );
+            onSendBot(selectedEntry.telefone, msg);
           }
         }}
       />
@@ -12451,19 +12401,14 @@ function BasesView({
         messages={whatsappMessages.filter((m) => m.tipo === "bases")}
         onSelect={(msg) => {}}
         botConfig={botConfig}
-        onSendBot={(msgTemplates) => {
-          const templates = Array.isArray(msgTemplates) ? msgTemplates : [msgTemplates];
+        onSendBot={(msgTemplate) => {
           const selectedLeadObjs = bases.filter(
             (b) => selectedEntries.includes(b.id) && !invalidBaseIds.has(b.id),
           );
-          const messagesPayload = selectedLeadObjs.map((l, idx) => {
-            const template = templates[idx % templates.length];
-            return {
-              telefone: l.telefone,
-              message: replaceMessageVariables(template, l),
-              nome: l.nome,
-            };
-          });
+          const messagesPayload = selectedLeadObjs.map((l) => ({
+            telefone: l.telefone,
+            message: replaceMessageVariables(msgTemplate, l),
+          }));
           onMassSendBot(messagesPayload);
           setMassSelectorOpen(false);
           setSelectedEntries([]);
@@ -12516,10 +12461,8 @@ function BasesRenovacaoView({
   profile: UserProfile;
   whatsappMessages: WhatsAppMessage[];
   botConfig: BotConfig;
-  onSendBot: (tel: string, msg: string, contactName?: string) => void;
-  onMassSendBot: (
-    messages: { telefone: string; message: string; nome?: string }[],
-  ) => void;
+  onSendBot: (tel: string, msg: string) => void;
+  onMassSendBot: (messages: { telefone: string; message: string }[]) => void;
 }) {
   const [formData, setFormData] = useState({
     nomeBase: "",
@@ -13346,13 +13289,9 @@ function BasesRenovacaoView({
           }
         }}
         botConfig={botConfig}
-        onSendBot={(msg, contactName) => {
+        onSendBot={(msg) => {
           if (selectedEntry) {
-            onSendBot(
-              selectedEntry.telefone,
-              Array.isArray(msg) ? msg[0] : msg,
-              contactName || selectedEntry.nome,
-            );
+            onSendBot(selectedEntry.telefone, msg);
           }
         }}
       />
@@ -13364,19 +13303,14 @@ function BasesRenovacaoView({
         messages={whatsappMessages.filter((m) => m.tipo === "bases_renovacao")}
         onSelect={(msg) => {}}
         botConfig={botConfig}
-        onSendBot={(msgTemplates) => {
-          const templates = Array.isArray(msgTemplates) ? msgTemplates : [msgTemplates];
+        onSendBot={(msgTemplate) => {
           const selectedLeadObjs = bases.filter((b) =>
             selectedEntries.includes(b.id),
           );
-          const messagesPayload = selectedLeadObjs.map((l, idx) => {
-            const template = templates[idx % templates.length];
-            return {
-              telefone: l.telefone,
-              message: replaceMessageVariables(template, l),
-              nome: l.nome,
-            };
-          });
+          const messagesPayload = selectedLeadObjs.map((l) => ({
+            telefone: l.telefone,
+            message: replaceMessageVariables(msgTemplate, l),
+          }));
           onMassSendBot(messagesPayload);
           setMassSelectorOpen(false);
           setSelectedEntries([]);
@@ -13430,10 +13364,8 @@ function GapView({
   profile: UserProfile;
   whatsappMessages: WhatsAppMessage[];
   botConfig: BotConfig;
-  onSendBot: (tel: string, msg: string, contactName?: string) => void;
-  onMassSendBot: (
-    messages: { telefone: string; message: string; nome?: string }[],
-  ) => void;
+  onSendBot: (tel: string, msg: string) => void;
+  onMassSendBot: (messages: { telefone: string; message: string }[]) => void;
   calendarioAcoes?: CalendarioAcao[];
 }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -13450,20 +13382,6 @@ function GapView({
   const [gapSubTab, setGapSubTab] = useState<"dashboard" | "lista">(
     "dashboard",
   );
-
-  const [isSelectorOpen, setIsSelectorOpen] = useState(false);
-  const [selectedEntryForWhatsapp, setSelectedEntryForWhatsapp] =
-    useState<GapEntry | null>(null);
-
-  const gapSpecificMessages = useMemo(() => {
-    return whatsappMessages
-      .filter((m) => m.tipo === "gap" || m.tipo.startsWith("gap_"))
-      .sort((a, b) => {
-        if (a.tipo === "gap" || a.tipo === "gap_0") return -1;
-        if (b.tipo === "gap" || b.tipo === "gap_0") return 1;
-        return a.tipo.localeCompare(b.tipo);
-      });
-  }, [whatsappMessages]);
 
   const handleBulkDelete = async () => {
     if (selectedEntries.length === 0) return;
@@ -14256,7 +14174,6 @@ Pela internet: https://sia.estacio.br/sianet/Logon`);
                             const payloads = selectedObjs.map((g) => ({
                               telefone: g.telefone,
                               message: getGapWhatsAppMessage(g),
-                              nome: g.nome,
                             }));
                             onMassSendBot(payloads);
                             setSelectedEntries([]);
@@ -14379,17 +14296,32 @@ Pela internet: https://sia.estacio.br/sianet/Logon`);
                         </select>
                       </td>
                       <td className="px-6 py-4 flex items-center space-x-2">
-                        <button
-                          onClick={() => {
-                            setSelectedEntryForWhatsapp(entry);
-                            setIsSelectorOpen(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-700 font-bold text-sm bg-blue-50 p-2 rounded-lg flex items-center gap-1.5 transition-all hover:bg-blue-100"
-                          title="Opções de WhatsApp"
+                        {botConfig.url && (
+                          <button
+                            onClick={() =>
+                              onSendBot(
+                                entry.telefone,
+                                getGapWhatsAppMessage(entry),
+                              )
+                            }
+                            className="text-blue-600 hover:text-blue-700 font-bold text-sm bg-blue-50 p-2 rounded-lg"
+                            title="Enviar pelo Bot ARGO'S"
+                          >
+                            <Bot size={16} />
+                          </button>
+                        )}
+                        <a
+                          href={getWhatsAppUrl(
+                            entry.telefone,
+                            getGapWhatsAppMessage(entry),
+                          )}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-emerald-600 hover:text-emerald-700 font-bold text-sm bg-emerald-50 p-2 rounded-lg"
+                          title="Abrir WhatsApp"
                         >
-                          <Bot size={16} />
-                          <span>WhatsApp</span>
-                        </button>
+                          <MessageSquare size={16} />
+                        </a>
                         <button
                           onClick={() => {
                             setEditingEntry(entry);
@@ -14723,34 +14655,6 @@ Pela internet: https://sia.estacio.br/sianet/Logon`);
             )}
           </AnimatePresence>
         </>
-      )}
-
-      {isSelectorOpen && selectedEntryForWhatsapp && (
-        <WhatsAppMessageSelector
-          isOpen={isSelectorOpen}
-          onClose={() => {
-            setIsSelectorOpen(false);
-            setSelectedEntryForWhatsapp(null);
-          }}
-          messages={gapSpecificMessages}
-          onSelect={(msg) => {
-            const url = getWhatsAppUrl(selectedEntryForWhatsapp.telefone, msg);
-            window.open(url, "_blank");
-          }}
-          leadName={selectedEntryForWhatsapp.nome}
-          leadCurso={selectedEntryForWhatsapp.curso}
-          leadMatricula={selectedEntryForWhatsapp.numeroMatricula}
-          botConfig={botConfig}
-          onSendBot={(msg, contactName) => {
-            if (typeof msg === "string") {
-              onSendBot(
-                selectedEntryForWhatsapp.telefone,
-                msg,
-                contactName || selectedEntryForWhatsapp.nome,
-              );
-            }
-          }}
-        />
       )}
     </div>
   );
@@ -19221,8 +19125,6 @@ function AdminView({
   forecast,
   periodos,
   whatsappMessages,
-  activeWhatsappTemplates,
-  setActiveWhatsappTemplates,
   empresasParceiras,
   botConfig,
   botStatuses,
@@ -19249,10 +19151,6 @@ function AdminView({
   forecast: ForecastCaptacao[];
   periodos: PeriodoCaptacao[];
   whatsappMessages: WhatsAppMessage[];
-  activeWhatsappTemplates: Record<string, string>;
-  setActiveWhatsappTemplates: React.Dispatch<
-    React.SetStateAction<Record<string, string>>
-  >;
   empresasParceiras: EmpresaParceira[];
   botConfig: BotConfig;
   uniqueUnidades?: string[];
@@ -22902,45 +22800,6 @@ function AdminView({
 
                 <div className="pt-4 border-t border-slate-100">
                   <label className="block text-sm font-bold text-slate-700 mb-1">
-                    Modelo de IA (OpenRouter)
-                  </label>
-                  <select
-                    value={botConfig.aiModel || ""}
-                    onChange={async (e) => {
-                      const newModel = e.target.value;
-                      try {
-                        await setDoc(
-                          doc(db, COLLECTIONS.BOT_CONFIG, "main"),
-                          {
-                            aiModel: newModel,
-                            updatedAt: serverTimestamp(),
-                          },
-                          { merge: true },
-                        );
-                        onToast("Modelo de IA atualizado!");
-                      } catch (err: any) {
-                        onToast(
-                          `Erro ao salvar modelo de IA: ${err.message}`,
-                          "error",
-                        );
-                      }
-                    }}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white"
-                  >
-                    <option value="">Selecione um modelo (Padrão: Gemini 2.0 Flash)</option>
-                    {OPENROUTER_MODELS.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.name}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    Escolha qual modelo será usado para as análises inteligentes.
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100">
-                  <label className="block text-sm font-bold text-slate-700 mb-1">
                     URL do Bot do Telegram (Railway)
                   </label>
                   <input
@@ -23311,297 +23170,191 @@ function AdminView({
           </section>
 
           <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="p-6 border-b border-slate-100 bg-slate-50">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900">
-                    Mensagens Padrão do WhatsApp
-                  </h3>
-                  <p className="text-slate-500 text-sm">
-                    Gerencie múltiplos modelos de mensagens para cada categoria
-                  </p>
-                </div>
-                <div className="flex overflow-x-auto pb-2 md:pb-0 gap-2 scrollbar-hide">
-                  {[
-                    { id: "historico", label: "Histórico", icon: <History size={16} /> },
-                    { id: "bases", label: "Bases", icon: <Database size={16} /> },
-                    { id: "gap", label: "GAP Acadêmico", icon: <GraduationCap size={16} /> },
-                    { id: "fiesProuni", label: "Fies/Prouni", icon: <FileText size={16} /> },
-                    { id: "bases_renovacao", label: "Base Líquida", icon: <RefreshCw size={16} /> },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => setActiveWhatsappTab(tab.id as any)}
-                      className={cn(
-                        "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shadow-sm",
-                        activeWhatsappTab === tab.id
-                          ? "bg-blue-600 text-white shadow-blue-100"
-                          : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-                      )}
-                    >
-                      {tab.icon}
-                      <span>{tab.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+            <div className="p-6 border-b border-slate-100">
+              <h3 className="text-xl font-bold text-slate-900">
+                Mensagens Padrão do WhatsApp
+              </h3>
+              <p className="text-slate-500 text-sm">
+                Gerencie múltiplos modelos de mensagens para cada categoria
+              </p>
             </div>
-            <div className="p-6">
+            <div className="p-6 space-y-12">
               {[
-                {
-                  id: "historico",
-                  label: "Histórico",
-                  multi: true,
-                  icon: <History size={18} />,
-                },
-                {
-                  id: "bases",
-                  label: "Bases",
-                  multi: true,
-                  icon: <Database size={18} />,
-                },
+                { id: "historico", label: "Histórico", multi: true },
+                { id: "bases", label: "Bases", multi: true },
                 {
                   id: "gap",
                   label: "GAP Acadêmico",
                   multi: false,
-                  icon: <GraduationCap size={18} />,
-                  subLabels: [
-                    "Padrão",
-                    "Matrícula Acadêmica OK",
-                    "Indicação de Amigo",
-                  ],
+                  subLabels: ["Padrão", "Matrícula Acadêmica OK"],
                 },
                 {
                   id: "fiesProuni",
                   label: "Fies/Prouni",
                   multi: false,
-                  icon: <FileText size={18} />,
                   subLabels: ["Padrão", "Matrícula Acadêmica OK"],
                 },
-                {
-                  id: "bases_renovacao",
-                  label: "Base Líquida",
-                  multi: true,
-                  icon: <RefreshCw size={18} />,
-                },
-              ]
-                .filter((tipo) => tipo.id === activeWhatsappTab)
-                .map((tipo) => {
-                  const messages = tipo.multi
-                    ? whatsappMessages.filter((m) => m.tipo === tipo.id)
-                    : (tipo.subLabels || []).map((label, idx) => {
-                        const subtypeId = `${tipo.id}_${idx}`;
-                        const msg = whatsappMessages.find(
-                          (m) => m.tipo === subtypeId,
-                        );
-                        return {
-                          id: msg?.id || subtypeId,
-                          tipo: subtypeId,
-                          texto: msg?.texto || "",
-                          nome: label,
-                          isVirtual: !msg,
-                        };
-                      });
+                { id: "bases_renovacao", label: "Base Líquida", multi: true },
+              ].map((tipo) => {
+                const messages = whatsappMessages.filter(
+                  (m) => m.tipo === tipo.id,
+                );
 
-                  const selectedKey = activeWhatsappTemplates[tipo.id];
-                  const selectedMsg = messages.find((m) =>
-                    tipo.multi ? m.id === selectedKey : m.tipo === selectedKey,
-                  );
-
+                if (tipo.multi) {
                   return (
-                    <div key={tipo.id} className="space-y-6">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between bg-blue-50/50 p-5 rounded-2xl border border-blue-100 gap-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shadow-sm">
-                            {tipo.icon}
-                          </div>
-                          <div>
-                            <h4 className="text-base font-bold text-slate-800 uppercase tracking-wider">
-                              {tipo.label}
-                            </h4>
-                            <p className="text-xs text-slate-500">
-                              {messages.length} modelo(s) disponível(is)
-                            </p>
-                          </div>
+                    <div
+                      key={tipo.id}
+                      className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mb-8"
+                    >
+                      <div className="flex justify-between items-center bg-slate-50 p-5 border-b border-slate-200">
+                        <div>
+                          <h4 className="text-base font-bold text-slate-800 uppercase tracking-wider">
+                            {tipo.label}
+                          </h4>
+                          <p className="text-xs text-slate-500 mt-1">
+                            Modelos de mensagens para {tipo.label.toLowerCase()}
+                          </p>
                         </div>
-
-                        <div className="flex items-center gap-3 flex-1 md:max-w-md">
-                          <select
-                            value={selectedKey || ""}
-                            onChange={(e) =>
-                              setActiveWhatsappTemplates((prev) => ({
-                                ...prev,
-                                [tipo.id]: e.target.value,
-                              }))
+                        <button
+                          onClick={async () => {
+                            try {
+                              await addDoc(
+                                collection(db, COLLECTIONS.WHATSAPP_MESSAGES),
+                                {
+                                  tipo: tipo.id,
+                                  texto: "",
+                                  createdAt: serverTimestamp(),
+                                },
+                              );
+                              onToast("Novo modelo adicionado!");
+                            } catch (err: any) {
+                              onToast("Erro ao adicionar modelo.", "error");
                             }
-                            className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none shadow-sm transition-all"
-                          >
-                            <option value="">Selecione um modelo...</option>
-                            {messages.map((m, idx) => (
-                              <option
-                                key={m.id}
-                                value={tipo.multi ? m.id : m.tipo}
-                              >
-                                {m.nome || `Modelo ${idx + 1}`}
-                              </option>
-                            ))}
-                          </select>
-
-                          {tipo.multi && (
-                            <button
-                              onClick={async () => {
-                                try {
-                                  const docRef = await addDoc(
-                                    collection(
-                                      db,
-                                      COLLECTIONS.WHATSAPP_MESSAGES,
-                                    ),
-                                    {
-                                      tipo: tipo.id,
-                                      texto: "",
-                                      nome: `Novo Modelo ${messages.length + 1}`,
-                                      createdAt: serverTimestamp(),
-                                    },
-                                  );
-                                  setActiveWhatsappTemplates((prev) => ({
-                                    ...prev,
-                                    [tipo.id]: docRef.id,
-                                  }));
-                                  onToast("Novo modelo adicionado!");
-                                } catch (err: any) {
-                                  onToast("Erro ao adicionar modelo.", "error");
-                                }
-                              }}
-                              className="bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-xl shadow-sm transition-all flex-shrink-0"
-                              title="Adicionar Novo Modelo"
-                            >
-                              <Plus size={20} />
-                            </button>
-                          )}
-                        </div>
+                          }}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center space-x-2 shadow-sm transition-all"
+                        >
+                          <Plus size={16} />
+                          <span>Novo Modelo</span>
+                        </button>
                       </div>
-
-                      <div className="bg-slate-50/30 rounded-2xl border border-slate-100 p-6">
-                        {selectedMsg ? (
-                          <div className="space-y-6">
-                            <div className="flex items-center gap-4">
-                              <div className="flex-1">
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">
-                                  Nome do Modelo
-                                </label>
-                                <input
-                                  type="text"
-                                  value={selectedMsg.nome || ""}
-                                  readOnly={!tipo.multi}
-                                  onChange={async (e) => {
-                                    if (!tipo.multi) return;
-                                    const newName = e.target.value;
-                                    try {
-                                      await updateDoc(
-                                        doc(
-                                          db,
-                                          COLLECTIONS.WHATSAPP_MESSAGES,
-                                          selectedMsg.id,
-                                        ),
-                                        { nome: newName },
-                                      );
-                                    } catch (err) {}
-                                  }}
-                                  className={cn(
-                                    "w-full px-4 py-2 rounded-xl border border-slate-200 text-sm font-bold shadow-sm",
-                                    !tipo.multi
-                                      ? "bg-slate-100 text-slate-500 cursor-not-allowed"
-                                      : "bg-white text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none",
-                                  )}
-                                  placeholder="Dê um nome a este modelo..."
-                                />
-                              </div>
-                              {tipo.multi && (
-                                <button
-                                  onClick={async () => {
-                                    if (
-                                      window.confirm("Excluir este modelo?")
-                                    ) {
-                                      await deleteDoc(
-                                        doc(
-                                          db,
-                                          COLLECTIONS.WHATSAPP_MESSAGES,
-                                          selectedMsg.id,
-                                        ),
-                                      );
-                                      setActiveWhatsappTemplates((prev) => {
-                                        const next = { ...prev };
-                                        delete next[tipo.id];
-                                        return next;
-                                      });
-                                      onToast("Modelo removido.");
-                                    }
-                                  }}
-                                  className="mt-5 p-2.5 text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
-                                  title="Excluir Modelo"
-                                >
-                                  <Trash2 size={20} />
-                                </button>
-                              )}
-                            </div>
-
-                            <WhatsAppMessageEditor
-                              key={selectedMsg.id}
-                              msgId={selectedMsg.id}
-                              initialText={selectedMsg.texto}
-                              label={`Editando: ${selectedMsg.nome || "Modelo"}`}
-                              onUpdate={async (novoTexto) => {
-                                if (novoTexto === selectedMsg.texto) return;
-                                try {
-                                  if ((selectedMsg as any).isVirtual) {
-                                    const docRef = await addDoc(
-                                      collection(
-                                        db,
-                                        COLLECTIONS.WHATSAPP_MESSAGES,
-                                      ),
-                                      {
-                                        tipo: (selectedMsg as any).tipo,
-                                        texto: novoTexto,
-                                        nome: selectedMsg.nome,
-                                        createdAt: serverTimestamp(),
-                                      },
-                                    );
-                                  } else {
-                                    await updateDoc(
-                                      doc(
-                                        db,
-                                        COLLECTIONS.WHATSAPP_MESSAGES,
-                                        selectedMsg.id,
-                                      ),
-                                      {
-                                        texto: novoTexto,
-                                        updatedAt: serverTimestamp(),
-                                      },
-                                    );
-                                  }
-                                  onToast("Modelo atualizado!");
-                                } catch (err: any) {
-                                  onToast("Erro ao salvar.", "error");
-                                }
-                              }}
-                            />
-                          </div>
-                        ) : (
-                          <div className="flex flex-col items-center justify-center py-20 text-slate-400 space-y-4">
-                            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
-                              <MessageSquare size={32} />
-                            </div>
-                            <p className="text-sm font-medium text-center">
-                              Selecione um modelo no menu acima para começar a
-                              editar e ver a prévia.
-                            </p>
+                      <div className="p-6 grid grid-cols-1 gap-6 bg-slate-50/50">
+                        {messages.map((msg, idx) => (
+                          <WhatsAppMessageEditor
+                            key={msg.id}
+                            msgId={msg.id}
+                            initialText={msg.texto}
+                            label={`MODELO ${idx + 1} - ${tipo.label}`}
+                            onUpdate={async (novoTexto) => {
+                              if (novoTexto === msg.texto) return;
+                              try {
+                                await updateDoc(
+                                  doc(
+                                    db,
+                                    COLLECTIONS.WHATSAPP_MESSAGES,
+                                    msg.id,
+                                  ),
+                                  {
+                                    texto: novoTexto,
+                                    updatedAt: serverTimestamp(),
+                                  },
+                                );
+                                onToast("Modelo atualizado!");
+                              } catch (err: any) {
+                                onToast("Erro ao salvar.", "error");
+                              }
+                            }}
+                            onDelete={async () => {
+                              if (window.confirm("Excluir este modelo?")) {
+                                await deleteDoc(
+                                  doc(
+                                    db,
+                                    COLLECTIONS.WHATSAPP_MESSAGES,
+                                    msg.id,
+                                  ),
+                                );
+                                onToast("Modelo removido.");
+                              }
+                            }}
+                          />
+                        ))}
+                        {messages.length === 0 && (
+                          <div className="text-center py-8 text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-xl">
+                            Nenhum modelo cadastrado. Clique em "Novo Modelo"
+                            para adicionar.
                           </div>
                         )}
                       </div>
                     </div>
                   );
-                })}
+                }
+
+                return (
+                  <div
+                    key={tipo.id}
+                    className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mb-8"
+                  >
+                    <div className="bg-slate-50 p-5 border-b border-slate-200 flex justify-between items-center">
+                      <div>
+                        <h4 className="text-base font-bold text-slate-800 uppercase tracking-wider">
+                          {tipo.label}
+                        </h4>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Modelos de mensagens para {tipo.label.toLowerCase()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="p-6 grid grid-cols-1 gap-6 bg-slate-50/50">
+                      {tipo.subLabels?.map((label, idx) => {
+                        const subtypeId = `${tipo.id}_${idx}`;
+                        const msg = whatsappMessages.find(
+                          (m) => m.tipo === subtypeId,
+                        );
+                        return (
+                          <WhatsAppMessageEditor
+                            key={subtypeId}
+                            msgId={msg?.id || subtypeId}
+                            initialText={msg?.texto || ""}
+                            label={`${tipo.label} - ${label}`}
+                            onUpdate={async (novoTexto) => {
+                              if (novoTexto === (msg?.texto || "")) return;
+                              try {
+                                if (msg) {
+                                  await updateDoc(
+                                    doc(
+                                      db,
+                                      COLLECTIONS.WHATSAPP_MESSAGES,
+                                      msg.id,
+                                    ),
+                                    {
+                                      texto: novoTexto,
+                                      updatedAt: serverTimestamp(),
+                                    },
+                                  );
+                                } else {
+                                  await addDoc(
+                                    collection(
+                                      db,
+                                      COLLECTIONS.WHATSAPP_MESSAGES,
+                                    ),
+                                    {
+                                      tipo: subtypeId,
+                                      texto: novoTexto,
+                                      createdAt: serverTimestamp(),
+                                    },
+                                  );
+                                }
+                                onToast("Mensagem atualizada!");
+                              } catch (err: any) {
+                                onToast("Erro ao salvar.", "error");
+                              }
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </section>
         </div>
@@ -23995,9 +23748,6 @@ export function ControlePagamentosView({
 
         const custoTotal = diarias * valorDia;
 
-        const collaborators = (action.colaboradoresIds || []).map(id => users.find(u => u.uid === id)).filter(Boolean);
-        const fdvResponsavel = collaborators.find(u => u?.role === "FDV (Comercial)" || u?.role === "Gestor Comercial");
-        
         result.push({
           actionId: action.id,
           promoterUid: pUid,
@@ -24012,7 +23762,6 @@ export function ControlePagamentosView({
           diarias,
           horas: horasAtuadas,
           solicitante:
-            fdvResponsavel?.name ||
             (action.colaboradoresNomes?.length
               ? action.colaboradoresNomes.join(", ")
               : action.colaboradorNome) ||
