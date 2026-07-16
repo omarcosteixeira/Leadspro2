@@ -17,7 +17,7 @@ export function WhatsAppMessageEditor({
   onDelete,
   label,
 }: Props) {
-  const [texto, setTexto] = useState(initialText);
+  const [texto, setTexto] = useState(initialText || "");
 
   const availableVariables = [
     { key: "[nome]", label: "Nome", previewValue: "João Silva" },

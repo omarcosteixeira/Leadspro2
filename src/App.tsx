@@ -23220,8 +23220,8 @@ function AdminView({
                           const userForBot = users.find(
                             (u) =>
                               u.botNumber &&
-                              u.botNumber.replace(/\D/g, "") ===
-                                botNumber.replace(/\D/g, ""),
+                              String(u.botNumber).replace(/\D/g, "") ===
+                                String(botNumber).replace(/\D/g, ""),
                           );
                           const nameForBot = userForBot
                             ? userForBot.name
