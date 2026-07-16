@@ -6607,6 +6607,19 @@ function AuthScreen({
             </button>
           </div>
 
+          {/* Alerta de Configuração se os projetos forem idênticos no modo Principal */}
+          {servidor === "principal" &&
+            firebaseConfigPrincipal.apiKey === "AIzaSyBexxjzDAuNSgY90rlVqpz4AQZDE-QwSG4" && (
+              <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-200 text-[10px] font-bold leading-relaxed flex items-start gap-2 animate-pulse">
+                <AlertCircle size={14} className="flex-shrink-0 mt-0.5" />
+                <p>
+                  O servidor Principal está usando as credenciais do servidor
+                  Comercial. Configure as variáveis de ambiente (API Key e App
+                  ID) do projeto gestaopro-761e1 para habilitar o acesso.
+                </p>
+              </div>
+            )}
+
           <form onSubmit={handleSubmit} className="space-y-4 font-sans">
             {!isLogin && (
               <div>
@@ -20326,13 +20339,13 @@ function AdminView({
                                     </p>
                                     <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0 mt-2.5">
                                       <a
-                                        href="https://console.developers.google.com/apis/api/identitytoolkit.googleapis.com/overview?project=gestaodeleadspro-d4230"
+                                        href="https://console.developers.google.com/apis/api/identitytoolkit.googleapis.com/overview?project=gestaopro-761e1"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center justify-center space-x-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors text-[11px]"
                                       >
                                         <span>
-                                          Ativar no Principal (gestaodeleadspro-d4230)
+                                          Ativar no Principal (gestaopro-761e1)
                                         </span>
                                       </a>
                                       <a

@@ -444,7 +444,7 @@ Caso contrário (se não houver correspondência lógica ou for um item completa
       }
 
       const targetServer = servidor === "comercial" ? "comercial" : "principal";
-      const projectId = targetServer === "comercial" ? "gestaodeleadspro-d4230" : "gestaodeleadspro-d4230";
+      const projectId = targetServer === "comercial" ? "gestaodeleadspro-d4230" : "gestaopro-761e1";
       const credentialEnv = targetServer === "comercial"
         ? process.env.FIREBASE_SERVICE_ACCOUNT_COMERCIAL
         : process.env.FIREBASE_SERVICE_ACCOUNT_PRINCIPAL;
