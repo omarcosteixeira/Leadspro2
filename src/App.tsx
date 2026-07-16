@@ -2421,44 +2421,66 @@ function FiesProuniView({
       let successCount = 0;
       let errorCount = 0;
 
+      const getVal = (row: any, ...keys: string[]) => {
+        const rowKeys = Object.keys(row);
+        for (const key of keys) {
+          const foundKey = rowKeys.find(
+            (k) => k.toLowerCase() === key.toLowerCase(),
+          );
+          if (foundKey && row[foundKey] !== undefined) return row[foundKey];
+        }
+        return undefined;
+      };
+
       for (const row of data) {
         try {
-          const cpf = String(row["CPF"] || "").replace(/\D/g, "");
+          const rawCpf = String(getVal(row, "CPF", "cpf") || "");
+          const cpf = rawCpf.replace(/\D/g, "");
           if (!cpf) continue;
 
           const payload = {
-            nome: String(row["Nome"] || ""),
+            nome: String(getVal(row, "Nome", "nome") || ""),
             cpf,
-            telefone: String(row["Telefone"] || ""),
-            email: String(row["Email"] || ""),
-            endereco: String(row["Endereço"] || ""),
-            status: String(row["Status"] || "Pendente"),
-            tipo: (String(row["Tipo"] || "PROUNI").toUpperCase() === "FIES"
+            telefone: String(getVal(row, "Telefone", "telefone") || ""),
+            email: String(getVal(row, "Email", "email") || ""),
+            endereco: String(getVal(row, "Endereço", "Endereco", "endereco") || ""),
+            status: String(getVal(row, "Status", "status") || "Pendente"),
+            tipo: (String(getVal(row, "Tipo", "tipo") || "PROUNI").toUpperCase() === "FIES"
               ? "FIES"
               : "PROUNI") as "FIES" | "PROUNI",
-            bolsa: String(row["Bolsa"] || "INTEGRAL").toUpperCase().includes("PARCIAL") ? "PARCIAL" : "INTEGRAL",
-            curso: String(row["Curso"] || ""),
-            posicaoRanking: String(row["Ranking"] || ""),
-            lista: String(row["Lista"] || ""),
-            periodo: String(row["Periodo"] || ""),
-            metodologia: String(row["Metodologia"] || ""),
-            responsavelEntrevista: String(row["Responsável Entrevista"] || ""),
-            dataEntrevista: String(row["Data Entrevista"] || ""),
+            bolsa: String(getVal(row, "Bolsa", "bolsa") || "INTEGRAL").toUpperCase().includes("PARCIAL") ? "PARCIAL" : "INTEGRAL",
+            situacao: String(getVal(row, "Situação", "Situacao", "situação", "situacao") || "Candidato")
+              .toLowerCase()
+              .includes("outro curso")
+              ? "Aluno (outro curso)"
+              : String(getVal(row, "Situação", "Situacao", "situação", "situacao") || "")
+                  .toLowerCase()
+                  .includes("mesmo curso")
+              ? "Aluno (mesmo curso)"
+              : "Candidato",
+            cotaPPI: String(getVal(row, "Cota PPI", "cota ppi", "Cota_PPI", "cotappi") || "").toLowerCase().includes("sim") ? "Sim" : "Não",
+            curso: String(getVal(row, "Curso", "curso") || ""),
+            posicaoRanking: String(getVal(row, "Ranking", "ranking") || ""),
+            lista: String(getVal(row, "Lista", "lista") || ""),
+            periodo: String(getVal(row, "Periodo", "Período", "periodo", "período") || ""),
+            metodologia: String(getVal(row, "Metodologia", "metodologia") || ""),
+            responsavelEntrevista: String(getVal(row, "Responsável Entrevista", "Responsavel Entrevista", "responsavel entrevista") || ""),
+            dataEntrevista: String(getVal(row, "Data Entrevista", "data entrevista") || ""),
             docsEntreguesStatus: String(
-              row["Status Docs"] || "Pendente",
+              getVal(row, "Status Docs", "status docs") || "Pendente",
             ) as any,
-            inscricaoSales: String(row["Inscrição Sales"] || ""),
-            numeroMatricula: String(row["Número Matrícula"] || ""),
+            inscricaoSales: String(getVal(row, "Inscrição Sales", "Inscricao Sales", "inscricao sales") || ""),
+            numeroMatricula: String(getVal(row, "Número Matrícula", "Numero Matricula", "numero matricula") || ""),
             digitalizaStatus: String(
-              row["Status Digitaliza"] || "Pendente",
+              getVal(row, "Status Digitaliza", "status digitaliza") || "Pendente",
             ) as any,
-            sisprouniStatus: String(row["SISPROUNI"] || "Pendente") as any,
-            tcbAssinado: String(row["TCB Assinado"]).toLowerCase() === "sim",
-            documentosEntregues: String(row["Documentos Entregues"] || "")
+            sisprouniStatus: String(getVal(row, "SISPROUNI", "sisprouni") || "Pendente") as any,
+            tcbAssinado: String(getVal(row, "TCB Assinado", "tcb assinado")).toLowerCase() === "sim",
+            documentosEntregues: String(getVal(row, "Documentos Entregues", "documentos entregues") || "")
               .split(",")
               .map((s) => s.trim())
               .filter(Boolean),
-            observacao: String(row["Observação"] || ""),
+            observacao: String(getVal(row, "Observação", "Observacao", "observacao") || ""),
             unidade: profile.unidade || "",
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
@@ -2534,17 +2556,28 @@ function FiesProuniView({
       let successCount = 0;
       let errorCount = 0;
 
+      const getVal = (row: any, ...keys: string[]) => {
+        const rowKeys = Object.keys(row);
+        for (const key of keys) {
+          const foundKey = rowKeys.find(
+            (k) => k.toLowerCase() === key.toLowerCase(),
+          );
+          if (foundKey && row[foundKey] !== undefined) return row[foundKey];
+        }
+        return undefined;
+      };
+
       for (const row of data) {
         try {
           const payload = {
-            periodo: String(row["Período"] || ""),
-            codCurso: String(row["Cod. Curso"] || ""),
-            curso: String(row["Curso"] || ""),
-            turno: String(row["Turno"] || ""),
-            metodologia: String(row["Metodologia"] || ""),
-            bolsa: String(row["Bolsa"] || "") as "50%" | "100%",
-            vagas: parseInt(String(row["Vagas"]), 10) || 0,
-            unidade: String(row["Unidade"] || ""),
+            periodo: String(getVal(row, "Período", "Periodo", "período", "periodo") || ""),
+            codCurso: String(getVal(row, "Cod. Curso", "cod curso", "cod. curso", "codCurso") || ""),
+            curso: String(getVal(row, "Curso", "curso") || ""),
+            turno: String(getVal(row, "Turno", "turno") || ""),
+            metodologia: String(getVal(row, "Metodologia", "metodologia") || ""),
+            bolsa: String(getVal(row, "Bolsa", "bolsa") || "") as "50%" | "100%",
+            vagas: parseInt(String(getVal(row, "Vagas", "vagas")), 10) || 0,
+            unidade: String(getVal(row, "Unidade", "unidade") || ""),
             createdAt: serverTimestamp(),
           };
 
