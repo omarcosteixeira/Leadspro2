@@ -6,9 +6,9 @@ import firebaseConfigPrincipalRaw from '../firebase-applet-config.json';
 export const firebaseConfigPrincipal = {
   ...firebaseConfigPrincipalRaw,
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY_PRINCIPAL || firebaseConfigPrincipalRaw.apiKey,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN_PRINCIPAL || (firebaseConfigPrincipalRaw.projectId === 'gestaodeleadspro-d4230' ? 'gestaopro-761e1.firebaseapp.com' : firebaseConfigPrincipalRaw.authDomain),
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID_PRINCIPAL || (firebaseConfigPrincipalRaw.projectId === 'gestaodeleadspro-d4230' ? 'gestaopro-761e1' : firebaseConfigPrincipalRaw.projectId),
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET_PRINCIPAL || (firebaseConfigPrincipalRaw.projectId === 'gestaodeleadspro-d4230' ? 'gestaopro-761e1.firebasestorage.app' : firebaseConfigPrincipalRaw.storageBucket),
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN_PRINCIPAL || firebaseConfigPrincipalRaw.authDomain,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID_PRINCIPAL || firebaseConfigPrincipalRaw.projectId,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET_PRINCIPAL || firebaseConfigPrincipalRaw.storageBucket,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID_PRINCIPAL || firebaseConfigPrincipalRaw.messagingSenderId,
   appId: import.meta.env.VITE_FIREBASE_APP_ID_PRINCIPAL || firebaseConfigPrincipalRaw.appId,
 };
@@ -29,12 +29,6 @@ const activeConfig = savedServidor === 'comercial' ? firebaseConfigComercial : f
 
 const app = initializeApp(activeConfig);
 export const auth = getAuth(app);
-
-// Check if principal config is actually set (and not just a copy of comercial)
-const isComercialApiKey = activeConfig.apiKey === "AIzaSyBexxjzDAuNSgY90rlVqpz4AQZDE-QwSG4";
-if (savedServidor === 'principal' && isComercialApiKey) {
-  console.warn('⚠️ AVISO: O Servidor Principal está usando a Chave de API do Servidor Comercial. Os perfis do servidor principal podem não conseguir logar até que a configuração correta de gestaopro-761e1 (apiKey e appId) seja fornecida via variáveis de ambiente.');
-}
 
 // Enable robust native offline persistence for Android and PWA standalone apps
 export const db = typeof window !== 'undefined'
