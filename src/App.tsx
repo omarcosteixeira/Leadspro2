@@ -160,12 +160,14 @@ import {
   Ligacao,
   AnalysisScheme,
   PeriodAnalysis,
+  SolicitacaoManutencao
 } from "./types";
 import { OPENROUTER_MODELS } from "./ai-config";
 import CrescimentoAnualAdmin from "./components/CrescimentoAnualAdmin";
 import { ProfileModal } from "./components/ProfileModal";
 import { PublicRegistrationForm } from "./components/PublicRegistrationForm";
 import { PublicInsumoForm } from "./components/PublicInsumoForm";
+import { PublicMaintenanceForm } from "./components/PublicMaintenanceForm";
 import { PublicPedidoCursoForm } from "./components/PublicPedidoCursoForm";
 import { MessageTemplateModal } from "./components/MessageTemplateModal";
 import { CursosDisponiveisView } from "./components/CursosDisponiveisView";
@@ -3906,6 +3908,7 @@ export default function App() {
   const [bases, setBases] = useState<BaseEntry[]>([]);
   const [gap, setGap] = useState<GapEntry[]>([]);
   const [isencoes, setIsencoes] = useState<IsencaoEntry[]>([]);
+  const [solicitacoesManutencao, setSolicitacoesManutencao] = useState<SolicitacaoManutencao[]>([]);
   const [fiesProuni, setFiesProuni] = useState<FiesProuniEntry[]>([]);
   const [fiesProuniVagas, setFiesProuniVagas] = useState<FiesProuniVaga[]>([]);
   const [campanhas, setCampanhas] = useState<Campanha[]>([]);
@@ -4963,6 +4966,7 @@ export default function App() {
     }
 
     let unsubIsencoes = () => {};
+    let unsubSolicitacoesManutencao = () => {};
     if (profile && VIEW_PERMISSIONS.isencoes.includes(profile.role)) {
       const isRestricted =
         profile.role !== ROLES.ADMIN_MASTER &&
@@ -4993,6 +4997,17 @@ export default function App() {
         },
         (err) =>
           handleFirestoreError(err, OperationType.LIST, COLLECTIONS.ISENCOES),
+      );
+
+      unsubSolicitacoesManutencao = onSnapshot(
+        collection(db, COLLECTIONS.SOLICITACOES_MANUTENCAO),
+        (snap) => {
+          setSolicitacoesManutencao(
+            snap.docs.map((d) => ({ id: d.id, ...d.data() }) as SolicitacaoManutencao),
+          );
+        },
+        (err) =>
+          handleFirestoreError(err, OperationType.LIST, COLLECTIONS.SOLICITACOES_MANUTENCAO),
       );
     }
 
@@ -5594,6 +5609,7 @@ export default function App() {
       unsubBases();
       unsubGap();
       unsubIsencoes();
+      unsubSolicitacoesManutencao();
       unsubPedidosCursos();
       unsubFiesProuni();
       unsubFiesProuniVagas();
@@ -5794,6 +5810,23 @@ export default function App() {
           )}
         </AnimatePresence>
         <PublicInsumoForm onToast={showToast} />
+      </div>
+    );
+  }
+
+  if (currentView === "manutencao-publica") {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col justify-between">
+        <AnimatePresence>
+          {toast && (
+            <Toast
+              message={toast.message}
+              type={toast.type}
+              onClose={() => setToast(null)}
+            />
+          )}
+        </AnimatePresence>
+        <PublicMaintenanceForm />
       </div>
     );
   }
@@ -6264,6 +6297,7 @@ export default function App() {
                   isencoes={isencoes}
                   metaDia={metaDia}
                   ligacoes={ligacoes}
+                  solicitacoesManutencao={solicitacoesManutencao}
                   analysisSchemes={analysisSchemes}
                   profile={profile!}
                   onToast={showToast}
@@ -6386,6 +6420,7 @@ export default function App() {
                 <SolicitacoesManutencaoView
                   profile={profile}
                   onToast={showToast}
+                  users={users}
                 />
               )}
               {currentView === "controleInsumos" && (
@@ -7863,6 +7898,84 @@ function DashboardView({
           )}
         </div>
       )}
+
+      {(() => {
+        const todayDateObj = new Date(today + "T12:00:00Z");
+        const dayOfWeek = todayDateObj.getUTCDay();
+        const startOfWeek = new Date(todayDateObj);
+        startOfWeek.setUTCDate(todayDateObj.getUTCDate() - dayOfWeek);
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setUTCDate(startOfWeek.getUTCDate() + 6);
+        const startOfWeekStr = startOfWeek.toISOString().split("T")[0];
+        const endOfWeekStr = endOfWeek.toISOString().split("T")[0];
+
+        const thisWeekMetas = metaDia.filter(m => m.data >= startOfWeekStr && m.data <= endOfWeekStr);
+        if (thisWeekMetas.length === 0) return null;
+
+        const weekTotYTD = thisWeekMetas.reduce((acc, item) => acc + item.ytdPresencial + item.ytdSemipresencial + item.ytdDigital + (item.ytdTecnico || 0) + (item.ytdPosGraduacao || 0), 0);
+        const weekTotReal = thisWeekMetas.reduce((acc, item) => acc + item.realizadoPresencial + item.realizadoSemipresencial + item.realizadoDigital + (item.realizadoTecnico || 0) + (item.realizadoPosGraduacao || 0), 0);
+        const weekTotAA = thisWeekMetas.reduce((acc, item) => acc + item.aaPresencial + item.aaSemipresencial + item.aaDigital + (item.aaTecnico || 0) + (item.aaPosGraduacao || 0), 0);
+
+        let statusText = "Abaixo da Meta";
+        let statusColor = "bg-rose-50 text-rose-600 border-rose-100";
+        if (weekTotYTD > 0 && weekTotReal > weekTotYTD) {
+          statusText = "Meta Superada!";
+          statusColor = "bg-emerald-50 text-emerald-600 border-emerald-100";
+        } else if (weekTotYTD > 0 && weekTotReal === weekTotYTD) {
+          statusText = "Meta Atingida";
+          statusColor = "bg-blue-50 text-blue-600 border-blue-100";
+        }
+
+        return (
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4 mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+              <div>
+                <div className="flex items-center space-x-2 text-slate-900">
+                  <Target size={20} className="text-indigo-600" />
+                  <h3 className="text-lg font-bold">
+                    Acompanhamento de Meta Semanal
+                  </h3>
+                </div>
+                <p className="text-xs text-slate-400 font-medium mt-1">
+                  Semana: <span className="font-bold">{new Date(startOfWeekStr + "T12:00:00Z").toLocaleDateString("pt-BR")}</span> a <span className="font-bold">{new Date(endOfWeekStr + "T12:00:00Z").toLocaleDateString("pt-BR")}</span>
+                </p>
+              </div>
+              <span className={cn("px-3 py-1.5 rounded-full text-xs font-bold border mt-2 sm:mt-0", statusColor)}>
+                {statusText}
+              </span>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100/50">
+                <p className="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-1">Ano Anterior (Semana)</p>
+                <div className="flex items-end gap-2">
+                  <span className="text-2xl font-black text-slate-700">{weekTotAA}</span>
+                </div>
+              </div>
+              <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/50">
+                <p className="text-[10px] uppercase font-bold tracking-wider text-blue-600 mb-1">Meta (Semana)</p>
+                <div className="flex items-end gap-2">
+                  <span className="text-2xl font-black text-blue-700">{weekTotYTD}</span>
+                </div>
+              </div>
+              <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100/50">
+                <p className="text-[10px] uppercase font-bold tracking-wider text-emerald-600 mb-1">Realizado (Semana)</p>
+                <div className="flex items-end gap-2">
+                  <span className="text-2xl font-black text-emerald-700">{weekTotReal}</span>
+                </div>
+              </div>
+              <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-100/50">
+                <p className="text-[10px] uppercase font-bold tracking-wider text-amber-600 mb-1">Atingimento</p>
+                <div className="flex items-end gap-2">
+                  <span className="text-2xl font-black text-amber-700">
+                    {weekTotYTD > 0 ? ((weekTotReal / weekTotYTD) * 100).toFixed(1) : 0}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {activeMeta && (
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
@@ -20955,6 +21068,80 @@ function AdminView({
                   ? "Editar Registro de Meta Dia"
                   : "Adicionar Novo Registro de Meta Dia"}
               </h3>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const dataToExport = metaDia.map((m) => ({
+                      Data: m.data,
+                      "A.A Presencial": m.aaPresencial,
+                      "Meta Presencial": m.ytdPresencial,
+                      "Realizado Presencial": m.realizadoPresencial,
+                      "A.A Semipresencial": m.aaSemipresencial,
+                      "Meta Semipresencial": m.ytdSemipresencial,
+                      "Realizado Semipresencial": m.realizadoSemipresencial,
+                      "A.A Digital": m.aaDigital,
+                      "Meta Digital": m.ytdDigital,
+                      "Realizado Digital": m.realizadoDigital,
+                      "A.A Técnico": m.aaTecnico || 0,
+                      "Meta Técnico": m.ytdTecnico || 0,
+                      "Realizado Técnico": m.realizadoTecnico || 0,
+                      "A.A Pós-Graduação": m.aaPosGraduacao || 0,
+                      "Meta Pós-Graduação": m.ytdPosGraduacao || 0,
+                      "Realizado Pós-Graduação": m.realizadoPosGraduacao || 0,
+                    }));
+                    exportToExcel(dataToExport, "Meta_Dia_Admin");
+                  }}
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors"
+                >
+                  <Download size={14} /> Exportar
+                </button>
+                <label className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors">
+                  <Upload size={14} /> Importar
+                  <input
+                    type="file"
+                    accept=".xlsx, .xls"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      importFromExcel(file, async (data) => {
+                        let imported = 0;
+                        for (const row of data) {
+                          try {
+                            if (!row["Data"]) continue;
+                            const docData = {
+                              data: row["Data"],
+                              aaPresencial: Number(row["A.A Presencial"]) || 0,
+                              ytdPresencial: Number(row["Meta Presencial"]) || 0,
+                              realizadoPresencial: Number(row["Realizado Presencial"]) || 0,
+                              aaSemipresencial: Number(row["A.A Semipresencial"]) || 0,
+                              ytdSemipresencial: Number(row["Meta Semipresencial"]) || 0,
+                              realizadoSemipresencial: Number(row["Realizado Semipresencial"]) || 0,
+                              aaDigital: Number(row["A.A Digital"]) || 0,
+                              ytdDigital: Number(row["Meta Digital"]) || 0,
+                              realizadoDigital: Number(row["Realizado Digital"]) || 0,
+                              aaTecnico: Number(row["A.A Técnico"]) || 0,
+                              ytdTecnico: Number(row["Meta Técnico"]) || 0,
+                              realizadoTecnico: Number(row["Realizado Técnico"]) || 0,
+                              aaPosGraduacao: Number(row["A.A Pós-Graduação"]) || 0,
+                              ytdPosGraduacao: Number(row["Meta Pós-Graduação"]) || 0,
+                              realizadoPosGraduacao: Number(row["Realizado Pós-Graduação"]) || 0,
+                              createdAt: serverTimestamp(),
+                            };
+                            await addDoc(collection(db, COLLECTIONS.META_DIA), docData);
+                            imported++;
+                          } catch (err) {
+                            console.error(err);
+                          }
+                        }
+                        onToast(imported + " registros importados!", "success");
+                      });
+                      e.target.value = ""; // reset
+                    }}
+                  />
+                </label>
+              </div>
               {editingMetaDia && (
                 <button
                   onClick={() => {

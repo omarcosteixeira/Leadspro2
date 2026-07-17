@@ -589,6 +589,9 @@ export interface SolicitacaoManutencao {
   id: string;
   descricao: string;
   local: string;
+  predio?: string;
+  setor?: string;
+  matricula?: string;
   status: 'Pendente' | 'Aprovado' | 'Rejeitado' | 'Em Andamento' | 'Concluído';
   solicitanteId: string;
   solicitanteNome: string;

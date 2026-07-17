@@ -21,7 +21,9 @@ import {
   Search,
   History as HistoryIcon,
   ChevronUp,
-  ChevronDown
+  ChevronDown, Filter,
+  Wrench,
+  AlertTriangle
 } from "lucide-react";
 import {
   BarChart,
@@ -52,7 +54,8 @@ import {
   PedidoCursoEntry,
   MetaDia,
   Ligacao,
-  AnalysisScheme
+  AnalysisScheme,
+  SolicitacaoManutencao
 } from "../types";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
@@ -95,6 +98,7 @@ interface RelatoriosViewProps {
   metaDia?: MetaDia[];
   ligacoes?: Ligacao[];
   analysisSchemes?: AnalysisScheme[];
+  solicitacoesManutencao?: SolicitacaoManutencao[];
   profile: UserProfile;
   onToast: (m: string, t?: "success" | "error") => void;
 }
@@ -113,14 +117,17 @@ export function RelatoriosView({
   metaDia = [],
   ligacoes = [],
   analysisSchemes = [],
+  solicitacoesManutencao = [],
   profile,
   onToast
 }: RelatoriosViewProps) {
   const [activeTab, setActiveTab] = useState<
-    "historico" | "bases" | "fiesProuni" | "planoAcao" | "empresas" | "insumos" | "isencoes" | "pedidos_cursos" | "metaDia" | "ligacoes" | "crescimento"
+    "historico" | "bases" | "fiesProuni" | "planoAcao" | "empresas" | "insumos" | "isencoes" | "pedidos_cursos" | "metaDia" | "ligacoes" | "crescimento" | "manutencao"
   >("historico");
 
   const dashboardRef = useRef<HTMLDivElement>(null);
+  const [metaDiaDataInicio, setMetaDiaDataInicio] = useState("");
+  const [metaDiaDataFim, setMetaDiaDataFim] = useState("");
   const [isExporting, setIsExporting] = useState(false);
 
   const exportToPDF = async () => {
@@ -463,8 +470,17 @@ export function RelatoriosView({
     const weekly = reduceMeta(metaDia.filter(m => m.data >= oneWeekAgo));
     const monthly = reduceMeta(metaDia.filter(m => m.data >= oneMonthAgo));
 
-    return { allTime, weekly, monthly };
-  }, [metaDia]);
+    let filteredForCustom = metaDia;
+    if (metaDiaDataInicio) {
+      filteredForCustom = filteredForCustom.filter(m => m.data >= metaDiaDataInicio);
+    }
+    if (metaDiaDataFim) {
+      filteredForCustom = filteredForCustom.filter(m => m.data <= metaDiaDataFim);
+    }
+    const custom = reduceMeta(filteredForCustom);
+
+    return { allTime, weekly, monthly, custom };
+  }, [metaDia, metaDiaDataInicio, metaDiaDataFim]);
 
   // --- Pedidos de Cursos Stats ---
   const pedidosCursosStats = useMemo(() => {
@@ -489,6 +505,36 @@ export function RelatoriosView({
 
     return { total, byCurso };
   }, [pedidosCursos]);
+
+  const manutencaoStats = useMemo(() => {
+    const total = solicitacoesManutencao.length;
+    const pendente = solicitacoesManutencao.filter(s => s.status === 'Pendente').length;
+    const andamento = solicitacoesManutencao.filter(s => s.status === 'Em Andamento').length;
+    const concluido = solicitacoesManutencao.filter(s => s.status === 'Concluído').length;
+
+    const byStatus = [
+      { name: 'Pendente', count: pendente, percentage: total > 0 ? ((pendente / total) * 100).toFixed(1) : "0" },
+      { name: 'Em Andamento', count: andamento, percentage: total > 0 ? ((andamento / total) * 100).toFixed(1) : "0" },
+      { name: 'Concluído', count: concluido, percentage: total > 0 ? ((concluido / total) * 100).toFixed(1) : "0" },
+    ];
+
+    const demandCounts: Record<string, number> = {};
+    solicitacoesManutencao.forEach(s => {
+      const key = `${s.predio || "N/A"} - ${s.local || "N/A"}`;
+      demandCounts[key] = (demandCounts[key] || 0) + 1;
+    });
+
+    const topDemands = Object.entries(demandCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, count]) => ({
+        name,
+        count,
+        percentage: total > 0 ? ((count / total) * 100).toFixed(1) : "0"
+      }));
+
+    return { total, pendente, andamento, concluido, byStatus, topDemands };
+  }, [solicitacoesManutencao]);
 
   // --- Ligações Stats ---
   const [ligacoesDataInicio, setLigacoesDataInicio] = useState("");
@@ -667,6 +713,7 @@ export function RelatoriosView({
           { id: "isencoes", label: "Isenções", icon: FileText },
           { id: "pedidos_cursos", label: "Pedidos de Cursos", icon: UserPlus },
           { id: "ligacoes", label: "Ligações", icon: Phone },
+          { id: "manutencao", label: "Manutenção", icon: Wrench },
           { id: "metaDia", label: "Meta Dia", icon: Target },
           { id: "crescimento", label: "Crescimento", icon: TrendingUp },
         ].map((tab) => (
@@ -699,6 +746,7 @@ export function RelatoriosView({
             {activeTab === "isencoes" && <FileText className="text-blue-600" />}
             {activeTab === "pedidos_cursos" && <UserPlus className="text-blue-600" />}
             {activeTab === "ligacoes" && <Phone className="text-blue-600" />}
+            {activeTab === "manutencao" && <Wrench className="text-blue-600" />}
             {activeTab === "metaDia" && <Target className="text-blue-600" />}
             Dashboard: {activeTab === "historico" ? "Histórico de Leads" : 
                         activeTab === "bases" ? "Bases de Candidatos" :
@@ -708,10 +756,26 @@ export function RelatoriosView({
                         activeTab === "insumos" ? "Controle de Insumos" : 
                         activeTab === "isencoes" ? "Acompanhamento de Isenções" : 
                         activeTab === "ligacoes" ? "Controle de Ligações" :
+                        activeTab === "manutencao" ? "Gestão de Manutenção" :
                         activeTab === "metaDia" ? "Meta Dia" : "Pedidos de Cursos"}
           </h3>
           <span className="text-xs font-mono text-slate-400">Gerado em: {new Date().toLocaleString("pt-BR")}</span>
         </div>
+
+        {activeTab === "manutencao" && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard title="Total Solicitado" value={manutencaoStats.total} icon={Wrench} color="bg-slate-500" />
+              <StatCard title="Pendentes" value={manutencaoStats.pendente} icon={Clock} color="bg-amber-500" />
+              <StatCard title="Em Andamento" value={manutencaoStats.andamento} icon={AlertTriangle} color="bg-orange-500" />
+              <StatCard title="Concluídos" value={manutencaoStats.concluido} icon={CheckCircle2} color="bg-green-500" />
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ChartSection title="Status das Solicitações" data={manutencaoStats.byStatus} />
+              <ChartSection title="Top 5 Maiores Demandas (Local)" data={manutencaoStats.topDemands} />
+            </div>
+          </div>
+        )}
 
         {activeTab === "historico" && (
           <div className="space-y-6">
@@ -1187,7 +1251,40 @@ export function RelatoriosView({
 
         {activeTab === "metaDia" && (
           <div className="space-y-12">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-6">
+              <div className="flex flex-col md:flex-row gap-4 items-center">
+                <div className="flex items-center gap-2">
+                  <Filter size={18} className="text-slate-400" />
+                  <span className="text-sm font-bold text-slate-700">Filtro Customizado</span>
+                </div>
+                <div className="flex items-center gap-2 flex-1">
+                  <input
+                    type="date"
+                    value={metaDiaDataInicio}
+                    onChange={e => setMetaDiaDataInicio(e.target.value)}
+                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none flex-1"
+                  />
+                  <span className="text-slate-400">até</span>
+                  <input
+                    type="date"
+                    value={metaDiaDataFim}
+                    onChange={e => setMetaDiaDataFim(e.target.value)}
+                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none flex-1"
+                  />
+                </div>
+                {(metaDiaDataInicio || metaDiaDataFim) && (
+                  <button
+                    onClick={() => { setMetaDiaDataInicio(""); setMetaDiaDataFim(""); }}
+                    className="px-4 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+                  >
+                    Limpar
+                  </button>
+                )}
+              </div>
+            </div>
+
             {[
+              ...(metaDiaDataInicio || metaDiaDataFim ? [{ title: "Personalizado", stats: metaDiaStats.custom }] : []),
               { title: "Geral (Todo o Período)", stats: metaDiaStats.allTime },
               { title: "Mensal (Últimos 30 Dias)", stats: metaDiaStats.monthly },
               { title: "Semanal (Últimos 7 Dias)", stats: metaDiaStats.weekly }
