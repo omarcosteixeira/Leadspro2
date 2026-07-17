@@ -249,6 +249,7 @@ export interface LinkUtil {
   id: string;
   nome: string;
   url: string;
+  local?: string;
 }
 
 export interface PeriodoCaptacao {
@@ -299,6 +300,7 @@ export interface WhatsAppMessage {
 export interface Aviso {
   id: string;
   url: string;
+  local?: string;
   titulo?: string;
   descricao?: string;
   createdAt: any;
@@ -392,6 +394,7 @@ export interface QgLigacao {
 export interface BotConfig {
   id?: string;
   url: string;
+  local?: string;
   active: boolean;
   trainingContext?: string;
   botNames?: Record<string, string>;

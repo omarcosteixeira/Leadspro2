@@ -64,6 +64,8 @@ import {
   Megaphone,
   Sun,
   Edit2,
+  Edit,
+  Save,
   MapPin,
   Lock,
   Unlock,
@@ -7618,6 +7620,7 @@ function DashboardView({
   users: UserProfile[];
 }) {
   const [isCustomizing, setIsCustomizing] = useState(false);
+  const [linksSearchTerm, setLinksSearchTerm] = useState("");
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallGuide, setShowInstallGuide] = useState(false);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
@@ -8705,11 +8708,30 @@ function DashboardView({
 
       {widgets.links && (
         <section>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
             <h3 className="text-xl font-bold text-slate-900">Links Úteis</h3>
+            <div className="relative w-full sm:w-72">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                <Search size={18} />
+              </span>
+              <input
+                type="text"
+                placeholder="Buscar links..."
+                value={linksSearchTerm}
+                onChange={(e) => setLinksSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+              />
+            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {links.map((link) => (
+            {links
+              .filter(link => 
+                !linksSearchTerm || 
+                link.nome.toLowerCase().includes(linksSearchTerm.toLowerCase()) || 
+                link.url.toLowerCase().includes(linksSearchTerm.toLowerCase()) || 
+                (link.local && link.local.toLowerCase().includes(linksSearchTerm.toLowerCase()))
+              )
+              .map((link) => (
               <a
                 key={link.id}
                 href={link.url}
@@ -8717,12 +8739,19 @@ function DashboardView({
                 rel="noopener noreferrer"
                 className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center space-x-3 hover:border-blue-200 hover:bg-blue-50/30 transition-all group"
               >
-                <div className="p-2 bg-blue-100 text-blue-600 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-all">
+                <div className="p-2 bg-blue-100 text-blue-600 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-all shrink-0">
                   <ExternalLink size={18} />
                 </div>
-                <span className="font-bold text-slate-700 truncate">
-                  {link.nome}
-                </span>
+                <div className="flex flex-col overflow-hidden">
+                  <span className="font-bold text-slate-700 truncate">
+                    {link.nome}
+                  </span>
+                  {link.local && (
+                    <span className="text-[10px] text-slate-400 font-medium truncate uppercase tracking-wider">
+                      {link.local}
+                    </span>
+                  )}
+                </div>
               </a>
             ))}
             {links.length === 0 && (
@@ -19757,7 +19786,8 @@ function AdminView({
     }
   };
 
-  const [newLink, setNewLink] = useState({ nome: "", url: "" });
+  const [newLink, setNewLink] = useState({ nome: "", url: "", local: "" });
+  const [editingLink, setEditingLink] = useState<LinkUtil | null>(null);
   const [newPlanner, setNewPlanner] = useState({
     atendenteName: "",
     baseName: "",
@@ -19974,9 +20004,15 @@ function AdminView({
   const handleAddLink = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await addDoc(collection(db, COLLECTIONS.LINKS), newLink);
-      onToast("Link adicionado!");
-      setNewLink({ nome: "", url: "" });
+      if (editingLink) {
+        await updateDoc(doc(db, COLLECTIONS.LINKS, editingLink.id), newLink);
+        onToast("Link atualizado!");
+        setEditingLink(null);
+      } else {
+        await addDoc(collection(db, COLLECTIONS.LINKS), newLink);
+        onToast("Link adicionado!");
+      }
+      setNewLink({ nome: "", url: "", local: "" });
     } catch (err: any) {
       onToast(err.message, "error");
     }
@@ -24159,8 +24195,21 @@ function AdminView({
 
       {activeTab === "links" && (
         <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 max-w-2xl mx-auto">
-          <h3 className="text-xl font-bold text-slate-900 mb-4">Links Úteis</h3>
-          <form onSubmit={handleAddLink} className="flex gap-2 mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold text-slate-900">Links Úteis</h3>
+            {editingLink && (
+              <button
+                onClick={() => {
+                  setEditingLink(null);
+                  setNewLink({ nome: "", url: "", local: "" });
+                }}
+                className="text-slate-400 hover:text-slate-600 text-sm font-bold transition-colors"
+              >
+                Cancelar Edição
+              </button>
+            )}
+          </div>
+          <form onSubmit={handleAddLink} className="flex flex-col sm:flex-row gap-2 mb-6">
             <input
               placeholder="Nome"
               required
@@ -24175,31 +24224,55 @@ function AdminView({
               onChange={(e) => setNewLink({ ...newLink, url: e.target.value })}
               className="flex-1 px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
             />
+            <input
+              placeholder="Local (Opcional)"
+              value={newLink.local || ""}
+              onChange={(e) => setNewLink({ ...newLink, local: e.target.value })}
+              className="flex-1 px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+            />
             <button
               type="submit"
-              className="bg-blue-600 text-white p-2 rounded-xl hover:bg-blue-700 transition-all"
+              className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-all font-bold flex items-center justify-center gap-2"
             >
-              <Plus size={20} />
+              {editingLink ? <Save size={20} /> : <Plus size={20} />}
             </button>
           </form>
           <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
             {links.map((l) => (
               <div
                 key={l.id}
-                className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100"
+                className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 group"
               >
-                <span className="text-sm font-bold text-slate-700">
-                  {l.nome}
-                </span>
-                <button
-                  onClick={async () => {
-                    await deleteDoc(doc(db, COLLECTIONS.LINKS, l.id));
-                    onToast("Link removido.");
-                  }}
-                  className="text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-all"
-                >
-                  <Trash2 size={18} />
-                </button>
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold text-slate-700">
+                    {l.nome}
+                  </span>
+                  {l.local && (
+                    <span className="text-xs text-slate-400 font-medium uppercase mt-1">
+                      {l.local}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => {
+                      setEditingLink(l);
+                      setNewLink({ nome: l.nome, url: l.url, local: l.local || "" });
+                    }}
+                    className="text-slate-400 hover:text-blue-500 hover:bg-blue-50 p-2 rounded-lg transition-all"
+                  >
+                    <Edit size={18} />
+                  </button>
+                  <button
+                    onClick={async () => {
+                      await deleteDoc(doc(db, COLLECTIONS.LINKS, l.id));
+                      onToast("Link removido.");
+                    }}
+                    className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-all"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
