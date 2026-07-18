@@ -53,7 +53,56 @@ export default function ControleLigacoesView({
 }: ControleLigacoesViewProps) {
   const [sourceType, setSourceType] = useState<"Base" | "Lead" | "FiesProuni" | "Gap" | null>(null);
   const [selectedSourceId, setSelectedSourceId] = useState<string>("");
+  const [selectedCurso, setSelectedCurso] = useState<string>("");
+  const [selectedMetodologia, setSelectedMetodologia] = useState<string>("");
   const [currentCandidate, setCurrentCandidate] = useState<Lead | BaseEntry | FiesProuniEntry | GapEntry | null>(null);
+
+  const availableCount = useMemo(() => {
+    if (!sourceType) return 0;
+    if ((sourceType === "Base" || sourceType === "Lead") && !selectedSourceId) return 0;
+
+    let candidates: (Lead | BaseEntry | FiesProuniEntry | GapEntry)[] = [];
+    if (sourceType === "Base") {
+      candidates = bases.filter(b => {
+        const matchesBase = b.nomeBase === selectedSourceId;
+        const matchesCurso = !selectedCurso || b.curso === selectedCurso;
+        const matchesMetodologia = !selectedMetodologia || b.metodologia === selectedMetodologia;
+        return matchesBase && matchesCurso && matchesMetodologia;
+      });
+    } else if (sourceType === "Lead") {
+      candidates = leads.filter(l => l.acao === selectedSourceId);
+    } else if (sourceType === "FiesProuni") {
+      candidates = fiesProuni.filter(f => f.docsEntreguesStatus !== "Sim" && f.status !== "Convertido");
+    } else if (sourceType === "Gap") {
+      candidates = gap;
+    }
+
+    // Filter out converted and called today
+    const filtered = candidates.filter(c => {
+      const status = (c as any).status;
+      return status !== 'Convertido' && !(c as any).converted;
+    });
+
+    const today = new Date().toISOString().split('T')[0];
+    const available = filtered.filter(c => {
+      const lastCall = ligacoes
+        .filter(l => l.candidatoId === c.id)
+        .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))[0];
+      
+      if (!lastCall || !lastCall.createdAt) return true;
+      const callDate = new Date(lastCall.createdAt.seconds * 1000).toISOString().split('T')[0];
+      return callDate !== today;
+    });
+
+    return available.length;
+  }, [sourceType, selectedSourceId, selectedCurso, selectedMetodologia, bases, leads, fiesProuni, gap, ligacoes]);
+
+  const availableStatusText = useMemo(() => {
+    if (!sourceType) return "";
+    if ((sourceType === "Base" || sourceType === "Lead") && !selectedSourceId) return "";
+    return `${availableCount} candidato(s) disponível(eis) para ligar`;
+  }, [availableCount, sourceType, selectedSourceId]);
+
   const [isSaving, setIsSaving] = useState(false);
   const [observation, setObservation] = useState("");
   const [showObservation, setShowObservation] = useState(false);
@@ -71,6 +120,22 @@ export default function ControleLigacoesView({
     return Array.from(names).sort();
   }, [leads]);
 
+  // Get unique courses for the selected base
+  const cursoOptions = useMemo(() => {
+    if (sourceType !== "Base" || !selectedSourceId) return [];
+    const filtered = bases.filter(b => b.nomeBase === selectedSourceId);
+    const names = new Set(filtered.map(b => b.curso).filter(Boolean));
+    return Array.from(names).sort();
+  }, [bases, sourceType, selectedSourceId]);
+
+  // Get unique methodologies for the selected base
+  const metodologiaOptions = useMemo(() => {
+    if (sourceType !== "Base" || !selectedSourceId) return [];
+    const filtered = bases.filter(b => b.nomeBase === selectedSourceId);
+    const names = new Set(filtered.map(b => b.metodologia).filter(Boolean));
+    return Array.from(names).sort();
+  }, [bases, sourceType, selectedSourceId]);
+
   const handleStartCall = (ignoreId?: string | React.MouseEvent) => {
     if ((sourceType === "Base" || sourceType === "Lead") && !selectedSourceId) {
       onToast("Selecione uma base ou ação para continuar.", "error");
@@ -79,7 +144,12 @@ export default function ControleLigacoesView({
 
     let candidates: (Lead | BaseEntry | FiesProuniEntry | GapEntry)[] = [];
     if (sourceType === "Base") {
-      candidates = bases.filter(b => b.nomeBase === selectedSourceId);
+      candidates = bases.filter(b => {
+        const matchesBase = b.nomeBase === selectedSourceId;
+        const matchesCurso = !selectedCurso || b.curso === selectedCurso;
+        const matchesMetodologia = !selectedMetodologia || b.metodologia === selectedMetodologia;
+        return matchesBase && matchesCurso && matchesMetodologia;
+      });
     } else if (sourceType === "Lead") {
       candidates = leads.filter(l => l.acao === selectedSourceId);
     } else if (sourceType === "FiesProuni") {
@@ -291,7 +361,11 @@ export default function ControleLigacoesView({
                     </label>
                     <select
                       value={selectedSourceId}
-                      onChange={(e) => setSelectedSourceId(e.target.value)}
+                      onChange={(e) => {
+                        setSelectedSourceId(e.target.value);
+                        setSelectedCurso("");
+                        setSelectedMetodologia("");
+                      }}
                       className="w-full p-4 rounded-xl border-2 border-slate-100 focus:border-blue-500 transition-all outline-none bg-slate-50 font-medium"
                     >
                       <option value="">Selecione...</option>
@@ -305,12 +379,54 @@ export default function ControleLigacoesView({
                         ))
                       )}
                     </select>
+
+                    {sourceType === "Base" && selectedSourceId && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Curso (Opcional)
+                          </label>
+                          <select
+                            value={selectedCurso}
+                            onChange={(e) => setSelectedCurso(e.target.value)}
+                            className="w-full p-3 rounded-xl border-2 border-slate-100 focus:border-blue-500 transition-all outline-none bg-slate-50 text-sm font-medium"
+                          >
+                            <option value="">Todos os Cursos</option>
+                            {cursoOptions.map(curso => (
+                              <option key={curso} value={curso}>{curso}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Metodologia (Opcional)
+                          </label>
+                          <select
+                            value={selectedMetodologia}
+                            onChange={(e) => setSelectedMetodologia(e.target.value)}
+                            className="w-full p-3 rounded-xl border-2 border-slate-100 focus:border-blue-500 transition-all outline-none bg-slate-50 text-sm font-medium"
+                          >
+                            <option value="">Todas as Metodologias</option>
+                            {metodologiaOptions.map(meto => (
+                              <option key={meto} value={meto}>{meto}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    )}
                   </>
                 )}
 
+                {availableStatusText && (
+                  <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl text-blue-700 text-sm font-bold text-center">
+                    {availableStatusText}
+                  </div>
+                )}
+
                 <button
+                  disabled={availableCount === 0}
                   onClick={handleStartCall}
-                  className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
+                  className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <RefreshCw size={20} />
                   Iniciar Nova Ligação
