@@ -2195,7 +2195,8 @@ function FiesProuniView({
     if (
       profile.role !== ROLES.ADMIN_MASTER &&
       profile.role !== ROLES.GESTOR_COMERCIAL &&
-      profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL
+      profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL &&
+      profile.role !== ROLES.SSA
     ) {
       if (profile.unidade && item.unidade && item.unidade !== profile.unidade) {
         return false;
@@ -2271,7 +2272,8 @@ function FiesProuniView({
     if (
       profile.role !== ROLES.ADMIN_MASTER &&
       profile.role !== ROLES.GESTOR_COMERCIAL &&
-      profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL
+      profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL &&
+      profile.role !== ROLES.SSA
     ) {
       if (profile.unidade && item.unidade && item.unidade !== profile.unidade) {
         return false;
@@ -5065,6 +5067,7 @@ export default function App() {
         profile.role !== ROLES.GESTOR_COMERCIAL &&
         profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL &&
         profile.role !== ROLES.LIDER_FDV &&
+        profile.role !== ROLES.SSA &&
         !["canaldonutri@gmail.com", "marcos.teixeira@estacio.br"].includes(
           user?.email || "",
         );
