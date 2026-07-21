@@ -541,6 +541,7 @@ export function RelatoriosView({
   const [ligacoesDataFim, setLigacoesDataFim] = useState("");
   const [ligacoesFiltroAtendente, setLigacoesFiltroAtendente] = useState("");
   const [ligacoesFiltroOrigem, setLigacoesFiltroOrigem] = useState("");
+  const [ligacoesFiltroStatus, setLigacoesFiltroStatus] = useState("");
   const [ligacoesSearchTerm, setLigacoesSearchTerm] = useState("");
 
   const filteredLigacoes = useMemo(() => {
@@ -550,6 +551,7 @@ export function RelatoriosView({
       if (ligacoesDataFim && callDate > ligacoesDataFim) return false;
       if (ligacoesFiltroAtendente && l.atendenteId !== ligacoesFiltroAtendente) return false;
       if (ligacoesFiltroOrigem && l.origemId !== ligacoesFiltroOrigem) return false;
+      if (ligacoesFiltroStatus && l.status !== ligacoesFiltroStatus) return false;
       
       if (ligacoesSearchTerm) {
         const search = ligacoesSearchTerm.toLowerCase();
@@ -561,7 +563,7 @@ export function RelatoriosView({
       
       return true;
     });
-  }, [ligacoes, ligacoesDataInicio, ligacoesDataFim, ligacoesFiltroAtendente, ligacoesFiltroOrigem, ligacoesSearchTerm]);
+  }, [ligacoes, ligacoesDataInicio, ligacoesDataFim, ligacoesFiltroAtendente, ligacoesFiltroOrigem, ligacoesFiltroStatus, ligacoesSearchTerm]);
 
   const ligacoesStats = useMemo(() => {
     const total = filteredLigacoes.length;
@@ -1057,6 +1059,16 @@ export function RelatoriosView({
                   {origensUnicas.map(o => (
                     <option key={o.id} value={o.id}>{o.name}</option>
                   ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1">Status</label>
+                <select value={ligacoesFiltroStatus} onChange={e => setLigacoesFiltroStatus(e.target.value)} className="w-full text-sm border-slate-200 rounded-lg p-2">
+                  <option value="">Todos</option>
+                  <option value="Convertido">Convertido</option>
+                  <option value="Interesse">Interesse</option>
+                  <option value="Não atendeu">Não atendeu</option>
+                  <option value="Sem interesse">Sem interesse</option>
                 </select>
               </div>
             </div>

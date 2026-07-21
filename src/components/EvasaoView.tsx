@@ -58,6 +58,7 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
   const [modalidadeFilter, setModalidadeFilter] = useState("Todas");
   const [periodoFilter, setPeriodoFilter] = useState("Todos");
   const [tipoSolicitacaoFilter, setTipoSolicitacaoFilter] = useState("Todos");
+  const [statusFilter, setStatusFilter] = useState("Todos");
   const [dataInicioFilter, setDataInicioFilter] = useState("");
   const [dataFimFilter, setDataFimFilter] = useState("");
 
@@ -122,6 +123,13 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
     return Array.from(new Set(periodos)).sort();
   }, [data]);
 
+  const uniqueStatus = useMemo(() => {
+    const statuses = data
+      .map(item => item.status)
+      .filter((s): s is string => !!s);
+    return Array.from(new Set(statuses)).sort();
+  }, [data]);
+
   const filteredData = useMemo(() => {
     let filtered = data;
     
@@ -140,6 +148,10 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
 
     if (tipoSolicitacaoFilter !== "Todos") {
       filtered = filtered.filter(item => item.tipoSolicitacao === tipoSolicitacaoFilter);
+    }
+
+    if (statusFilter !== "Todos") {
+      filtered = filtered.filter(item => item.status === statusFilter);
     }
 
     if (dataInicioFilter) {
@@ -168,19 +180,19 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
     }
 
     return filtered.sort((a, b) => {
-      // Primary sort: atendimento date (YYYY-MM-DD)
-      const atendA = a.atendimento || "";
-      const atendB = b.atendimento || "";
+      // Primary sort: atendimento date (YYYY-MM-DD) + time (HH:mm)
+      const atendA = (a.atendimento || "") + " " + (a.horario || "");
+      const atendB = (b.atendimento || "") + " " + (b.horario || "");
       if (atendA !== atendB) {
-        return atendB.localeCompare(atendA);
+        return atendA.localeCompare(atendB);
       }
 
       // Secondary sort: createdAt
       const dateA = a.createdAt?.toDate?.() || new Date(0);
       const dateB = b.createdAt?.toDate?.() || new Date(0);
-      return dateB.getTime() - dateA.getTime();
+      return dateA.getTime() - dateB.getTime();
     });
-  }, [data, profile, modalidadeFilter, periodoFilter, tipoSolicitacaoFilter, searchTerm, dataInicioFilter, dataFimFilter]);
+  }, [data, profile, modalidadeFilter, periodoFilter, tipoSolicitacaoFilter, statusFilter, searchTerm, dataInicioFilter, dataFimFilter]);
 
   // Top 5 Cursos
   const topCursos = useMemo(() => {
@@ -674,6 +686,17 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
               <option value="Trancamento">Trancamento</option>
               <option value="Cancelamento">Cancelamento</option>
               <option value="Transferência externa">Transferência externa</option>
+            </select>
+            {/* Status Filter */}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+            >
+              <option value="Todos">Todos Status</option>
+              {uniqueStatus.map(s => (
+                <option key={s} value={s}>{s}</option>
+              ))}
             </select>
           </div>
         </div>
