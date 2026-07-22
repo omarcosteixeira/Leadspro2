@@ -5366,6 +5366,7 @@ export default function App() {
         ROLES.ADMIN_MASTER,
         ROLES.GESTOR_COMERCIAL,
         ROLES.GESTOR_COMERCIAL_COMERCIAL,
+        ROLES.FINANCEIRO,
       ].includes(profile.role);
 
       if (isRestricted) {
