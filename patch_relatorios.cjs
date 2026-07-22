@@ -1,83 +1,157 @@
 const fs = require('fs');
 let code = fs.readFileSync('src/components/RelatoriosView.tsx', 'utf8');
 
-// 1. Add state
-const stateAnchor = `  const [ligacoesFiltroAtendente, setLigacoesFiltroAtendente] = useState("");
-  const [ligacoesFiltroOrigem, setLigacoesFiltroOrigem] = useState("");
-  const [ligacoesSearchTerm, setLigacoesSearchTerm] = useState("");`;
-const stateReplacement = `  const [ligacoesFiltroAtendente, setLigacoesFiltroAtendente] = useState("");
-  const [ligacoesFiltroOrigem, setLigacoesFiltroOrigem] = useState("");
-  const [ligacoesFiltroStatus, setLigacoesFiltroStatus] = useState("");
-  const [ligacoesSearchTerm, setLigacoesSearchTerm] = useState("");`;
+const cardsAnchor = `<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                  <ModalidadeCard 
+                    title="B.U Presencial" 
+                    aa={section.stats.aaPresencial + section.stats.aaSemipresencial} 
+                    realizado={section.stats.realizadoPresencial + section.stats.realizadoSemipresencial} 
+                  />
+                  <ModalidadeCard 
+                    title="Presencial" 
+                    aa={section.stats.aaPresencial} 
+                    realizado={section.stats.realizadoPresencial} 
+                  />
+                  <ModalidadeCard 
+                    title="Semipresencial" 
+                    aa={section.stats.aaSemipresencial} 
+                    realizado={section.stats.realizadoSemipresencial} 
+                  />
+                  <ModalidadeCard 
+                    title="EAD (Digital)" 
+                    aa={section.stats.aaDigital} 
+                    realizado={section.stats.realizadoDigital} 
+                  />
+                  <ModalidadeCard 
+                    title="Curso Técnico" 
+                    aa={section.stats.aaTecnico} 
+                    realizado={section.stats.realizadoTecnico} 
+                  />
+                  <ModalidadeCard 
+                    title="Pós-Graduação" 
+                    aa={section.stats.aaPosGraduacao} 
+                    realizado={section.stats.realizadoPosGraduacao} 
+                  />
+                </div>`;
 
-if (code.includes(stateAnchor)) {
-  code = code.replace(stateAnchor, stateReplacement);
+const cardsReplacement = `<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                  <ModalidadeCard 
+                    title="B.U Presencial" 
+                    aa={section.stats.aaPresencial + section.stats.aaSemipresencial} 
+                    meta={section.stats.ytdPresencial + section.stats.ytdSemipresencial}
+                    realizado={section.stats.realizadoPresencial + section.stats.realizadoSemipresencial} 
+                  />
+                  <ModalidadeCard 
+                    title="Presencial" 
+                    aa={section.stats.aaPresencial} 
+                    meta={section.stats.ytdPresencial}
+                    realizado={section.stats.realizadoPresencial} 
+                  />
+                  <ModalidadeCard 
+                    title="Semipresencial" 
+                    aa={section.stats.aaSemipresencial} 
+                    meta={section.stats.ytdSemipresencial}
+                    realizado={section.stats.realizadoSemipresencial} 
+                  />
+                  <ModalidadeCard 
+                    title="EAD (Digital)" 
+                    aa={section.stats.aaDigital} 
+                    meta={section.stats.ytdDigital}
+                    realizado={section.stats.realizadoDigital} 
+                  />
+                  <ModalidadeCard 
+                    title="Curso Técnico" 
+                    aa={section.stats.aaTecnico} 
+                    meta={section.stats.ytdTecnico}
+                    realizado={section.stats.realizadoTecnico} 
+                  />
+                  <ModalidadeCard 
+                    title="Pós-Graduação" 
+                    aa={section.stats.aaPosGraduacao} 
+                    meta={section.stats.ytdPosGraduacao}
+                    realizado={section.stats.realizadoPosGraduacao} 
+                  />
+                </div>`;
+
+const componentAnchor = `const ModalidadeCard = ({ title, aa, realizado }: { title: string, aa: number, realizado: number }) => {
+  const percent = aa > 0 ? ((realizado / aa) * 100).toFixed(1) : 0;
+  return (
+    <div className="p-4 rounded-xl border border-slate-100 shadow-sm bg-white flex flex-col justify-between">
+      <div>
+        <h5 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3 leading-tight h-8">{title}</h5>
+        <div className="flex justify-between items-end">
+          <div>
+            <div className="text-[10px] text-slate-400 font-bold uppercase">Realizado</div>
+            <div className="text-xl font-black text-slate-800">{realizado}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-[10px] text-slate-400 font-bold uppercase">A.A</div>
+            <div className="text-sm font-bold text-slate-600">{aa}</div>
+          </div>
+        </div>
+      </div>
+      <div className="mt-3 pt-2 border-t border-slate-50 flex items-center justify-between">
+        <span className="text-[10px] font-bold text-slate-400 uppercase">Curva A.A</span>
+        <span className={cn("text-xs font-bold", realizado >= aa ? "text-emerald-600" : "text-rose-500")}>
+          {percent}%
+        </span>
+      </div>
+    </div>
+  );
+};`;
+
+const componentReplacement = `const ModalidadeCard = ({ title, aa, meta, realizado }: { title: string, aa: number, meta: number, realizado: number }) => {
+  const percentAa = aa > 0 ? ((realizado / aa) * 100).toFixed(1) : 0;
+  const percentMeta = meta > 0 ? ((realizado / meta) * 100).toFixed(1) : 0;
+  return (
+    <div className="p-4 rounded-xl border border-slate-100 shadow-sm bg-white flex flex-col justify-between">
+      <div>
+        <h5 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3 leading-tight h-8">{title}</h5>
+        <div className="flex justify-between items-end mb-2">
+          <div>
+            <div className="text-[10px] text-slate-400 font-bold uppercase">Realizado</div>
+            <div className="text-xl font-black text-slate-800">{realizado}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-[10px] text-slate-400 font-bold uppercase">Meta</div>
+            <div className="text-sm font-bold text-indigo-600">{meta}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-[10px] text-slate-400 font-bold uppercase">A.A</div>
+            <div className="text-sm font-bold text-slate-600">{aa}</div>
+          </div>
+        </div>
+      </div>
+      <div className="mt-2 pt-2 border-t border-slate-50 flex flex-col gap-1">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-bold text-slate-400 uppercase">Curva Meta</span>
+          <span className={cn("text-xs font-bold", Number(percentMeta) >= 100 ? "text-emerald-600" : "text-rose-500")}>
+            {percentMeta}%
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-bold text-slate-400 uppercase">Curva A.A</span>
+          <span className={cn("text-xs font-bold", Number(percentAa) >= 100 ? "text-emerald-600" : "text-rose-500")}>
+            {percentAa}%
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};`;
+
+if(code.includes(cardsAnchor)) {
+  code = code.replace(cardsAnchor, cardsReplacement);
+  console.log("Replaced cards");
 } else {
-  console.log("Could not find state anchor");
+  console.log("Could not find cardsAnchor");
 }
 
-// 2. Add filter logic
-const filterAnchor = `      if (ligacoesFiltroAtendente && l.atendenteId !== ligacoesFiltroAtendente) return false;
-      if (ligacoesFiltroOrigem && l.origemId !== ligacoesFiltroOrigem) return false;
-      
-      if (ligacoesSearchTerm) {`;
-const filterReplacement = `      if (ligacoesFiltroAtendente && l.atendenteId !== ligacoesFiltroAtendente) return false;
-      if (ligacoesFiltroOrigem && l.origemId !== ligacoesFiltroOrigem) return false;
-      if (ligacoesFiltroStatus && l.status !== ligacoesFiltroStatus) return false;
-      
-      if (ligacoesSearchTerm) {`;
-if (code.includes(filterAnchor)) {
-  code = code.replace(filterAnchor, filterReplacement);
+if(code.includes(componentAnchor)) {
+  code = code.replace(componentAnchor, componentReplacement);
+  console.log("Replaced component");
 } else {
-  console.log("Could not find filter anchor");
-}
-
-// 3. Update dependencies
-const depAnchor = `  }, [ligacoes, ligacoesDataInicio, ligacoesDataFim, ligacoesFiltroAtendente, ligacoesFiltroOrigem, ligacoesSearchTerm]);`;
-const depReplacement = `  }, [ligacoes, ligacoesDataInicio, ligacoesDataFim, ligacoesFiltroAtendente, ligacoesFiltroOrigem, ligacoesFiltroStatus, ligacoesSearchTerm]);`;
-if (code.includes(depAnchor)) {
-  code = code.replace(depAnchor, depReplacement);
-} else {
-  console.log("Could not find dep anchor");
-}
-
-// 4. Update UI
-const uiAnchor = `              <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">Base / Ação</label>
-                <select value={ligacoesFiltroOrigem} onChange={e => setLigacoesFiltroOrigem(e.target.value)} className="w-full text-sm border-slate-200 rounded-lg p-2">
-                  <option value="">Todas</option>
-                  {origensUnicas.map(o => (
-                    <option key={o.id} value={o.id}>{o.name}</option>
-                  ))}
-                </select>
-              </div>
-            </div>`;
-const uiReplacement = `              <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">Base / Ação</label>
-                <select value={ligacoesFiltroOrigem} onChange={e => setLigacoesFiltroOrigem(e.target.value)} className="w-full text-sm border-slate-200 rounded-lg p-2">
-                  <option value="">Todas</option>
-                  {origensUnicas.map(o => (
-                    <option key={o.id} value={o.id}>{o.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">Status</label>
-                <select value={ligacoesFiltroStatus} onChange={e => setLigacoesFiltroStatus(e.target.value)} className="w-full text-sm border-slate-200 rounded-lg p-2">
-                  <option value="">Todos</option>
-                  <option value="Convertido">Convertido</option>
-                  <option value="Interesse">Interesse</option>
-                  <option value="Não atendeu">Não atendeu</option>
-                  <option value="Sem interesse">Sem interesse</option>
-                </select>
-              </div>
-            </div>`;
-
-if (code.includes(uiAnchor)) {
-  code = code.replace(uiAnchor, uiReplacement);
-} else {
-  console.log("Could not find ui anchor");
+  console.log("Could not find componentAnchor");
 }
 
 fs.writeFileSync('src/components/RelatoriosView.tsx', code, 'utf8');
-console.log("Done");
