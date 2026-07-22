@@ -863,6 +863,42 @@ Retorne apenas o JSON puro.`;
     }
   });
 
+  app.post("/api/crm/sentiment", async (req, res) => {
+    try {
+      const { text } = req.body;
+      if (!text) {
+        return res.status(400).json({ success: false, error: "Texto é obrigatório." });
+      }
+
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        // Return default neutral if no API key
+        return res.json({ success: true, sentiment: "Neutro" });
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+      const prompt = `Analise o sentimento da seguinte mensagem de um cliente e responda APENAS com uma destas três palavras: Positivo, Negativo ou Neutro.\n\nMensagem: "${text}"\n\nSentimento:`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+      });
+
+      let sentiment = response.text?.trim() || "Neutro";
+      
+      // Normalize
+      const lower = sentiment.toLowerCase();
+      if (lower.includes("positivo")) sentiment = "Positivo";
+      else if (lower.includes("negativo")) sentiment = "Negativo";
+      else sentiment = "Neutro";
+
+      res.json({ success: true, sentiment });
+    } catch (error: any) {
+      console.error("Sentiment analysis error:", error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

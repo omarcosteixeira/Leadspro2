@@ -50,7 +50,7 @@ service cloud.firestore {
     function isTecnico() { return hasAnyRole(['Técnico']); }
 
     function isRestrictedRole(role) {
-      return !(role in ['Admin Master', 'Gestor Comercial', 'Gerente Comercial (Comercial)']);
+      return !(role in ['Admin Master', 'Gestor Comercial', 'Gerente Comercial (Comercial)', 'Financeiro']);
     }
 
     function canAccessUnit(unidade) {
@@ -115,8 +115,8 @@ service cloud.firestore {
     // ===============================================================
 
     match /artifacts/gestaodeleadspro-d4230/public/data/users/{userId} {
-      allow get: if isAuthenticated() && (userId == request.auth.uid || isMasterUser());
-      allow list: if isAuthenticated() && isMasterUser();
+      allow get: if isAuthenticated() && (userId == request.auth.uid || isMasterUser() || isComercial() || isFinanceiro());
+      allow list: if isAuthenticated() && (isMasterUser() || isComercial() || isFinanceiro());
       allow create: if isAuthenticated() && (userId == request.auth.uid || isMasterUser());
       allow update: if isAuthenticated() && (isMasterUser() || (userId == request.auth.uid && request.resource.data.role == resource.data.role));
       allow delete: if isMasterUser();
@@ -153,19 +153,19 @@ service cloud.firestore {
     }
 
     match /artifacts/gestaodeleadspro-d4230/public/data/fies_prouni/{entryId} {
-      allow get, list: if isAuthenticated() && (isMasterUser() || isComercial() || canAccessUnit(resource.data.unidade));
+      allow get, list: if isAuthenticated() && (isMasterUser() || isComercial() || isFinanceiro() || canAccessUnit(resource.data.unidade));
       allow create, update: if (isMasterUser() || isComercial() || isLider() || isSalaMatricula() || isSSA()) && (isMasterUser() || isComercial() || canAccessUnit(request.resource.data.unidade));
       allow delete: if isMasterUser() || isComercial() || isLider();
     }
 
     match /artifacts/gestaodeleadspro-d4230/public/data/fies_prouni_vagas/{entryId} {
-      allow get, list: if isAuthenticated() && (isMasterUser() || isComercial() || canAccessUnit(resource.data.unidade));
+      allow get, list: if isAuthenticated() && (isMasterUser() || isComercial() || isFinanceiro() || canAccessUnit(resource.data.unidade));
       allow create, update: if (isMasterUser() || isComercial() || isLider() || isSalaMatricula() || isSSA()) && (isMasterUser() || isComercial() || canAccessUnit(request.resource.data.unidade));
       allow delete: if isMasterUser() || isComercial() || isLider();
     }
 
     match /artifacts/gestaodeleadspro-d4230/public/data/calendario_acoes/{acaoId} {
-      allow get, list: if isAuthenticated() && (isMasterUser() || isComercial() || canAccessUnit(resource.data.unidade));
+      allow get, list: if isAuthenticated() && (isMasterUser() || isComercial() || isFinanceiro() || canAccessUnit(resource.data.unidade));
       allow create: if (isMasterUser() || isComercial() || isFinanceiro() || isLider() || isFDV() || isPromotor()) && isValidCalendarioAcao(request.resource.data) && (isMasterUser() || isComercial() || canAccessUnit(request.resource.data.unidade));
       allow update: if (isMasterUser() || isComercial() || isFinanceiro() || isLider() || isFDV() || isPromotor()) && isValidCalendarioAcao(request.resource.data) && 
         (isMasterUser() || isComercial() || (canAccessUnit(resource.data.unidade) && canAccessUnit(request.resource.data.unidade)));

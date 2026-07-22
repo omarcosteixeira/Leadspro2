@@ -90,6 +90,8 @@ export const COLLECTIONS = new Proxy({} as any, {
       CONTROLE_LIGACOES: `artifacts/${currentProjectId}/public/data/controle_ligacoes`,
       CRESCIMENTO_ANUAL: `artifacts/${currentProjectId}/public/data/crescimento_anual`,
       SOLICITACOES_MANUTENCAO: `artifacts/${currentProjectId}/public/data/solicitacoes_manutencao`,
+      CONVERSATIONS: `artifacts/${currentProjectId}/public/data/conversations`,
+      MESSAGES: `artifacts/${currentProjectId}/public/data/messages`,
     };
     return paths[prop];
   }

@@ -184,6 +184,7 @@ import { MultiSelect } from "./components/MultiSelect";
 import { EvasaoView } from "./components/EvasaoView";
 import NovasOportunidadesView from "./components/NovasOportunidadesView";
 import ControleLigacoesView from "./components/ControleLigacoesView";
+import CRMView from "./components/CRMView";
 
 // --- Helpers ---
 export const replaceMessageVariables = (
@@ -566,6 +567,10 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.LIDER_FDV,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
     ROLES.GESTOR_COMERCIAL,
+  ],
+  crm: [
+    ROLES.ADMIN_MASTER,
+    ROLES.LIDER_FDV,
   ],
   controlePagamentos: [
     ROLES.ADMIN_MASTER,
@@ -2193,7 +2198,7 @@ function FiesProuniView({
   const filteredData = data.filter((item) => {
     // Restrict visibility to entries from the same unit, unless admin/gestor
     if (
-      profile.role !== ROLES.ADMIN_MASTER &&
+      profile.role !== ROLES.ADMIN_MASTER && profile.role !== ROLES.FINANCEIRO &&
       profile.role !== ROLES.GESTOR_COMERCIAL &&
       profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL &&
       profile.role !== ROLES.SSA
@@ -2270,7 +2275,7 @@ function FiesProuniView({
 
   const filteredVagas = safeVagas.filter((item) => {
     if (
-      profile.role !== ROLES.ADMIN_MASTER &&
+      profile.role !== ROLES.ADMIN_MASTER && profile.role !== ROLES.FINANCEIRO &&
       profile.role !== ROLES.GESTOR_COMERCIAL &&
       profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL &&
       profile.role !== ROLES.SSA
@@ -4213,6 +4218,53 @@ export default function App() {
       });
       showToast("Mensagem enviada com sucesso pelo Bot ARGO'S!");
 
+      // Log to CRM
+      try {
+        let sentiment = "Neutro";
+        try {
+          const res = await fetch("/api/crm/sentiment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: message }),
+          });
+          const data = await res.json();
+          if (data.success && data.sentiment) {
+            sentiment = data.sentiment;
+          }
+        } catch (e) {
+          console.error("Error analyzing sentiment:", e);
+        }
+
+        const msgData = {
+          text: message,
+          senderId: profile?.uid || "system",
+          senderName: profile?.name || "System",
+          senderRole: profile?.role || "",
+          receiverPhone: rawPhone,
+          timestamp: serverTimestamp(),
+          type: "sent",
+          status: "sent",
+        };
+        await addDoc(collection(db, COLLECTIONS.MESSAGES), msgData);
+
+        // Update or Create conversation
+        await setDoc(
+          doc(db, COLLECTIONS.CONVERSATIONS, rawPhone),
+          {
+            contactPhone: rawPhone,
+            contactName: contactName || rawPhone,
+            lastMessage: message,
+            lastMessageTimestamp: serverTimestamp(),
+            unreadCount: 0,
+            unidade: profile?.unidade || "",
+            sentiment,
+          },
+          { merge: true },
+        );
+      } catch (err) {
+        console.error("Error logging message to CRM:", err);
+      }
+
       // Automatic Status Transition Logic upon message sent
       try {
         const phonesMatch = (p1?: string, p2?: string): boolean => {
@@ -4722,7 +4774,7 @@ export default function App() {
     let unsubUsers = () => {};
     if (user && profile) {
       const isRestricted =
-        profile.role !== ROLES.ADMIN_MASTER &&
+        profile.role !== ROLES.ADMIN_MASTER && profile.role !== ROLES.FINANCEIRO &&
         profile.role !== ROLES.GESTOR_COMERCIAL &&
         profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL &&
         profile.role !== ROLES.LIDER_FDV &&
@@ -4782,7 +4834,7 @@ export default function App() {
     if (profile) {
       let leadsQuery;
       const isRestricted =
-        profile.role !== ROLES.ADMIN_MASTER &&
+        profile.role !== ROLES.ADMIN_MASTER && profile.role !== ROLES.FINANCEIRO &&
         profile.role !== ROLES.GESTOR_COMERCIAL &&
         profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL &&
         profile.role !== ROLES.LIDER_FDV &&
@@ -4890,7 +4942,7 @@ export default function App() {
     let unsubBases = () => {};
     if (profile && VIEW_PERMISSIONS.bases.includes(profile.role)) {
       const isRestricted =
-        profile.role !== ROLES.ADMIN_MASTER &&
+        profile.role !== ROLES.ADMIN_MASTER && profile.role !== ROLES.FINANCEIRO &&
         profile.role !== ROLES.GESTOR_COMERCIAL &&
         profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL &&
         profile.role !== ROLES.LIDER_FDV &&
@@ -4941,7 +4993,7 @@ export default function App() {
     let unsubGap = () => {};
     if (profile && VIEW_PERMISSIONS.gap.includes(profile.role)) {
       const isRestricted =
-        profile.role !== ROLES.ADMIN_MASTER &&
+        profile.role !== ROLES.ADMIN_MASTER && profile.role !== ROLES.FINANCEIRO &&
         profile.role !== ROLES.GESTOR_COMERCIAL &&
         profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL &&
         profile.role !== ROLES.LIDER_FDV &&
@@ -4973,7 +5025,7 @@ export default function App() {
     let unsubSolicitacoesManutencao = () => {};
     if (profile && VIEW_PERMISSIONS.isencoes.includes(profile.role)) {
       const isRestricted =
-        profile.role !== ROLES.ADMIN_MASTER &&
+        profile.role !== ROLES.ADMIN_MASTER && profile.role !== ROLES.FINANCEIRO &&
         profile.role !== ROLES.GESTOR_COMERCIAL &&
         profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL &&
         profile.role !== ROLES.LIDER_FDV &&
@@ -5022,7 +5074,7 @@ export default function App() {
         VIEW_PERMISSIONS.relatorios.includes(profile.role))
     ) {
       const isRestricted =
-        profile.role !== ROLES.ADMIN_MASTER &&
+        profile.role !== ROLES.ADMIN_MASTER && profile.role !== ROLES.FINANCEIRO &&
         profile.role !== ROLES.GESTOR_COMERCIAL &&
         profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL &&
         profile.role !== ROLES.LIDER_FDV &&
@@ -5063,7 +5115,7 @@ export default function App() {
     let unsubFiesProuniVagas = () => {};
     if (profile && VIEW_PERMISSIONS.fiesProuni.includes(profile.role)) {
       const isRestricted =
-        profile.role !== ROLES.ADMIN_MASTER &&
+        profile.role !== ROLES.ADMIN_MASTER && profile.role !== ROLES.FINANCEIRO &&
         profile.role !== ROLES.GESTOR_COMERCIAL &&
         profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL &&
         profile.role !== ROLES.LIDER_FDV &&
@@ -5223,7 +5275,7 @@ export default function App() {
         canView("controlePagamentos"))
     ) {
       const isRestricted =
-        profile.role !== ROLES.ADMIN_MASTER &&
+        profile.role !== ROLES.ADMIN_MASTER && profile.role !== ROLES.FINANCEIRO &&
         profile.role !== ROLES.GESTOR_COMERCIAL &&
         profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL &&
         profile.role !== ROLES.LIDER_FDV &&
@@ -6098,6 +6150,7 @@ export default function App() {
               { id: "relatorios", label: "Relatórios", icon: BarChart3 },
               { id: "cadastro", label: "Novo Lead", icon: UserPlus },
               { id: "historico", label: "Histórico", icon: History },
+              { id: "crm", label: "CRM WhatsApp", icon: MessageSquare },
               { id: "bases", label: "Bases", icon: Database },
               { id: "gap", label: "GAP Acadêmico", icon: GraduationCap },
               {
@@ -6330,6 +6383,17 @@ export default function App() {
                   basesRenovacao={basesRenovacao}
                   calendarioAcoes={calendarioAcoes}
                   pedidosCursos={pedidosCursos}
+                />
+              )}
+              {currentView === "crm" && (
+                <CRMView
+                  leads={leads}
+                  bases={bases}
+                  fiesProuni={fiesProuni}
+                  gap={gap}
+                  profile={profile!}
+                  onSendBot={handleSendBotMessage}
+                  onToast={showToast}
                 />
               )}
               {currentView === "bases" && (
@@ -15384,7 +15448,7 @@ function CalendarioAcoesView({
     if (!isPromotor) return false;
 
     if (
-      profile.role !== ROLES.ADMIN_MASTER &&
+      profile.role !== ROLES.ADMIN_MASTER && profile.role !== ROLES.FINANCEIRO &&
       profile.role !== ROLES.GESTOR_COMERCIAL &&
       profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL
     ) {
@@ -15401,7 +15465,7 @@ function CalendarioAcoesView({
     if (!isTargetRole) return false;
 
     if (
-      profile.role !== ROLES.ADMIN_MASTER &&
+      profile.role !== ROLES.ADMIN_MASTER && profile.role !== ROLES.FINANCEIRO &&
       profile.role !== ROLES.GESTOR_COMERCIAL &&
       profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL
     ) {
@@ -15467,7 +15531,7 @@ function CalendarioAcoesView({
   const filteredData = data.filter((item) => {
     // Restrict visibility to actions from the same unit, unless admin/gestor
     if (
-      profile.role !== ROLES.ADMIN_MASTER &&
+      profile.role !== ROLES.ADMIN_MASTER && profile.role !== ROLES.FINANCEIRO &&
       profile.role !== ROLES.GESTOR_COMERCIAL &&
       profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL
     ) {

@@ -602,3 +602,27 @@ export interface SolicitacaoManutencao {
   updatedAt?: any;
   observacoesFinanceiro?: string;
 }
+
+export interface Message {
+  id: string;
+  text: string;
+  senderId: string;
+  senderName: string;
+  senderRole?: string;
+  receiverPhone: string;
+  timestamp: any;
+  type: 'sent' | 'received';
+  status?: 'sent' | 'delivered' | 'read';
+}
+
+export interface Conversation {
+  id: string; // Typically the contact's phone number
+  contactPhone: string;
+  contactName: string;
+  lastMessage: string;
+  lastMessageTimestamp: any;
+  unreadCount: number;
+  assignedTo?: string; // UID of the user assigned to this chat
+  unidade?: string;
+  sentiment?: "Positivo" | "Negativo" | "Neutro";
+}
