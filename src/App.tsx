@@ -619,8 +619,8 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.ADMIN_MASTER,
     ROLES.FDV_COMERCIAL,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
-
     ROLES.LIDER_FDV,
+    ROLES.FINANCEIRO,
   ],
   isencoes: [
     ROLES.ADMIN_MASTER,
@@ -4017,7 +4017,7 @@ export default function App() {
       localStorage.getItem("servidor_selected") === "comercial";
     if (profile.role === ROLES.FINANCEIRO) {
       if (isComercial) {
-        return view === "controlePagamentos";
+        return ["controlePagamentos", "controleInsumosComercial"].includes(view);
       } else {
         return VIEW_PERMISSIONS[view]?.includes(profile.role) || false;
       }
@@ -6387,15 +6387,31 @@ export default function App() {
                 />
               )}
               {currentView === "crm" && (
-                <CRMView
-                  leads={leads}
-                  bases={bases}
-                  fiesProuni={fiesProuni}
-                  gap={gap}
-                  profile={profile!}
-                  onSendBot={handleSendBotMessage}
-                  onToast={showToast}
-                />
+                ["Admin Master", "Líder/FDV"].includes(profile?.role || "") ? (
+                  <CRMView
+                    leads={leads}
+                    bases={bases}
+                    fiesProuni={fiesProuni}
+                    gap={gap}
+                    profile={profile!}
+                    onSendBot={handleSendBotMessage}
+                    onToast={showToast}
+                  />
+                ) : (
+                  <div className="p-12 text-center bg-white rounded-3xl border border-slate-100 shadow-sm max-w-2xl mx-auto mt-10">
+                    <div className="w-20 h-20 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <MessageSquare size={40} />
+                    </div>
+                    <h3 className="text-2xl font-bold text-slate-800">Acesso Restrito</h3>
+                    <p className="text-slate-500 mt-3 text-lg">A aba CRM está disponível apenas para Perfis Líder/FDV e Administradores enquanto estiver em fase de testes.</p>
+                    <button 
+                      onClick={() => setCurrentView('dashboard')}
+                      className="mt-8 bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"
+                    >
+                      Voltar ao Início
+                    </button>
+                  </div>
+                )
               )}
               {currentView === "bases" && (
                 <BasesView

@@ -115,10 +115,34 @@ export default function CRMView({
           unreadCount: 0
         });
       }
+
+      // Check if the last message needs sentiment analysis
+      const lastMsg = msgs[msgs.length - 1];
+      if (lastMsg && lastMsg.type === 'received' && !selectedChat.sentiment) {
+        analyzeSentiment(lastMsg.text, selectedChat.id);
+      }
     });
 
     return () => unsubscribe();
   }, [selectedChat]);
+
+  const analyzeSentiment = async (text: string, conversationId: string) => {
+    try {
+      const res = await fetch("/api/crm/sentiment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      const data = await res.json();
+      if (data.success && data.sentiment) {
+        await updateDoc(doc(db, COLLECTIONS.CONVERSATIONS, conversationId), {
+          sentiment: data.sentiment
+        });
+      }
+    } catch (e) {
+      console.error("Error analyzing sentiment:", e);
+    }
+  };
 
   // Scroll to bottom
   useEffect(() => {
@@ -271,16 +295,18 @@ export default function CRMView({
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
                     <p className="text-xs text-slate-500 truncate flex-1">{conv.lastMessage}</p>
-                    {conv.sentiment && (
-                      <span className={cn(
-                        "text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider",
-                        conv.sentiment === "Positivo" ? "bg-emerald-100 text-emerald-700" :
-                        conv.sentiment === "Negativo" ? "bg-red-100 text-red-700" :
-                        "bg-slate-100 text-slate-600"
-                      )}>
-                        {conv.sentiment}
-                      </span>
-                    )}
+                    <div className="w-16 flex justify-end">
+                      {conv.sentiment && (
+                        <span className={cn(
+                          "text-[8px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider",
+                          conv.sentiment === "Positivo" ? "bg-emerald-100 text-emerald-700 border border-emerald-200" :
+                          conv.sentiment === "Negativo" ? "bg-rose-100 text-rose-700 border border-rose-200" :
+                          "bg-slate-100 text-slate-600 border border-slate-200"
+                        )}>
+                          {conv.sentiment}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 {conv.unreadCount > 0 && (
