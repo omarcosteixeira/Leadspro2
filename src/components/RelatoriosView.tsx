@@ -1305,10 +1305,10 @@ export function RelatoriosView({
                 <h4 className="font-bold text-slate-800 text-lg border-b pb-2">{section.title}</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                   <ModalidadeCard 
-                    title="B.U Presencial" 
-                    aa={section.stats.aaPresencial + section.stats.aaSemipresencial} 
-                    meta={section.stats.ytdPresencial + section.stats.ytdSemipresencial}
-                    realizado={section.stats.realizadoPresencial + section.stats.realizadoSemipresencial} 
+                    title="B.U Presencial + Digital" 
+                    aa={section.stats.aaPresencial + section.stats.aaSemipresencial + section.stats.aaDigital} 
+                    meta={section.stats.ytdPresencial + section.stats.ytdSemipresencial + section.stats.ytdDigital}
+                    realizado={section.stats.realizadoPresencial + section.stats.realizadoSemipresencial + section.stats.realizadoDigital} 
                   />
                   <ModalidadeCard 
                     title="Presencial" 

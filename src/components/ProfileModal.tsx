@@ -88,6 +88,9 @@ export function ProfileModal({
   const [isEditingTelegram, setIsEditingTelegram] = useState(false);
   const [submittingTelegram, setSubmittingTelegram] = useState(false);
 
+  const [showInjectUI, setShowInjectUI] = useState(false);
+  const [sessionJSON, setSessionJSON] = useState("");
+
   const [activeTab, setActiveTab] = useState<"config" | "folgas">("config");
   const [tipo, setTipo] = useState<"Folga" | "Férias">("Folga");
   const [dataInicio, setDataInicio] = useState("");
@@ -749,23 +752,123 @@ export function ProfileModal({
                           </div>
 
                           {/* Connection Trigger Button */}
-                          <button
-                            onClick={handleConnect}
-                            disabled={connecting}
-                            className="w-full bg-slate-900 hover:bg-slate-800 disabled:bg-slate-600 text-white py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-200"
-                          >
-                            {connecting ? (
-                              <>
-                                <RefreshCw size={16} className="animate-spin" />
-                                <span>Solicitando Conexão...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Smartphone size={16} />
-                                <span>Conectar e Gerar QR / Código</span>
-                              </>
-                            )}
-                          </button>
+                          <div className="flex flex-col gap-2">
+                            <button
+                              onClick={handleConnect}
+                              disabled={connecting}
+                              className="w-full bg-slate-900 hover:bg-slate-800 disabled:bg-slate-600 text-white py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-200"
+                            >
+                              {connecting ? (
+                                <>
+                                  <RefreshCw size={16} className="animate-spin" />
+                                  <span>Solicitando Conexão...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Smartphone size={16} />
+                                  <span>Conectar Tradicional</span>
+                                </>
+                              )}
+                            </button>
+
+                            <button
+                              onClick={() => setShowInjectUI(!showInjectUI)}
+                              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-100"
+                            >
+                              <Link size={16} />
+                              <span>Injetar Sessão (Extensão)</span>
+                            </button>
+                          </div>
+
+                          {showInjectUI && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              className="bg-blue-50 border border-blue-200 p-4 rounded-xl space-y-3 overflow-hidden"
+                            >
+                              <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg text-[10px] text-amber-800 leading-relaxed mb-2">
+                                <p className="font-bold flex items-center gap-1 mb-1">
+                                  <AlertCircle size={12} />
+                                  SOP - Instruções:
+                                </p>
+                                <ol className="list-decimal ml-3 space-y-1">
+                                  <li>Logue no WhatsApp Web em aba anônima.</li>
+                                  <li>Copie o JSON pela extensão <strong>PESK Linker</strong>.</li>
+                                  <li>Cole abaixo e clique em Injetar.</li>
+                                  <li>Feche a aba do WhatsApp Web imediatamente.</li>
+                                </ol>
+                              </div>
+
+                              <textarea
+                                value={sessionJSON}
+                                onChange={(e) => setSessionJSON(e.target.value)}
+                                placeholder="Cole o JSON da extensão aqui..."
+                                rows={4}
+                                className="w-full bg-white border border-blue-200 rounded-lg p-2 text-[10px] font-mono focus:ring-2 focus:ring-blue-500 outline-none"
+                              />
+
+                              <button
+                                onClick={async () => {
+                                  if (!sessionJSON) {
+                                    onToast("Cole o JSON primeiro.", "error");
+                                    return;
+                                  }
+                                  try {
+                                    const sessionDataObj =
+                                      JSON.parse(sessionJSON);
+                                    const numberToConnect =
+                                      cleanSavedNumber || cleanInputNumber;
+                                    if (!numberToConnect) {
+                                      onToast(
+                                        "Número não identificado.",
+                                        "error",
+                                      );
+                                      return;
+                                    }
+
+                                    const cleanUrl = botConfig.url.endsWith("/")
+                                      ? botConfig.url.slice(0, -1)
+                                      : botConfig.url;
+
+                                    const res = await fetch(
+                                      `${cleanUrl}/api/inject`,
+                                      {
+                                        method: "POST",
+                                        headers: {
+                                          "Content-Type": "application/json",
+                                        },
+                                        body: JSON.stringify({
+                                          botNumber: numberToConnect,
+                                          sessionData: sessionDataObj,
+                                        }),
+                                      },
+                                    );
+
+                                    if (!res.ok) {
+                                      const errData = await res.json();
+                                      onToast(
+                                        `Erro: ${errData.error || res.statusText}`,
+                                        "error",
+                                      );
+                                      return;
+                                    }
+
+                                    onToast(
+                                      "Sucesso! Sessão injetada com sucesso.",
+                                      "success",
+                                    );
+                                    setShowInjectUI(false);
+                                    setSessionJSON("");
+                                  } catch (e: any) {
+                                    onToast(`Erro: ${e.message}`, "error");
+                                  }
+                                }}
+                                className="w-full bg-blue-600 text-white py-2 rounded-lg font-bold text-xs hover:bg-blue-700 transition"
+                              >
+                                Injetar e Conectar Agora
+                              </button>
+                            </motion.div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -777,49 +880,24 @@ export function ProfileModal({
                   )}
 
                   {/* Real-time QR and pairing code container pulled from server status */}
-                  {botInfo &&
-                    botStatus === "pairing" &&
-                    (botInfo.pairingCode || botInfo.qrUrl) && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mt-3 bg-white p-4 rounded-xl border-2 border-dashed border-slate-200 text-center flex flex-col gap-4 items-center shadow-inner"
-                      >
-                        <div className="flex items-center space-x-1.5 text-orange-600">
-                          <QrIcon size={16} />
-                          <span className="text-xs font-bold uppercase tracking-wider">
-                            Código Prontidão
-                          </span>
-                        </div>
-
-                        {botInfo.qrUrl && (
-                          <div className="bg-slate-50 p-2 rounded-lg border border-slate-100">
-                            <p className="text-[10px] text-slate-500 mb-2">
-                              Aponte a câmera do WhatsApp para escancear o QR
-                              Code:
-                            </p>
-                            <img
-                              src={botInfo.qrUrl}
-                              alt="QR Code WhatsApp"
-                              className="mx-auto rounded w-48 h-48 object-contain"
-                              referrerPolicy="no-referrer"
-                            />
-                          </div>
-                        )}
-
-                        {botInfo.pairingCode && (
-                          <div className="w-full">
-                            <p className="text-[10px] text-slate-500 mb-1">
-                              {botInfo.qrUrl ? "Ou utilize" : "Utilize"} o
-                              Pairing Code no aparelho:
-                            </p>
-                            <div className="bg-slate-950 text-white rounded-lg p-3 font-mono text-2xl tracking-widest font-bold max-w-[200px] mx-auto select-all shadow-md">
-                              {botInfo.pairingCode}
-                            </div>
-                          </div>
-                        )}
-                      </motion.div>
-                    )}
+                  {botInfo && botStatus === "pairing" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-3 bg-white p-4 rounded-xl border-2 border-dashed border-slate-200 text-center flex flex-col gap-2 items-center shadow-inner"
+                    >
+                      <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center animate-pulse">
+                        <RefreshCw size={20} />
+                      </div>
+                      <p className="text-xs font-bold text-slate-700">
+                        Aguardando injeção de sessão via extensão.
+                      </p>
+                      <p className="text-[10px] text-slate-500 max-w-[220px]">
+                        O QR Code nativo está desabilitado por segurança. Use a
+                        extensão PESK Linker para conectar este número.
+                      </p>
+                    </motion.div>
+                  )}
                 </div>
               </div>
             </>

@@ -102,6 +102,7 @@ import {
   EyeOff,
   UserMinus,
   Wrench,
+  Hash,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -3976,6 +3977,9 @@ export default function App() {
       }
     >
   >({});
+  const [showInjectModal, setShowInjectModal] = useState(false);
+  const [injectBotNumber, setInjectBotNumber] = useState("");
+  const [injectSessionData, setInjectSessionData] = useState("");
   const [initialActionData, setInitialActionData] =
     useState<Partial<CalendarioAcao> | null>(null);
   const [activePopup, setActivePopup] = useState<{
@@ -6117,6 +6121,129 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {showInjectModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[9999]"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden"
+            >
+              <div className="bg-blue-600 p-6 text-white flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="bg-white/20 p-2 rounded-xl">
+                    <MessageSquare size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold leading-none">Conectar via Injeção</h3>
+                    <p className="text-blue-100 text-[10px] mt-1 font-medium">MODO AVANÇADO / ANTI-BLOQUEIO</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowInjectModal(false)}
+                  className="hover:bg-white/20 p-2 rounded-full transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl text-[11px] text-amber-800 leading-relaxed shadow-sm">
+                  <p className="font-bold flex items-center gap-2 mb-2 text-amber-900">
+                    <AlertCircle size={14} />
+                    COMO USAR (SOP):
+                  </p>
+                  <ol className="list-decimal ml-4 space-y-2">
+                    <li>Abra o <strong>WhatsApp Web oficial</strong> em uma aba anônima do Chrome.</li>
+                    <li>Faça o login normal pelo celular (QR Code ou Número).</li>
+                    <li>Com o WhatsApp aberto, clique na extensão <strong>PESK Linker</strong> e copie o JSON.</li>
+                    <li>Cole o código abaixo e clique em Injetar.</li>
+                    <li><strong>IMPORTANTE:</strong> Feche a aba do WhatsApp Web imediatamente após o sucesso.</li>
+                  </ol>
+                </div>
+                
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Número do Bot</label>
+                  <div className="relative">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                      <Hash size={16} />
+                    </div>
+                    <input 
+                      type="text" 
+                      value={injectBotNumber} 
+                      onChange={e => setInjectBotNumber(e.target.value.replace(/\D/g, ''))}
+                      className="w-full bg-slate-50 border border-slate-200 pl-10 pr-4 py-3 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm font-bold"
+                      placeholder="5524999999999"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Dados da Sessão (JSON)</label>
+                  <textarea 
+                    rows={6}
+                    value={injectSessionData} 
+                    onChange={e => setInjectSessionData(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-mono text-[10px] resize-none"
+                    placeholder='Cole aqui o JSON gerado pela extensão...'
+                  />
+                </div>
+
+                <button
+                  onClick={async () => {
+                    if (!injectBotNumber || !injectSessionData) {
+                      showToast("Por favor, preencha o número e cole o JSON.", "error");
+                      return;
+                    }
+                    try {
+                      let sessionDataObj;
+                      try {
+                        sessionDataObj = JSON.parse(injectSessionData);
+                      } catch (e) {
+                        showToast("JSON inválido! Copie novamente da extensão.", "error");
+                        return;
+                      }
+
+                      await callBotApi("/api/inject", {
+                        method: "POST",
+                        body: { 
+                          botNumber: injectBotNumber,
+                          sessionData: sessionDataObj
+                        }
+                      });
+                      
+                      showToast("Sucesso! Sessão injetada. O bot está iniciando...", "success");
+                      setShowInjectModal(false);
+                      setInjectSessionData("");
+                      
+                      // Refresh status after injection
+                      setTimeout(async () => {
+                        try {
+                          const data = await callBotApi("/api/status");
+                          if (data && data.bots) setBotStatuses(data.bots);
+                        } catch (e) {}
+                      }, 4000);
+                    } catch (err: any) {
+                      showToast(`Erro na injeção: ${err.message}`, "error");
+                    }
+                  }}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-600/20 transition-all flex items-center justify-center gap-2 group"
+                >
+                  <span>Injetar Sessão e Conectar</span>
+                  <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
       <aside
         className={cn(
@@ -8000,9 +8127,9 @@ function DashboardView({
         const thisWeekMetas = metaDia.filter(m => m.data >= startOfWeekStr && m.data <= endOfWeekStr);
         if (thisWeekMetas.length === 0) return null;
 
-        const weekTotYTD = thisWeekMetas.reduce((acc, item) => acc + item.ytdPresencial + item.ytdSemipresencial + item.ytdDigital + (item.ytdTecnico || 0) + (item.ytdPosGraduacao || 0), 0);
-        const weekTotReal = thisWeekMetas.reduce((acc, item) => acc + item.realizadoPresencial + item.realizadoSemipresencial + item.realizadoDigital + (item.realizadoTecnico || 0) + (item.realizadoPosGraduacao || 0), 0);
-        const weekTotAA = thisWeekMetas.reduce((acc, item) => acc + item.aaPresencial + item.aaSemipresencial + item.aaDigital + (item.aaTecnico || 0) + (item.aaPosGraduacao || 0), 0);
+        const weekTotYTD = thisWeekMetas.reduce((acc, item) => acc + item.ytdPresencial + item.ytdSemipresencial + item.ytdDigital, 0);
+        const weekTotReal = thisWeekMetas.reduce((acc, item) => acc + item.realizadoPresencial + item.realizadoSemipresencial + item.realizadoDigital, 0);
+        const weekTotAA = thisWeekMetas.reduce((acc, item) => acc + item.aaPresencial + item.aaSemipresencial + item.aaDigital, 0);
 
         let statusText = "Abaixo da Meta";
         let statusColor = "bg-rose-50 text-rose-600 border-rose-100";
@@ -8167,8 +8294,7 @@ function DashboardView({
               <span className="text-2xl font-black text-slate-500 mt-2">
                 {activeMeta.aaPresencial +
                   activeMeta.aaSemipresencial +
-                  activeMeta.aaDigital +
-                  (activeMeta.aaTecnico || 0)}
+                  activeMeta.aaDigital}
               </span>
             </div>
 
@@ -8176,13 +8302,11 @@ function DashboardView({
               const totYTD =
                 activeMeta.ytdPresencial +
                 activeMeta.ytdSemipresencial +
-                activeMeta.ytdDigital +
-                (activeMeta.ytdTecnico || 0);
+                activeMeta.ytdDigital;
               const totReal =
                 activeMeta.realizadoPresencial +
                 activeMeta.realizadoSemipresencial +
-                activeMeta.realizadoDigital +
-                (activeMeta.realizadoTecnico || 0);
+                activeMeta.realizadoDigital;
               const pct = totYTD > 0 ? (totReal / totYTD) * 100 : 0;
 
               let pctBg = "bg-rose-50 text-rose-700";
@@ -23499,6 +23623,12 @@ function AdminView({
                         Resetar Sessões (Pasta Corrompida)
                       </button>
                       <button
+                        onClick={() => setShowInjectModal(true)}
+                        className="bg-blue-600 text-white text-xs px-3 py-2 rounded-lg font-bold hover:bg-blue-700 transition"
+                      >
+                        Injetar Sessão (JSON)
+                      </button>
+                      <button
                         onClick={async () => {
                           const num = prompt(
                             "Digite o número no formato 5511999999999:",
@@ -23652,35 +23782,20 @@ function AdminView({
                                 </div>
                               </div>
 
-                              {info?.status === "pairing" &&
-                                (info?.pairingCode || info?.qrUrl) && (
-                                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 mt-2 text-center flex flex-col gap-4 items-center">
-                                    {info?.qrUrl && (
-                                      <div>
-                                        <p className="text-xs text-slate-500 mb-2">
-                                          Escaneie o QR Code:
-                                        </p>
-                                        <img
-                                          src={info.qrUrl}
-                                          alt="QR Code WhatsApp"
-                                          className="mx-auto rounded"
-                                        />
-                                      </div>
-                                    )}
-
-                                    {info?.pairingCode && (
-                                      <div>
-                                        <p className="text-xs text-slate-500 mb-1">
-                                          {info?.qrUrl ? "Ou use" : "Use"} o
-                                          Pairing Code:
-                                        </p>
-                                        <p className="text-2xl tracking-widest font-mono font-bold text-slate-800">
-                                          {info.pairingCode}
-                                        </p>
-                                      </div>
-                                    )}
+                              {info?.status === "pairing" && (
+                                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 mt-2 text-center flex flex-col gap-2 items-center">
+                                  <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center animate-pulse">
+                                    <RefreshCw size={24} />
                                   </div>
-                                )}
+                                  <p className="text-xs font-bold text-slate-700">
+                                    Aguardando injeção de sessão via extensão.
+                                  </p>
+                                  <p className="text-[10px] text-slate-500 max-w-[200px]">
+                                    O QR Code nativo está desabilitado. Use a
+                                    extensão PESK Linker para conectar.
+                                  </p>
+                                </div>
+                              )}
 
                               {info?.status === "online" && (
                                 <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
