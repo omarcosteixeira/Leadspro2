@@ -615,6 +615,26 @@ export interface Message {
   status?: 'sent' | 'delivered' | 'read';
 }
 
+export interface FormField {
+  id: string;
+  label: string;
+  type: 'text' | 'tel' | 'email' | 'select' | 'textarea';
+  required: boolean;
+  options?: string[];
+  leadMapping: keyof Lead | 'custom';
+}
+
+export interface FormConfig {
+  id: string;
+  title: string;
+  description?: string;
+  active: boolean;
+  fields: FormField[];
+  unidade?: string;
+  createdAt: any;
+  updatedAt?: any;
+}
+
 export interface Conversation {
   id: string; // Typically the contact's phone number
   contactPhone: string;

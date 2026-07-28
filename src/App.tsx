@@ -169,6 +169,8 @@ import { OPENROUTER_MODELS } from "./ai-config";
 import CrescimentoAnualAdmin from "./components/CrescimentoAnualAdmin";
 import { ProfileModal } from "./components/ProfileModal";
 import { PublicRegistrationForm } from "./components/PublicRegistrationForm";
+import { FormulariosView } from "./components/FormulariosView";
+import { PublicCustomForm } from "./components/PublicCustomForm";
 import { PublicInsumoForm } from "./components/PublicInsumoForm";
 import { PublicMaintenanceForm } from "./components/PublicMaintenanceForm";
 import { PublicPedidoCursoForm } from "./components/PublicPedidoCursoForm";
@@ -400,6 +402,12 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.FDV_COMERCIAL,
     ROLES.FINANCEIRO,
     ROLES.TECNICO,
+  ],
+  formularios: [
+    ROLES.ADMIN_MASTER,
+    ROLES.LIDER_FDV,
+    ROLES.GESTOR_COMERCIAL,
+    ROLES.GESTOR_COMERCIAL_COMERCIAL,
   ],
   relatorios: [
     ROLES.ADMIN_MASTER,
@@ -5859,6 +5867,26 @@ export default function App() {
     );
   }
 
+  const searchParams = new URLSearchParams(window.location.search);
+  const publicFormId = searchParams.get("formId");
+
+  if (publicFormId) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col justify-between">
+        <AnimatePresence>
+          {toast && (
+            <Toast
+              message={toast.message}
+              type={toast.type}
+              onClose={() => setToast(null)}
+            />
+          )}
+        </AnimatePresence>
+        <PublicCustomForm onToast={showToast} />
+      </div>
+    );
+  }
+
   if (currentView === "pedido-insumos") {
     return (
       <div className="min-h-screen bg-[#01112c] flex flex-col justify-between">
@@ -6742,6 +6770,7 @@ export default function App() {
                   analysisSchemes={analysisSchemes}
                   onSaveAnalysisScheme={handleSaveAnalysisScheme}
                   onDeleteAnalysisScheme={handleDeleteAnalysisScheme}
+                  setShowInjectModal={setShowInjectModal}
                 />
               )}
             </motion.div>
@@ -19726,6 +19755,7 @@ function AdminView({
   analysisSchemes,
   onSaveAnalysisScheme,
   onDeleteAnalysisScheme,
+  setShowInjectModal,
 }: {
   profile: UserProfile | null;
   users: UserProfile[];
@@ -19781,6 +19811,7 @@ function AdminView({
   analysisSchemes: AnalysisScheme[];
   onSaveAnalysisScheme: (scheme: Partial<AnalysisScheme>) => Promise<void>;
   onDeleteAnalysisScheme: (id: string) => Promise<void>;
+  setShowInjectModal: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const [activeWhatsappTab, setActiveWhatsappTab] = useState<
     "historico" | "bases" | "gap" | "fiesProuni" | "bases_renovacao"
@@ -19801,6 +19832,7 @@ function AdminView({
     | "logo"
     | "funcionarios"
     | "crescimentoAnual"
+    | "formularios"
   >("usuarios");
   const [adminRequests, setAdminRequests] = useState<SolicitacaoFolga[]>([]);
   const [loadingAdminRequests, setLoadingAdminRequests] = useState(false);
@@ -20384,6 +20416,7 @@ function AdminView({
           { id: "treinamento", label: "Treinamento Bot" },
           { id: "links", label: "Links Úteis" },
           { id: "logo", label: "Logotipo do Login" },
+          { id: "formularios", label: "Formulários" },
           { id: "crescimentoAnual", label: "Crescimento Anual" },
           { id: "backup", label: "Backup e Segurança" },
         ].map((tab) => (
@@ -20787,8 +20820,10 @@ function AdminView({
 
           {changingPasswordUser &&
             (() => {
-              const isMarcosTeixeira =
-                profile?.email === "marcos.teixeira@estacio.br";
+              const isMasterAdmin =
+                profile?.role === "Admin Master" ||
+                profile?.email === "marcos.teixeira@estacio.br" ||
+                profile?.email === "canaldonutri@gmail.com";
               return (
                 <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                   <motion.div
@@ -20799,12 +20834,12 @@ function AdminView({
                     <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                       <div>
                         <h3 className="text-lg font-bold text-slate-900">
-                          {isMarcosTeixeira
+                          {isMasterAdmin
                             ? "Alterar Senha do Usuário"
                             : "Redefinir Senha do Usuário"}
                         </h3>
                         <p className="text-xs text-slate-500 mt-1">
-                          {isMarcosTeixeira
+                          {isMasterAdmin
                             ? `Defina uma nova senha para ${changingPasswordUser.name}`
                             : `Envie um e-mail de redefinição para ${changingPasswordUser.name}`}
                         </p>
@@ -20818,7 +20853,7 @@ function AdminView({
                     </div>
 
                     <div className="p-6 space-y-6">
-                      {isMarcosTeixeira ? (
+                      {isMasterAdmin ? (
                         <>
                           {/* Option 1: Direct Password Change */}
                           <form
@@ -21005,8 +21040,7 @@ function AdminView({
                             <strong>
                               alteração direta de senha administrativa
                             </strong>{" "}
-                            é de uso exclusivo do Admin Master (
-                            <strong>marcos.teixeira@estacio.br</strong>).
+                            é de uso exclusivo do Admin Master.
                           </p>
                           <p>
                             Como administrador, você pode disparar o fluxo de
@@ -21019,7 +21053,7 @@ function AdminView({
                       {/* Option 2: Email Password Reset */}
                       <div className="space-y-3">
                         <p className="text-xs text-slate-500 text-center">
-                          {isMarcosTeixeira
+                          {isMasterAdmin
                             ? "Você também pode enviar um e-mail de redefinição para o endereço cadastrado do usuário."
                             : "Envie um link seguro de redefinição para o endereço cadastrado do usuário."}
                         </p>
@@ -24506,6 +24540,10 @@ function AdminView({
           onSave={onSaveAnalysisScheme}
           onDelete={onDeleteAnalysisScheme}
         />
+      )}
+
+      {activeTab === "formularios" && (
+        <FormulariosView user={profile!} onToast={onToast} />
       )}
 
       {activeTab === "backup" && (

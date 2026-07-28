@@ -10,7 +10,7 @@ import { getAuth } from "firebase-admin/auth";
 
 async function startServer() {
   const app = express();
-  const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
+  const PORT = 3000;
 
   // Generous limit for HTML files or base64 embedded images
   app.use(express.json({ limit: "50mb" }));
@@ -422,10 +422,11 @@ Caso contrário (se não houver correspondência lógica ou for um item completa
     try {
       const { uid, newPassword, servidor, adminEmail } = req.body;
 
-      if (adminEmail !== "marcos.teixeira@estacio.br") {
+      const allowedAdmins = ["marcos.teixeira@estacio.br", "canaldonutri@gmail.com"];
+      if (!allowedAdmins.includes(adminEmail)) {
         return res.status(200).json({
           success: false,
-          error: "Apenas o Administrador Master (Marcos Teixeira) tem autorização para realizar a alteração de senhas diretamente."
+          error: "Apenas o Administrador Master tem autorização para realizar a alteração de senhas diretamente."
         });
       }
 
@@ -465,6 +466,8 @@ Caso contrário (se não houver correspondência lógica ou for um item completa
           } catch (e: any) {
             console.error(`Erro ao decodificar conta de serviço para ${targetServer}:`, e);
           }
+        } else {
+          console.warn(`Aviso: Credenciais (FIREBASE_SERVICE_ACCOUNT_${targetServer.toUpperCase()}) não encontradas. O servidor tentará usar as credenciais padrão do ambiente.`);
         }
         appInstance = initializeApp(options, appName);
       }
