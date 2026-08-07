@@ -265,7 +265,14 @@ export function CursosDisponiveisView({
         filterCurso.length === 0 || filterCurso.includes(c.curso);
       const matchProduto =
         filterProduto.length === 0 || filterProduto.includes(c.produto);
+      
+      if (profile.role === "Gestor Unidade") {
+        if (!profile.unidade || c.nomeUnidade !== profile.unidade) {
+          return false;
+        }
+      }
       return matchUnidade && matchMetodologia && matchCurso && matchProduto;
+  
     });
   }, [cursos, filterUnidade, filterMetodologia, filterCurso, filterProduto]);
 

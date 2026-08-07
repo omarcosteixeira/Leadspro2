@@ -348,6 +348,9 @@ export interface EvasaoRecord {
   periodo?: string;
   tipoSolicitacao?: string;
   observacao?: string;
+  parcelaLeve?: string;
+  mensalidades?: string;
+  parcelamento?: string;
   createdAt: any;
   updatedAt?: any;
 }

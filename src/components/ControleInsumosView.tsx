@@ -637,7 +637,10 @@ export function ControleInsumosView({
           (p.cursoNome || "").toLowerCase().includes(term) ||
           p.disciplinaNome.toLowerCase().includes(term) ||
           p.itens.some((it) => it.material.toLowerCase().includes(term));
+        
+
         return matchesStatus && matchesSearch;
+  
       })
       .sort(
         (a, b) =>
@@ -893,7 +896,7 @@ export function ControleInsumosView({
           <span>Dashboard</span>
         </button>
 
-        <button
+        {profile.role !== "Gestor Unidade" && <button
           onClick={() => setActiveTab("pedidos")}
           className={cn(
             "flex items-center space-x-2 px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all w-full sm:w-auto justify-center cursor-pointer",
@@ -909,9 +912,9 @@ export function ControleInsumosView({
               {pedidos.filter((p) => p.status === "Pendente").length}
             </span>
           )}
-        </button>
+        </button>}
 
-        <button
+        {profile.role !== "Gestor Unidade" && <button
           onClick={() => setActiveTab("estoque")}
           className={cn(
             "flex items-center space-x-2 px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all w-full sm:w-auto justify-center cursor-pointer",
@@ -922,9 +925,9 @@ export function ControleInsumosView({
         >
           <Layers size={16} />
           <span>Físico / Estoque ({estoque.length})</span>
-        </button>
+        </button>}
 
-        <button
+        {profile.role !== "Gestor Unidade" && <button
           onClick={() => setActiveTab("compras")}
           className={cn(
             "flex items-center space-x-2 px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all w-full sm:w-auto justify-center cursor-pointer relative",
@@ -940,7 +943,7 @@ export function ControleInsumosView({
               {comprasList.length}
             </span>
           )}
-        </button>
+        </button>}
       </div>
 
       {/* Tab: DASHBOARD */}

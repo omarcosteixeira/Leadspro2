@@ -281,6 +281,16 @@ export function RelatoriosView({
   const [planoFiltroFdv, setPlanoFiltroFdv] = useState("");
   const [planoFiltroUnidade, setPlanoFiltroUnidade] = useState("");
 
+  
+  const filteredIsencoes = useMemo(() => isPrivileged ? isencoes : isencoes.filter(i => i.unidade === profile.unidade), [isencoes, profile, isPrivileged]);
+  const filteredEmpresasParceiras = useMemo(() => isPrivileged ? empresasParceiras : empresasParceiras.filter(e => e.unidadesVinculadas?.includes(profile.unidade || "") || (e as any).unidade === profile.unidade), [empresasParceiras, profile, isPrivileged]);
+  const filteredPedidosCursos = useMemo(() => isPrivileged ? (pedidosCursos || []) : (pedidosCursos || []), [pedidosCursos, isPrivileged]); // Pedidos doesn't have unidade in type right now, keep as is or filter? Wait, if it has no unidade, we can't filter.
+  const filteredInsumosPedidos = useMemo(() => isPrivileged ? insumosPedidos : insumosPedidos, [insumosPedidos, profile, isPrivileged]);
+  const filteredInsumosBaixas = useMemo(() => isPrivileged ? insumosBaixas : insumosBaixas, [insumosBaixas, profile, isPrivileged]);
+  const filteredMetaDia = useMemo(() => isPrivileged ? (metaDia || []) : (metaDia || []), [metaDia, profile, isPrivileged]);
+  const filteredSolicitacoesManutencao = useMemo(() => isPrivileged ? (solicitacoesManutencao || []) : (solicitacoesManutencao || []), [solicitacoesManutencao, profile, isPrivileged]);
+  const filteredAnalysisSchemes = useMemo(() => isPrivileged ? (analysisSchemes || []) : (analysisSchemes || []), [analysisSchemes, profile, isPrivileged]);
+
   const filteredCalendarioAcoes = useMemo(() => {
     return filteredPlanoAcoes.filter((a) => {
       if (planoDataInicio && a.dataInicio < planoDataInicio) return false;
@@ -364,41 +374,41 @@ export function RelatoriosView({
 
   // --- Empresas Stats ---
   const empresasStats = useMemo(() => {
-    const total = empresasParceiras.length;
-    const conveniadas = empresasParceiras.filter(e => e.statusEmpresa === "Conveniada").length;
-    const emTratativa = empresasParceiras.filter(e => e.statusEmpresa === "Em tratativa").length;
+    const total = filteredEmpresasParceiras.length;
+    const conveniadas = filteredEmpresasParceiras.filter(e => e.statusEmpresa === "Conveniada").length;
+    const emTratativa = filteredEmpresasParceiras.filter(e => e.statusEmpresa === "Em tratativa").length;
     const classificacao = {
-      Ouro: empresasParceiras.filter(e => e.classificacao === "Ouro").length,
-      Prata: empresasParceiras.filter(e => e.classificacao === "Prata").length,
-      Bronze: empresasParceiras.filter(e => e.classificacao === "Bronze").length,
+      Ouro: filteredEmpresasParceiras.filter(e => e.classificacao === "Ouro").length,
+      Prata: filteredEmpresasParceiras.filter(e => e.classificacao === "Prata").length,
+      Bronze: filteredEmpresasParceiras.filter(e => e.classificacao === "Bronze").length,
     };
 
     return { total, conveniadas, emTratativa, classificacao };
-  }, [empresasParceiras]);
+  }, [filteredEmpresasParceiras]);
 
   // --- Insumos Stats ---
   const insumosStats = useMemo(() => {
-    const totalPedidos = insumosPedidos.length;
-    const entregues = insumosPedidos.filter(p => p.status === "Entregue").length;
+    const totalPedidos = filteredInsumosPedidos.length;
+    const entregues = filteredInsumosPedidos.filter(p => p.status === "Entregue").length;
     const totalItensEstoque = insumosEstoque.reduce((acc, curr) => acc + curr.quantidade, 0);
     const itensCriticos = insumosEstoque.filter(e => e.quantidade < (e.estoqueMinimo || 5)).length;
 
     return { totalPedidos, entregues, totalItensEstoque, itensCriticos };
-  }, [insumosPedidos, insumosEstoque]);
+  }, [filteredInsumosPedidos, insumosEstoque]);
 
   // --- Isenções Stats ---
   const isencoesStats = useMemo(() => {
-    const total = isencoes.length;
-    const pendente = isencoes.filter((i) => i.status === "Pendente").length;
-    const solicitado = isencoes.filter((i) => i.status === "Solicitado").length;
-    const deferido = isencoes.filter((i) => i.status === "Deferido").length;
-    const convertido = isencoes.filter((i) => i.resultado === "Convertido").length;
-    const boletoPago = isencoes.filter((i) => i.boletoPago).length;
+    const total = filteredIsencoes.length;
+    const pendente = filteredIsencoes.filter((i) => i.status === "Pendente").length;
+    const solicitado = filteredIsencoes.filter((i) => i.status === "Solicitado").length;
+    const deferido = filteredIsencoes.filter((i) => i.status === "Deferido").length;
+    const convertido = filteredIsencoes.filter((i) => i.resultado === "Convertido").length;
+    const boletoPago = filteredIsencoes.filter((i) => i.boletoPago).length;
 
     const byCursoMap: Record<string, number> = {};
     const byOrigemMap: Record<string, number> = {};
 
-    isencoes.forEach(i => {
+    filteredIsencoes.forEach(i => {
       if (i.curso) {
         byCursoMap[i.curso] = (byCursoMap[i.curso] || 0) + 1;
       }
@@ -426,7 +436,7 @@ export function RelatoriosView({
       }));
 
     return { total, pendente, solicitado, deferido, convertido, boletoPago, byCurso, byOrigem };
-  }, [isencoes]);
+  }, [filteredIsencoes]);
 
   const metaDiaStats = useMemo(() => {
     const now = new Date();
@@ -467,8 +477,8 @@ export function RelatoriosView({
     }, initialStats());
 
     const allTime = reduceMeta(metaDia);
-    const weekly = reduceMeta(metaDia.filter(m => m.data >= oneWeekAgo));
-    const monthly = reduceMeta(metaDia.filter(m => m.data >= oneMonthAgo));
+    const weekly = reduceMeta(filteredMetaDia.filter(m => m.data >= oneWeekAgo));
+    const monthly = reduceMeta(filteredMetaDia.filter(m => m.data >= oneMonthAgo));
 
     let filteredForCustom = metaDia;
     if (metaDiaDataInicio) {
@@ -480,14 +490,14 @@ export function RelatoriosView({
     const custom = reduceMeta(filteredForCustom);
 
     return { allTime, weekly, monthly, custom };
-  }, [metaDia, metaDiaDataInicio, metaDiaDataFim]);
+  }, [filteredMetaDia, metaDiaDataInicio, metaDiaDataFim]);
 
   // --- Pedidos de Cursos Stats ---
   const pedidosCursosStats = useMemo(() => {
-    const total = pedidosCursos.length;
+    const total = filteredPedidosCursos.length;
     
     const byCursoMap: Record<string, number> = {};
-    pedidosCursos.forEach(p => {
+    filteredPedidosCursos.forEach(p => {
       if (p.curso) {
         const cursoNorm = p.curso.trim();
         byCursoMap[cursoNorm] = (byCursoMap[cursoNorm] || 0) + 1;
@@ -504,13 +514,13 @@ export function RelatoriosView({
       }));
 
     return { total, byCurso };
-  }, [pedidosCursos]);
+  }, [filteredPedidosCursos]);
 
   const manutencaoStats = useMemo(() => {
-    const total = solicitacoesManutencao.length;
-    const pendente = solicitacoesManutencao.filter(s => s.status === 'Pendente').length;
-    const andamento = solicitacoesManutencao.filter(s => s.status === 'Em Andamento').length;
-    const concluido = solicitacoesManutencao.filter(s => s.status === 'Concluído').length;
+    const total = filteredSolicitacoesManutencao.length;
+    const pendente = filteredSolicitacoesManutencao.filter(s => s.status === 'Pendente').length;
+    const andamento = filteredSolicitacoesManutencao.filter(s => s.status === 'Em Andamento').length;
+    const concluido = filteredSolicitacoesManutencao.filter(s => s.status === 'Concluído').length;
 
     const byStatus = [
       { name: 'Pendente', count: pendente, percentage: total > 0 ? ((pendente / total) * 100).toFixed(1) : "0" },
@@ -519,7 +529,7 @@ export function RelatoriosView({
     ];
 
     const demandCounts: Record<string, number> = {};
-    solicitacoesManutencao.forEach(s => {
+    filteredSolicitacoesManutencao.forEach(s => {
       const key = `${s.predio || "N/A"} - ${s.local || "N/A"}`;
       demandCounts[key] = (demandCounts[key] || 0) + 1;
     });
@@ -534,7 +544,7 @@ export function RelatoriosView({
       }));
 
     return { total, pendente, andamento, concluido, byStatus, topDemands };
-  }, [solicitacoesManutencao]);
+  }, [filteredSolicitacoesManutencao]);
 
   // --- Ligações Stats ---
   const [ligacoesDataInicio, setLigacoesDataInicio] = useState("");
@@ -545,7 +555,7 @@ export function RelatoriosView({
   const [ligacoesSearchTerm, setLigacoesSearchTerm] = useState("");
 
   const filteredLigacoes = useMemo(() => {
-    return ligacoes.filter(l => {
+    return ligacoes.filter((l) => isPrivileged ? true : l.unidade === profile.unidade).filter(l => {
       const callDate = l.createdAt?.seconds ? new Date(l.createdAt.seconds * 1000).toISOString().split('T')[0] : '';
       if (ligacoesDataInicio && callDate < ligacoesDataInicio) return false;
       if (ligacoesDataFim && callDate > ligacoesDataFim) return false;
@@ -563,7 +573,7 @@ export function RelatoriosView({
       
       return true;
     });
-  }, [ligacoes, ligacoesDataInicio, ligacoesDataFim, ligacoesFiltroAtendente, ligacoesFiltroOrigem, ligacoesFiltroStatus, ligacoesSearchTerm]);
+  }, [ligacoes, profile, isPrivileged, ligacoesDataInicio, ligacoesDataFim, ligacoesFiltroAtendente, ligacoesFiltroOrigem, ligacoesFiltroStatus, ligacoesSearchTerm]);
 
   const ligacoesStats = useMemo(() => {
     const total = filteredLigacoes.length;
@@ -639,7 +649,7 @@ export function RelatoriosView({
       const sourceName = calendarioAcoes.find(a => a.id === id)?.nome || id;
       return { id, name: sourceName };
     }).sort((a, b) => a.name.localeCompare(b.name));
-  }, [ligacoes, calendarioAcoes]);
+  }, [ligacoes, profile, isPrivileged, calendarioAcoes]);
 
   const ligacoesChartDataByStaff = useMemo(() => {
     const data: Record<string, { name: string, atendidas: number, naoAtendidas: number, convertidas: number }> = {};
@@ -1348,7 +1358,7 @@ export function RelatoriosView({
 
         {activeTab === "crescimento" && (
           <div className="space-y-12">
-            {analysisSchemes.length === 0 ? (
+            {filteredAnalysisSchemes.length === 0 ? (
               <div className="bg-white p-12 rounded-3xl border border-slate-100 text-center space-y-4">
                 <div className="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto">
                   <TrendingUp size={32} />
@@ -1357,7 +1367,7 @@ export function RelatoriosView({
                 <p className="text-slate-500 max-w-sm mx-auto">As análises de crescimento são configuradas pelo administrador no painel administrativo.</p>
               </div>
             ) : (
-              analysisSchemes.map((scheme) => (
+              filteredAnalysisSchemes.map((scheme) => (
                 <div key={scheme.id} className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-8">
                   <div className="flex items-center justify-between">
                     <div>

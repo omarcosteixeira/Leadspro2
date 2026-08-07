@@ -435,6 +435,7 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.SALA_MATRICULA,
     ROLES.QG,
     ROLES.LIDER_FDV,
+    ROLES.GESTOR_UNIDADE,
     ROLES.GESTOR_COMERCIAL,
     ROLES.FDV_COMERCIAL,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
@@ -452,7 +453,7 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.PROMOTOR,
     ROLES.PROMOTOR_RUA,
   ],
-  gap: [ROLES.ADMIN_MASTER, ROLES.SALA_MATRICULA, ROLES.LIDER_FDV],
+  gap: [ROLES.ADMIN_MASTER, ROLES.SALA_MATRICULA, ROLES.LIDER_FDV, ROLES.GESTOR_UNIDADE],
   fiesProuni: [
     ROLES.ADMIN_MASTER,
     ROLES.SALA_MATRICULA,
@@ -574,6 +575,7 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
   admin: [
     ROLES.ADMIN_MASTER,
     ROLES.LIDER_FDV,
+    ROLES.GESTOR_UNIDADE,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
     ROLES.GESTOR_COMERCIAL,
   ],
@@ -621,7 +623,7 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.ACADEMICO,
     ROLES.FINANCEIRO,
     ROLES.TECNICO,
-
+    ROLES.GESTOR_UNIDADE,
     ROLES.LIDER_FDV,
   ],
   controleInsumosComercial: [
@@ -19833,7 +19835,7 @@ function AdminView({
     | "funcionarios"
     | "crescimentoAnual"
     | "formularios"
-  >("usuarios");
+  >(profile?.role === "Gestor Unidade" ? "forecast" : "usuarios");
   const [adminRequests, setAdminRequests] = useState<SolicitacaoFolga[]>([]);
   const [loadingAdminRequests, setLoadingAdminRequests] = useState(false);
   const [statusFilter, setStatusFilter] = useState<
@@ -20403,23 +20405,23 @@ function AdminView({
     <div className="space-y-8 pb-12">
       <div className="flex overflow-x-auto space-x-2 border-b border-slate-200 pb-4 mb-6 scrollbar-hide">
         {[
-          { id: "usuarios", label: "Usuários" },
-          { id: "funcionarios", label: "Funcionários (Insumos)" },
-          { id: "folgas", label: "Folgas e Férias" },
-          { id: "bomDia", label: "Bom Dia Captação" },
-          { id: "forecast", label: "Forecast" },
-          { id: "metaDia", label: "Meta Dia" },
-          { id: "qgLigacoes", label: "QG Ligações" },
-          { id: "planner", label: "Planner da Semana" },
-          { id: "periodo", label: "Período da Captação" },
-          { id: "whatsapp", label: "Gestão WhatsApp" },
-          { id: "treinamento", label: "Treinamento Bot" },
-          { id: "links", label: "Links Úteis" },
-          { id: "logo", label: "Logotipo do Login" },
-          { id: "formularios", label: "Formulários" },
-          { id: "crescimentoAnual", label: "Crescimento Anual" },
-          { id: "backup", label: "Backup e Segurança" },
-        ].map((tab) => (
+          { id: "usuarios", label: "Usuários", roles: ["Admin Master", "Líder/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
+          { id: "funcionarios", label: "Funcionários (Insumos)", roles: ["Admin Master", "Líder/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
+          { id: "folgas", label: "Folgas e Férias", roles: ["Admin Master", "Líder/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)", "Gestor Unidade"] },
+          { id: "bomDia", label: "Bom Dia Captação", roles: ["Admin Master", "Líder/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
+          { id: "forecast", label: "Forecast", roles: ["Admin Master", "Líder/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)", "Gestor Unidade"] },
+          { id: "metaDia", label: "Meta Dia", roles: ["Admin Master", "Líder/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
+          { id: "qgLigacoes", label: "QG Ligações", roles: ["Admin Master", "Líder/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
+          { id: "planner", label: "Planner da Semana", roles: ["Admin Master", "Líder/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
+          { id: "periodo", label: "Período da Captação", roles: ["Admin Master", "Líder/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
+          { id: "whatsapp", label: "Gestão WhatsApp", roles: ["Admin Master", "Líder/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
+          { id: "treinamento", label: "Treinamento Bot", roles: ["Admin Master", "Líder/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
+          { id: "links", label: "Links Úteis", roles: ["Admin Master", "Líder/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)", "Gestor Unidade"] },
+          { id: "logo", label: "Logotipo do Login", roles: ["Admin Master", "Líder/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
+          { id: "formularios", label: "Formulários", roles: ["Admin Master", "Líder/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)", "Gestor Unidade"] },
+          { id: "crescimentoAnual", label: "Crescimento Anual", roles: ["Admin Master", "Líder/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)", "Gestor Unidade"] },
+          { id: "backup", label: "Backup e Segurança", roles: ["Admin Master"] },
+        ].filter(t => !t.roles || t.roles.includes(profile?.role || "")).map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}

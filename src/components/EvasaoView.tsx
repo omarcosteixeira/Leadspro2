@@ -84,6 +84,9 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
     periodo: "",
     tipoSolicitacao: "",
     observacao: "",
+    parcelaLeve: "",
+    mensalidades: "",
+    parcelamento: "",
   });
 
   useEffect(() => {
@@ -356,7 +359,11 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
       "Trancamento/Cancelamento": item.trancamentoCancelamento || "",
       "Período": item.periodo || "",
       "Tipo de Solicitação": item.tipoSolicitacao || "",
-      "Observação": item.observacao || ""
+      "Observação": item.observacao || "",
+      "Parcela Leve": item.parcelaLeve || "",
+      "Mensalidades": item.mensalidades || "",
+      "Parcelamento": item.parcelamento || ""
+
     }));
     exportToExcel(exportData, `Evasao_${new Date().getTime()}`);
     onToast("Excel exportado com sucesso!", "success");
@@ -390,6 +397,10 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
             periodo: String(row["Período"] || row["Periodo"] || ""),
             tipoSolicitacao: String(row["Tipo de Solicitação"] || row["Tipo de solicitação"] || ""),
             observacao: String(row["Observação"] || ""),
+            parcelaLeve: String(row["Parcela Leve"] || row["parcelaLeve"] || ""),
+            mensalidades: String(row["Mensalidades"] || row["mensalidades"] || ""),
+            parcelamento: String(row["Parcelamento"] || row["parcelamento"] || ""),
+
             createdAt: serverTimestamp(),
           });
           count++;
@@ -777,6 +788,21 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
                         Obs: {item.observacao}
                       </div>
                     )}
+                    {item.parcelaLeve && (
+                      <div className="text-xs text-blue-600 mt-1 font-medium">
+                        PL: {item.parcelaLeve}
+                      </div>
+                    )}
+                    {item.mensalidades && (
+                      <div className="text-xs text-indigo-600 mt-1 font-medium">
+                        Mensalidades: {item.mensalidades}
+                      </div>
+                    )}
+                    {item.parcelamento && (
+                      <div className="text-xs text-purple-600 mt-1 font-medium">
+                        Parcelamento: {item.parcelamento}
+                      </div>
+                    )}
                     {item.resultado && (
                       <div className="text-xs text-emerald-600 mt-1 font-bold">
                         Res: {item.resultado}
@@ -1015,6 +1041,39 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
                       onChange={e => setFormData({...formData, trancamentoCancelamento: e.target.value})}
                       className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Parcela Leve</label>
+                    <select
+                      value={formData.parcelaLeve || ""}
+                      onChange={e => setFormData({...formData, parcelaLeve: e.target.value})}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Selecione...</option>
+                      {[0,1,2,3].map(v => <option key={v} value={v}>{v}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Mensalidades</label>
+                    <select
+                      value={formData.mensalidades || ""}
+                      onChange={e => setFormData({...formData, mensalidades: e.target.value})}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Selecione...</option>
+                      {[0,1,2,3,4,5].map(v => <option key={v} value={v}>{v}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Parcelamento</label>
+                    <select
+                      value={formData.parcelamento || ""}
+                      onChange={e => setFormData({...formData, parcelamento: e.target.value})}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Selecione...</option>
+                      {[0,1,2,3,4,5,6,7,8,9].map(v => <option key={v} value={v}>{v}</option>)}
+                    </select>
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-sm font-bold text-slate-700 mb-1">Observação (Opcional)</label>
