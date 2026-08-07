@@ -9869,6 +9869,7 @@ function HistoricoView({
     "Interessado",
     "Não Interessado",
     "Convertido",
+    "Contato via Sales",
   ];
 
   const uniquePromotores = useMemo(() => {
@@ -10017,6 +10018,7 @@ function HistoricoView({
       "Sem retorno": 0,
       Interessado: 0,
       "Não Interessado": 0,
+      "Contato via Sales": 0,
     };
     filteredLeads.forEach((l) => {
       const s = l.converted ? "Convertido" : l.status || "Pendente";
@@ -10401,6 +10403,7 @@ function HistoricoView({
                             s.name === "Interessado" && "bg-blue-400",
                             s.name === "Não Interessado" && "bg-rose-400",
                             s.name === "Sem retorno" && "bg-slate-400",
+                            s.name === "Contato via Sales" && "bg-purple-400",
                           )}
                         />
                         {s.name}
@@ -10421,6 +10424,7 @@ function HistoricoView({
                           s.name === "Interessado" && "bg-blue-400",
                           s.name === "Não Interessado" && "bg-rose-400",
                           s.name === "Sem retorno" && "bg-slate-400",
+                            s.name === "Contato via Sales" && "bg-purple-400",
                         )}
                         style={{ width: `${s.percentage}%` }}
                       />
@@ -10718,11 +10722,13 @@ function HistoricoView({
                                   ? "bg-rose-100 text-rose-600"
                                   : lead.status === "Sem retorno"
                                     ? "bg-slate-100 text-slate-600"
+                                    : lead.status === "Contato via Sales" ? "bg-purple-100 text-purple-600"
                                     : "bg-amber-100 text-amber-600",
                           )}
                         >
                           <option value="Pendente">Pendente</option>
                           <option value="Sem retorno">Sem retorno</option>
+<option value="Contato via Sales">Contato via Sales</option>
                           <option value="Interessado">Interessado</option>
                           <option value="Não Interessado">
                             Não Interessado
@@ -11229,7 +11235,8 @@ function BasesView({
       | "Interessado"
       | "Convertido"
       | "Não tem interesse"
-      | "Sem retorno",
+      | "Sem retorno"
+      | "Contato via Sales",
   });
 
   // Memoized aggregations for Dashboard basic metrics
@@ -11302,6 +11309,7 @@ function BasesView({
       Convertido: 0,
       "Não tem interesse": 0,
       "Sem retorno": 0,
+      "Contato via Sales": 0,
     };
     bases.forEach((b) => {
       const s = b.status || "Pendente";
@@ -12140,6 +12148,7 @@ function BasesView({
                               s.name === "Convertido" && "bg-emerald-400",
                               s.name === "Não tem interesse" && "bg-rose-400",
                               s.name === "Sem retorno" && "bg-orange-400",
+                              s.name === "Contato via Sales" && "bg-purple-400",
                             )}
                           />
                           {s.name}
@@ -12160,6 +12169,7 @@ function BasesView({
                             s.name === "Convertido" && "bg-emerald-400",
                             s.name === "Não tem interesse" && "bg-rose-400",
                             s.name === "Sem retorno" && "bg-orange-400",
+                              s.name === "Contato via Sales" && "bg-purple-400",
                           )}
                           style={{ width: `${s.percentage}%` }}
                         />
@@ -12436,6 +12446,7 @@ function BasesView({
                 <option value="Convertido">Convertido</option>
                 <option value="Não tem interesse">Não tem interesse</option>
                 <option value="Sem retorno">Sem retorno</option>
+<option value="Contato via Sales">Contato via Sales</option>
               </select>
               <select
                 className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500"
@@ -12565,6 +12576,8 @@ function BasesView({
                             "bg-rose-100 text-rose-600",
                           entry.status === "Sem retorno" &&
                             "bg-orange-100 text-orange-600",
+                          entry.status === "Contato via Sales" &&
+                            "bg-purple-100 text-purple-600",
                         )}
                       >
                         <option value="Pendente">Pendente</option>
@@ -12574,6 +12587,7 @@ function BasesView({
                           Não tem interesse
                         </option>
                         <option value="Sem retorno">Sem retorno</option>
+<option value="Contato via Sales">Contato via Sales</option>
                       </select>
                     </td>
                     <td className="px-6 py-4 flex items-center space-x-2">
@@ -12913,6 +12927,7 @@ function BasesView({
                     <option value="Convertido">Convertido</option>
                     <option value="Não tem interesse">Não tem interesse</option>
                     <option value="Sem retorno">Sem retorno</option>
+<option value="Contato via Sales">Contato via Sales</option>
                   </select>
                 </div>
               </div>
@@ -13704,6 +13719,7 @@ function BasesRenovacaoView({
               <option value="Convertido">Convertido</option>
               <option value="Não tem interesse">Não tem interesse</option>
               <option value="Sem retorno">Sem retorno</option>
+<option value="Contato via Sales">Contato via Sales</option>
             </select>
           </div>
         </div>
@@ -13808,7 +13824,9 @@ function BasesRenovacaoView({
                         entry.status === "Não tem interesse" &&
                           "bg-rose-100 text-rose-600",
                         entry.status === "Sem retorno" &&
-                          "bg-orange-100 text-orange-600",
+                            "bg-orange-100 text-orange-600",
+                          entry.status === "Contato via Sales" &&
+                            "bg-purple-100 text-purple-600",
                       )}
                     >
                       <option value="Pendente">Pendente</option>
@@ -13818,6 +13836,7 @@ function BasesRenovacaoView({
                         Não tem interesse
                       </option>
                       <option value="Sem retorno">Sem retorno</option>
+<option value="Contato via Sales">Contato via Sales</option>
                     </select>
                   </td>
                   <td className="px-6 py-4 flex items-center space-x-2">

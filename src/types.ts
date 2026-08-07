@@ -91,7 +91,7 @@ export interface Lead {
   cpf?: string;
   cursoInteresse?: string;
   empresa?: string;
-  status: 'Pendente' | 'Sem retorno' | 'Interessado' | 'Não Interessado' | 'Convertido';
+  status: 'Pendente' | 'Sem retorno' | 'Interessado' | 'Não Interessado' | 'Convertido' | 'Contato via Sales';
   converted?: boolean;
   createdAt: any;
   promotorId: string;
@@ -116,7 +116,7 @@ export interface BaseEntry {
   numeroMatricula?: string;
   metodologia: string;
   formaIngresso: string;
-  status: 'Pendente' | 'Interessado' | 'Convertido' | 'Não tem interesse' | 'Sem retorno';
+  status: 'Pendente' | 'Interessado' | 'Convertido' | 'Não tem interesse' | 'Sem retorno' | 'Contato via Sales';
   unidade?: string;
   email?: string;
   createdAt: any;
