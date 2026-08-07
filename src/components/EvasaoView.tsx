@@ -79,6 +79,8 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
     contato: "",
     status: "",
     pendencia: "",
+      multa: "",
+      instituicaoDestino: "",
     resultado: "",
     trancamentoCancelamento: "",
     periodo: "",
@@ -327,6 +329,8 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
       contato: "",
       status: "",
       pendencia: "",
+      multa: "",
+      instituicaoDestino: "",
       resultado: "",
       trancamentoCancelamento: "",
       periodo: "",
@@ -355,6 +359,8 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
       "Contato": item.contato || "",
       "Status": item.status || "",
       "Pendência": item.pendencia || "",
+      "Multa": item.multa || "",
+      "Instituição Destino": item.instituicaoDestino || "",
       "Resultado": item.resultado || "",
       "Trancamento/Cancelamento": item.trancamentoCancelamento || "",
       "Período": item.periodo || "",
@@ -392,6 +398,8 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
             contato: String(row["Contato"] || ""),
             status: String(row["Status"] || ""),
             pendencia: String(row["Pendência"] || ""),
+            multa: String(row["Multa"] || ""),
+            instituicaoDestino: String(row["Instituição Destino"] || row["Instituição destino"] || ""),
             resultado: String(row["Resultado"] || ""),
             trancamentoCancelamento: String(row["Trancamento/Cancelamento"] || ""),
             periodo: String(row["Período"] || row["Periodo"] || ""),
@@ -763,6 +771,11 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
                           {item.tipoSolicitacao}
                         </span>
                       )}
+                      {item.instituicaoDestino && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-800" title={item.instituicaoDestino}>
+                          Destino: {item.instituicaoDestino}
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td className="p-4">
@@ -776,6 +789,11 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
                     {item.pendencia && (
                       <div className="text-xs text-rose-600 mt-1 font-medium line-clamp-1" title={item.pendencia}>
                         Pend: {item.pendencia}
+                      </div>
+                    )}
+                    {item.multa && (
+                      <div className="text-xs text-amber-600 mt-1 font-medium line-clamp-1" title={item.multa}>
+                        Multa: {item.multa}
                       </div>
                     )}
                   </td>
@@ -976,6 +994,17 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
                       <option value="Transferência externa">Transferência externa</option>
                     </select>
                   </div>
+                  {formData.tipoSolicitacao === 'Transferência externa' && (
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-bold text-slate-700 mb-1">Instituição Destino</label>
+                      <input
+                        type="text"
+                        value={formData.instituicaoDestino || ""}
+                        onChange={e => setFormData({...formData, instituicaoDestino: e.target.value})}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  )}
                   <div className="md:col-span-2">
                     <label className="block text-sm font-bold text-slate-700 mb-1">Nome do Aluno</label>
                     <input
@@ -1011,12 +1040,27 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-1">Pendência</label>
-                    <input
-                      type="text"
+                    <select
                       value={formData.pendencia || ""}
                       onChange={e => setFormData({...formData, pendencia: e.target.value})}
                       className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                    >
+                      <option value="">Selecione...</option>
+                      <option value="Sim">Sim</option>
+                      <option value="Não">Não</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Multa</label>
+                    <select
+                      value={formData.multa || ""}
+                      onChange={e => setFormData({...formData, multa: e.target.value})}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Selecione...</option>
+                      <option value="Sim">Sim</option>
+                      <option value="Não">Não</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-1">Resultado</label>

@@ -351,6 +351,9 @@ export interface EvasaoRecord {
   parcelaLeve?: string;
   mensalidades?: string;
   parcelamento?: string;
+  instituicaoDestino?: string;
+  multa?: string;
+
   createdAt: any;
   updatedAt?: any;
 }

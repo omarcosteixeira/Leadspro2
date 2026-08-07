@@ -128,7 +128,7 @@ service cloud.firestore {
         (isFDV() ? (resource.data.promotorId == request.auth.uid || resource.data.linkadoA == request.auth.uid) : 
         (isPromotor() ? resource.data.promotorId == request.auth.uid : canAccessUnit(resource.data.unidade)))
       );
-      allow create: if (request.auth == null || canAccessUnit(request.resource.data.unidade));
+      allow create: if true;
       allow update: if isAuthenticated() && (
         isMasterUser() || isComercial() || isLider() || isGestorUnidade() || isSalaMatricula() || isQG() ||
         (isFDV() && (resource.data.promotorId == request.auth.uid || resource.data.linkadoA == request.auth.uid)) ||
@@ -318,7 +318,8 @@ service cloud.firestore {
     }
 
     match /artifacts/gestaodeleadspro-d4230/public/data/solicitacoes_manutencao/{id} {
-      allow read, write: if isAuthenticated();
+      allow read, update, delete: if isAuthenticated();
+      allow create: if true;
     }
 
     match /artifacts/gestaodeleadspro-d4230/public/data/evasao/{id} {
@@ -342,6 +343,11 @@ service cloud.firestore {
     }
     match /artifacts/gestaodeleadspro-d4230/public/data/bot_reports/{id} {
       allow read, write: if isAuthenticated();
+    }
+
+    match /artifacts/gestaodeleadspro-d4230/public/data/forms_config/{id} {
+      allow read: if true;
+      allow write: if isPrincipal() || isComercial();
     }
   }
 }
