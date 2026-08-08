@@ -81,7 +81,7 @@ export function FormulariosView({ user, onToast }: FormulariosViewProps) {
   }, []);
 
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -98,62 +98,53 @@ export function FormulariosView({ user, onToast }: FormulariosViewProps) {
     try {
       setIsUploading(true);
       
-      // Fallback if storage is not fully configured: read as Base64 to save locally, 
-      // but let's try Firebase Storage first if possible. 
-      // Wait, let's actually just use a Base64 reader to be safe because 
-      // Firebase Storage rules might be missing or fail, 
-      // and we don't want the user to be blocked.
-      // But wait, base64 might exceed Firestore document limits. 
-      // Let's use Firebase Storage.
-      const storageRef = ref(storage, `banners/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
-      
-      setCurrentForm(prev => prev ? { ...prev, bannerUrl: url } : prev);
-      onToast("Imagem enviada com sucesso!", "success");
-    } catch (err: any) {
-      console.error("Erro ao enviar imagem:", err);
-      // Fallback to base64 with compression
-      try {
-         const reader = new FileReader();
-         reader.onloadend = () => {
-             const img = new window.Image();
-             img.onload = () => {
-                 const canvas = document.createElement('canvas');
-                 const MAX_WIDTH = 1024;
-                 const MAX_HEIGHT = 1024;
-                 let width = img.width;
-                 let height = img.height;
-                 
-                 if (width > height) {
-                     if (width > MAX_WIDTH) {
-                         height *= MAX_WIDTH / width;
-                         width = MAX_WIDTH;
-                     }
-                 } else {
-                     if (height > MAX_HEIGHT) {
-                         width *= MAX_HEIGHT / height;
-                         height = MAX_HEIGHT;
-                     }
-                 }
-                 
-                 canvas.width = width;
-                 canvas.height = height;
-                 const ctx = canvas.getContext('2d');
-                 if (ctx) {
-                     ctx.drawImage(img, 0, 0, width, height);
-                     const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
-                     setCurrentForm(prev => prev ? { ...prev, bannerUrl: dataUrl } : prev);
-                     onToast("Imagem salva em modo offline (tamanho reduzido)", "success");
-                 }
-             };
-             img.src = reader.result as string;
-         };
-         reader.readAsDataURL(file);
-      } catch (fallbackErr) {
-         onToast("Erro ao processar imagem.", "error");
-      }
-    } finally {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+          const img = new window.Image();
+          img.onload = () => {
+              const canvas = document.createElement('canvas');
+              const MAX_WIDTH = 1024;
+              const MAX_HEIGHT = 1024;
+              let width = img.width;
+              let height = img.height;
+              
+              if (width > height) {
+                  if (width > MAX_WIDTH) {
+                      height *= MAX_WIDTH / width;
+                      width = MAX_WIDTH;
+                  }
+              } else {
+                  if (height > MAX_HEIGHT) {
+                      width *= MAX_HEIGHT / height;
+                      height = MAX_HEIGHT;
+                  }
+              }
+              
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              if (ctx) {
+                  ctx.drawImage(img, 0, 0, width, height);
+                  const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                  setCurrentForm(prev => prev ? { ...prev, bannerUrl: dataUrl } : prev);
+                  onToast("Imagem carregada com sucesso!", "success");
+              }
+              setIsUploading(false);
+          };
+          img.onerror = () => {
+              onToast("Erro ao ler a imagem.", "error");
+              setIsUploading(false);
+          };
+          img.src = reader.result as string;
+      };
+      reader.onerror = () => {
+          onToast("Erro ao processar imagem.", "error");
+          setIsUploading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error("Erro no processamento:", err);
+      onToast("Erro ao processar imagem.", "error");
       setIsUploading(false);
     }
   };
