@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import {
   Plus,
   Trash2,
+  Image,
   Edit2,
   Share2,
   Settings2,
@@ -39,6 +40,8 @@ import {
 } from "firebase/firestore";
 import { FormConfig, FormField, UserProfile } from "../types";
 import { cn } from "../lib/utils";
+import { storage } from "../firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 interface FormulariosViewProps {
   user: UserProfile;
@@ -56,6 +59,7 @@ export function FormulariosView({ user, onToast }: FormulariosViewProps) {
   const [forms, setForms] = useState<FormConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [currentForm, setCurrentForm] = useState<Partial<FormConfig> | null>(null);
   const [showShareModal, setShowShareModal] = useState<string | null>(null);
 
@@ -75,6 +79,84 @@ export function FormulariosView({ user, onToast }: FormulariosViewProps) {
     );
     return unsub;
   }, []);
+
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      onToast("Selecione um arquivo de imagem válido.", "error");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      onToast("A imagem deve ter no máximo 5MB.", "error");
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      
+      // Fallback if storage is not fully configured: read as Base64 to save locally, 
+      // but let's try Firebase Storage first if possible. 
+      // Wait, let's actually just use a Base64 reader to be safe because 
+      // Firebase Storage rules might be missing or fail, 
+      // and we don't want the user to be blocked.
+      // But wait, base64 might exceed Firestore document limits. 
+      // Let's use Firebase Storage.
+      const storageRef = ref(storage, `banners/${Date.now()}_${file.name}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      
+      setCurrentForm(prev => prev ? { ...prev, bannerUrl: url } : prev);
+      onToast("Imagem enviada com sucesso!", "success");
+    } catch (err: any) {
+      console.error("Erro ao enviar imagem:", err);
+      // Fallback to base64 with compression
+      try {
+         const reader = new FileReader();
+         reader.onloadend = () => {
+             const img = new window.Image();
+             img.onload = () => {
+                 const canvas = document.createElement('canvas');
+                 const MAX_WIDTH = 1024;
+                 const MAX_HEIGHT = 1024;
+                 let width = img.width;
+                 let height = img.height;
+                 
+                 if (width > height) {
+                     if (width > MAX_WIDTH) {
+                         height *= MAX_WIDTH / width;
+                         width = MAX_WIDTH;
+                     }
+                 } else {
+                     if (height > MAX_HEIGHT) {
+                         width *= MAX_HEIGHT / height;
+                         height = MAX_HEIGHT;
+                     }
+                 }
+                 
+                 canvas.width = width;
+                 canvas.height = height;
+                 const ctx = canvas.getContext('2d');
+                 if (ctx) {
+                     ctx.drawImage(img, 0, 0, width, height);
+                     const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                     setCurrentForm(prev => prev ? { ...prev, bannerUrl: dataUrl } : prev);
+                     onToast("Imagem salva em modo offline (tamanho reduzido)", "success");
+                 }
+             };
+             img.src = reader.result as string;
+         };
+         reader.readAsDataURL(file);
+      } catch (fallbackErr) {
+         onToast("Erro ao processar imagem.", "error");
+      }
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleCreate = () => {
     setCurrentForm({
@@ -220,15 +302,42 @@ export function FormulariosView({ user, onToast }: FormulariosViewProps) {
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">URL do Banner (Opcional)</label>
-                <input
-                  type="url"
-                  value={currentForm?.bannerUrl || ""}
-                  onChange={(e) => setCurrentForm({ ...currentForm, bannerUrl: e.target.value })}
-                  placeholder="Ex: https://meusite.com/imagem.png"
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                />
-                <p className="text-[10px] text-slate-500 mt-1">Insira a URL de uma imagem para ser exibida no topo do formulário.</p>
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Banner (Opcional)</label>
+                
+                {currentForm?.bannerUrl ? (
+                  <div className="mb-3 relative rounded-xl overflow-hidden border border-slate-200">
+                    <img src={currentForm.bannerUrl} alt="Banner" className="w-full h-32 object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setCurrentForm({ ...currentForm, bannerUrl: "" })}
+                      className="absolute top-2 right-2 bg-white/90 text-red-600 p-1.5 rounded-lg shadow-sm hover:bg-white transition-colors"
+                      title="Remover banner"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ) : null}
+
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={isUploading}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                  />
+                  <div className={cn(
+                    "w-full bg-slate-50 border border-slate-200 border-dashed rounded-xl px-4 py-6 text-center transition-all",
+                    isUploading ? "opacity-50" : "hover:border-blue-400 hover:bg-blue-50"
+                  )}>
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Image size={24} className={isUploading ? "text-slate-400" : "text-blue-500"} />
+                      <span className="text-sm font-medium text-slate-600">
+                        {isUploading ? "Enviando imagem..." : "Clique ou arraste uma imagem (Máx: 5MB)"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 

@@ -1,6 +1,7 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 import firebaseConfigPrincipalRaw from '../firebase-applet-config.json';
 
 export const firebaseConfigPrincipal = {
@@ -29,6 +30,7 @@ const activeConfig = savedServidor === 'comercial' ? firebaseConfigComercial : f
 
 const app = initializeApp(activeConfig);
 export const auth = getAuth(app);
+export const storage = getStorage(app);
 
 // Enable robust native offline persistence for Android and PWA standalone apps
 export const db = typeof window !== 'undefined'
