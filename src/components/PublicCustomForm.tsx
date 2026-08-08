@@ -164,6 +164,19 @@ export function PublicCustomForm({ onToast }: PublicCustomFormProps) {
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-xl mx-auto">
+        {formConfig.bannerUrl && (
+          <div className="mb-8 w-full rounded-3xl overflow-hidden shadow-lg border border-slate-100 bg-slate-200 flex items-center justify-center">
+            <img 
+              src={formConfig.bannerUrl} 
+              alt={`Banner ${formConfig.title}`} 
+              className="w-full h-auto max-h-64 object-cover block" 
+              onError={(e) => {
+                // If image fails to load, hide the container
+                e.currentTarget.parentElement!.style.display = 'none';
+              }}
+            />
+          </div>
+        )}
         <div className="text-center mb-10">
           <div className="inline-flex p-3 bg-blue-600 text-white rounded-2xl shadow-xl shadow-blue-100 mb-4">
             <FileText size={32} />

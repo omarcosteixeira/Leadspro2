@@ -213,11 +213,22 @@ export function FormulariosView({ user, onToast }: FormulariosViewProps) {
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Descrição (Opcional)</label>
                 <textarea
-                  value={currentForm?.description}
+                  value={currentForm?.description || ""}
                   onChange={(e) => setCurrentForm({ ...currentForm, description: e.target.value })}
                   placeholder="Uma breve mensagem para quem for preencher..."
                   className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all h-24 resize-none"
                 />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">URL do Banner (Opcional)</label>
+                <input
+                  type="url"
+                  value={currentForm?.bannerUrl || ""}
+                  onChange={(e) => setCurrentForm({ ...currentForm, bannerUrl: e.target.value })}
+                  placeholder="Ex: https://meusite.com/imagem.png"
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                />
+                <p className="text-[10px] text-slate-500 mt-1">Insira a URL de uma imagem para ser exibida no topo do formulário.</p>
               </div>
             </div>
 

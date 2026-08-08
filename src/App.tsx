@@ -4621,6 +4621,8 @@ export default function App() {
         ...doc.data(),
       })) as AnalysisScheme[];
       setAnalysisSchemes(list);
+    }, (err) => {
+      console.log("Crescimento Anual snapshot error:", err);
     });
     return () => unsubscribe();
   }, []);

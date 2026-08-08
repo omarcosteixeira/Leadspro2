@@ -637,6 +637,7 @@ export interface FormConfig {
   active: boolean;
   fields: FormField[];
   unidade?: string;
+  bannerUrl?: string;
   createdAt: any;
   updatedAt?: any;
 }
