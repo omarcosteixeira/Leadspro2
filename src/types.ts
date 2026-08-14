@@ -82,6 +82,16 @@ export interface Campanha {
   createdAt: any;
 }
 
+export interface SalesContact {
+  id: string;
+  contactId: string;
+  nome: string;
+  telefone: string;
+  curso: string;
+  origem: string;
+  createdAt: any;
+}
+
 export interface Lead {
   id: string;
   acao: string;

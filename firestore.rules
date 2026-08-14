@@ -359,6 +359,9 @@ service cloud.firestore {
     match /artifacts/gestaopro-761e1/public/data/email_campaign_logs/{id} {
       allow read, write: if true;
     }
+    match /artifacts/gestaopro-761e1/public/data/sales_contacts/{id} {
+      allow read, write: if true;
+    }
 
     match /artifacts/gestaodeleadspro-d4230/public/data/users/{userId} {
       allow get: if isAuthenticated() && (userId == request.auth.uid || isMasterUser() || isComercial() || isFinanceiro());
@@ -603,6 +606,9 @@ service cloud.firestore {
       allow read, write: if true;
     }
     match /artifacts/gestaodeleadspro-d4230/public/data/email_campaign_logs/{id} {
+      allow read, write: if true;
+    }
+    match /artifacts/gestaodeleadspro-d4230/public/data/sales_contacts/{id} {
       allow read, write: if true;
     }
 

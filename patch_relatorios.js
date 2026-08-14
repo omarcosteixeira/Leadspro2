@@ -2,47 +2,23 @@ import fs from 'fs';
 let code = fs.readFileSync('src/components/RelatoriosView.tsx', 'utf8');
 
 code = code.replace(
-  'const filteredEmpresasParceiras = useMemo(() => isPrivileged ? empresasParceiras : filteredEmpresasParceiras.filter(e => e.unidadesVinculadas?.includes(profile.unidade || "") || e.unidade === profile.unidade), [empresasParceiras, profile, isPrivileged]);',
-  'const filteredEmpresasParceiras = useMemo(() => isPrivileged ? empresasParceiras : empresasParceiras.filter(e => e.unidadesVinculadas?.includes(profile.unidade || "") || e.unidade === profile.unidade), [empresasParceiras, profile, isPrivileged]);'
+  '  IsencaoEntry,\n  PedidoCursoEntry,\n  MetaDia,\n  Ligacao,\n  AnalysisScheme,\n  SolicitacaoManutencao\n} from "../types";',
+  '  IsencaoEntry,\n  PedidoCursoEntry,\n  MetaDia,\n  Ligacao,\n  AnalysisScheme,\n  SolicitacaoManutencao,\n  SalesContact\n} from "../types";'
 );
 
 code = code.replace(
-  'const filteredPedidosCursos = useMemo(() => isPrivileged ? (pedidosCursos || []) : (pedidosCursos || []), [filteredPedidosCursos, isPrivileged]);',
-  'const filteredPedidosCursos = useMemo(() => isPrivileged ? (pedidosCursos || []) : (pedidosCursos || []), [pedidosCursos, isPrivileged]);'
+  '  solicitacoesManutencao?: SolicitacaoManutencao[];\n  profile: UserProfile;\n  onToast: (msg: string, type?: "success" | "error") => void;\n}',
+  '  solicitacoesManutencao?: SolicitacaoManutencao[];\n  salesContacts?: SalesContact[];\n  profile: UserProfile;\n  onToast: (msg: string, type?: "success" | "error") => void;\n}'
 );
 
 code = code.replace(
-  'const filteredInsumosPedidos = useMemo(() => isPrivileged ? insumosPedidos : filteredInsumosPedidos.filter(i => i.unidade === profile.unidade), [filteredInsumosPedidos, profile, isPrivileged]);',
-  'const filteredInsumosPedidos = useMemo(() => isPrivileged ? insumosPedidos : insumosPedidos, [insumosPedidos, profile, isPrivileged]);'
+  '  solicitacoesManutencao = [],\n  analysisSchemes = [],\n  profile,\n  onToast,\n}: RelatoriosViewProps) => {',
+  '  solicitacoesManutencao = [],\n  salesContacts = [],\n  analysisSchemes = [],\n  profile,\n  onToast,\n}: RelatoriosViewProps) => {'
 );
 
 code = code.replace(
-  'const filteredInsumosBaixas = useMemo(() => isPrivileged ? insumosBaixas : filteredInsumosBaixas.filter(i => i.unidade === profile.unidade), [filteredInsumosBaixas, profile, isPrivileged]);',
-  'const filteredInsumosBaixas = useMemo(() => isPrivileged ? insumosBaixas : insumosBaixas, [insumosBaixas, profile, isPrivileged]);'
-);
-
-code = code.replace(
-  'const filteredMetaDia = useMemo(() => isPrivileged ? (metaDia || []) : (metaDia || []).filter(m => m.unidade === profile.unidade), [filteredMetaDia, profile, isPrivileged]);',
-  'const filteredMetaDia = useMemo(() => isPrivileged ? (metaDia || []) : (metaDia || []), [metaDia, profile, isPrivileged]);'
-);
-
-code = code.replace(
-  'const filteredSolicitacoesManutencao = useMemo(() => isPrivileged ? (solicitacoesManutencao || []) : (solicitacoesManutencao || []).filter(s => s.unidade === profile.unidade), [filteredSolicitacoesManutencao, profile, isPrivileged]);',
-  'const filteredSolicitacoesManutencao = useMemo(() => isPrivileged ? (solicitacoesManutencao || []) : (solicitacoesManutencao || []), [solicitacoesManutencao, profile, isPrivileged]);'
-);
-
-code = code.replace(
-  'const filteredAnalysisSchemes = useMemo(() => isPrivileged ? (analysisSchemes || []) : (analysisSchemes || []).filter(a => a.unidade === profile.unidade), [filteredAnalysisSchemes, profile, isPrivileged]);',
-  'const filteredAnalysisSchemes = useMemo(() => isPrivileged ? (analysisSchemes || []) : (analysisSchemes || []), [analysisSchemes, profile, isPrivileged]);'
-);
-
-code = code.replace(
-  'if (filteredMetaDiaDataInicio && ',
-  'if (metaDiaDataInicio && '
-);
-code = code.replace(
-  'if (filteredMetaDiaDataFim && ',
-  'if (metaDiaDataFim && '
+  '    "historico" | "bases" | "fiesProuni" | "planoAcao" | "empresas" | "insumos" | "isencoes" | "pedidos_cursos" | "metaDia" | "ligacoes" | "crescimento" | "manutencao"\n  >("historico");',
+  '    "historico" | "bases" | "fiesProuni" | "planoAcao" | "empresas" | "insumos" | "isencoes" | "pedidos_cursos" | "metaDia" | "ligacoes" | "crescimento" | "manutencao" | "sales"\n  >("historico");'
 );
 
 fs.writeFileSync('src/components/RelatoriosView.tsx', code);

@@ -73,6 +73,7 @@ import {
   KeyRound,
   Building2,
   MessageSquare,
+  PhoneOutgoing,
   Mail,
   Globe,
   Copy,
@@ -3923,6 +3924,7 @@ export default function App() {
   }, []);
 
   // Data States
+  const [salesContacts, setSalesContacts] = useState<SalesContact[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [bases, setBases] = useState<BaseEntry[]>([]);
@@ -4846,6 +4848,7 @@ export default function App() {
       );
     }
 
+    let unsubSalesContacts = () => {};
     let unsubLeads = () => {};
     if (profile) {
       let leadsQuery;
@@ -4952,6 +4955,14 @@ export default function App() {
         },
         (err) =>
           handleFirestoreError(err, OperationType.LIST, COLLECTIONS.LEADS),
+      );
+      
+      unsubSalesContacts = onSnapshot(
+        query(collection(db, COLLECTIONS.SALES_CONTACTS), orderBy("createdAt", "desc")),
+        (snap) => {
+          setSalesContacts(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as SalesContact));
+        },
+        (err) => console.error("Error loading sales contacts:", err)
       );
     }
 
@@ -6516,6 +6527,7 @@ export default function App() {
                   metaDia={metaDia}
                   ligacoes={ligacoes}
                   solicitacoesManutencao={solicitacoesManutencao}
+                  salesContacts={salesContacts}
                   analysisSchemes={analysisSchemes}
                   profile={profile!}
                   onToast={showToast}
@@ -10075,6 +10087,23 @@ function HistoricoView({
     }
   };
 
+  const handleContatoViaSales = async (contact: {id: string; nome: string; telefone: string; cursoInteresse?: string; curso?: string}, origem: string) => {
+    try {
+      await addDoc(collection(db, COLLECTIONS.SALES_CONTACTS), {
+        contactId: contact.id,
+        nome: contact.nome,
+        telefone: contact.telefone,
+        curso: contact.cursoInteresse || contact.curso || 'Não informado',
+        origem,
+        createdAt: serverTimestamp(),
+      });
+      onToast("Contato via Sales registrado com sucesso!", "success");
+    } catch (err: any) {
+      console.error(err);
+      onToast("Erro ao registrar Contato via Sales.", "error");
+    }
+  };
+
   const handleMoveToGap = async (lead: Lead) => {
     try {
       await addDoc(collection(db, COLLECTIONS.GAP), {
@@ -10752,6 +10781,14 @@ function HistoricoView({
                               <span>WhatsApp</span>
                             </button>
                           )}
+                          <button
+                            onClick={() => handleContatoViaSales(lead, 'Leads')}
+                            className="inline-flex items-center space-x-1 text-sky-600 font-bold text-sm hover:text-sky-700 bg-sky-50 px-2 py-1 rounded-lg"
+                            title="Registrar Contato via Sales"
+                          >
+                            <PhoneOutgoing size={14} />
+                            <span>Sales</span>
+                          </button>
                           {lead.status === "Convertido" && !invalidLeadIds.has(lead.id) && (
                             <button
                               onClick={() => handleMoveToGap(lead)}
@@ -12607,6 +12644,14 @@ function BasesView({
                         </button>
                       )}
                       <button
+                        onClick={() => handleContatoViaSales(entry, entry.nomeBase || 'Bases')}
+                        className="text-sky-600 font-bold text-sm flex items-center space-x-1 hover:text-sky-700 bg-sky-50 px-2 py-1 rounded-lg ml-2"
+                        title="Registrar Contato via Sales"
+                      >
+                        <PhoneOutgoing size={14} />
+                        <span>Sales</span>
+                      </button>
+                      <button
                         onClick={() => {
                           setEditingCandidate(entry);
                           setEditFormData({
@@ -13852,6 +13897,14 @@ function BasesRenovacaoView({
                     >
                       <MessageSquare size={14} />
                       <span>WhatsApp</span>
+                    </button>
+                    <button
+                      onClick={() => handleContatoViaSales(entry, entry.nomeBase || 'Bases Renovação')}
+                      className="text-sky-600 font-bold text-sm flex items-center space-x-1 hover:text-sky-700 bg-sky-50 px-2 py-1 rounded-lg ml-2"
+                      title="Registrar Contato via Sales"
+                    >
+                      <PhoneOutgoing size={14} />
+                      <span>Sales</span>
                     </button>
                     <button
                       onClick={() => handleDeleteBase(entry.id)}

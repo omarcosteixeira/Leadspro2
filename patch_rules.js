@@ -1,14 +1,22 @@
 import fs from 'fs';
-let rules = fs.readFileSync('firestore.rules', 'utf8');
+let code = fs.readFileSync('firestore.rules', 'utf8');
 
-const matchStart = '    match /artifacts/gestaodeleadspro-d4230/';
-let startIndex = rules.indexOf(matchStart);
+const target1 = `    match /artifacts/gestaopro-761e1/public/data/email_campaign_logs/{id} {
+      allow read, write: if true;
+    }`;
+const replacement1 = target1 + `
+    match /artifacts/gestaopro-761e1/public/data/sales_contacts/{id} {
+      allow read, write: if true;
+    }`;
 
-if (startIndex > -1) {
-    let block = rules.substring(startIndex, rules.lastIndexOf('  }\n}'));
-    let gestaoproBlock = block.replace(/gestaodeleadspro-d4230/g, 'gestaopro-761e1');
-    
-    // Duplicate the block
-    let newRules = rules.substring(0, startIndex) + gestaoproBlock + '\n' + block + '\n  }\n}';
-    fs.writeFileSync('firestore.rules', newRules);
-}
+const target2 = `    match /artifacts/gestaodeleadspro-d4230/public/data/email_campaign_logs/{id} {
+      allow read, write: if true;
+    }`;
+const replacement2 = target2 + `
+    match /artifacts/gestaodeleadspro-d4230/public/data/sales_contacts/{id} {
+      allow read, write: if true;
+    }`;
+
+code = code.replace(target1, replacement1);
+code = code.replace(target2, replacement2);
+fs.writeFileSync('firestore.rules', code);

@@ -1,14 +1,18 @@
 import fs from 'fs';
 let code = fs.readFileSync('src/types.ts', 'utf8');
 
-code = code.replace(
-  "status: 'Pendente' | 'Sem retorno' | 'Interessado' | 'Não Interessado' | 'Convertido';",
-  "status: 'Pendente' | 'Sem retorno' | 'Interessado' | 'Não Interessado' | 'Convertido' | 'Contato via Sales';"
-);
+const target = `export interface Lead {`;
+const replacement = `export interface SalesContact {
+  id: string;
+  contactId: string;
+  nome: string;
+  telefone: string;
+  curso: string;
+  origem: string;
+  createdAt: any;
+}
 
-code = code.replace(
-  "status: 'Pendente' | 'Interessado' | 'Convertido' | 'Não tem interesse' | 'Sem retorno';",
-  "status: 'Pendente' | 'Interessado' | 'Convertido' | 'Não tem interesse' | 'Sem retorno' | 'Contato via Sales';"
-);
+export interface Lead {`;
 
+code = code.replace(target, replacement);
 fs.writeFileSync('src/types.ts', code);

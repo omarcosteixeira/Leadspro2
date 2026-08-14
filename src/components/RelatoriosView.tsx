@@ -4,7 +4,8 @@ import {
   Download, 
   Users, 
   CheckCircle2, 
-  TrendingUp, 
+  TrendingUp,
+  PhoneOutgoing, 
   UserPlus, 
   Target, 
   GraduationCap, 
@@ -55,11 +56,13 @@ import {
   MetaDia,
   Ligacao,
   AnalysisScheme,
-  SolicitacaoManutencao
+  SolicitacaoManutencao,
+  SalesContact
 } from "../types";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { InsumosDashboard } from "./InsumosDashboard";
+import { RelatorioSales } from "./RelatorioSales";
 
 // Reusing StatCard or defining it locally for portability
 const StatCard = ({
@@ -122,7 +125,7 @@ export function RelatoriosView({
   onToast
 }: RelatoriosViewProps) {
   const [activeTab, setActiveTab] = useState<
-    "historico" | "bases" | "fiesProuni" | "planoAcao" | "empresas" | "insumos" | "isencoes" | "pedidos_cursos" | "metaDia" | "ligacoes" | "crescimento" | "manutencao"
+    "historico" | "bases" | "fiesProuni" | "planoAcao" | "empresas" | "insumos" | "isencoes" | "pedidos_cursos" | "metaDia" | "ligacoes" | "crescimento" | "manutencao" | "sales"
   >("historico");
 
   const dashboardRef = useRef<HTMLDivElement>(null);
@@ -728,6 +731,7 @@ export function RelatoriosView({
           { id: "manutencao", label: "Manutenção", icon: Wrench },
           { id: "metaDia", label: "Meta Dia", icon: Target },
           { id: "crescimento", label: "Crescimento", icon: TrendingUp },
+          { id: "sales", label: "Sales (WhatsApp)", icon: PhoneOutgoing },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -769,7 +773,7 @@ export function RelatoriosView({
                         activeTab === "isencoes" ? "Acompanhamento de Isenções" : 
                         activeTab === "ligacoes" ? "Controle de Ligações" :
                         activeTab === "manutencao" ? "Gestão de Manutenção" :
-                        activeTab === "metaDia" ? "Meta Dia" : "Pedidos de Cursos"}
+                        activeTab === "metaDia" ? "Meta Dia" : activeTab === "sales" ? "Contato via Sales" : "Pedidos de Cursos"}
           </h3>
           <span className="text-xs font-mono text-slate-400">Gerado em: {new Date().toLocaleString("pt-BR")}</span>
         </div>
@@ -1269,6 +1273,10 @@ export function RelatoriosView({
               </div>
             </div>
           </div>
+        )}
+
+        {activeTab === "sales" && (
+          <RelatorioSales salesContacts={salesContacts} />
         )}
 
         {activeTab === "metaDia" && (
