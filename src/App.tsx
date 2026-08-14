@@ -130,6 +130,7 @@ import { ControleConcorrenciaView } from "./components/ControleConcorrenciaView"
 import Mapa3D from "./components/Mapa3D";
 import {
   UserProfile,
+  SalesContact,
   Lead,
   BaseEntry,
   GapEntry,
@@ -10087,7 +10088,7 @@ function HistoricoView({
     }
   };
 
-  const handleContatoViaSales = async (contact: {id: string; nome: string; telefone: string; cursoInteresse?: string; curso?: string}, origem: string) => {
+  const handleContatoViaSales = async (contact: any, origem: string) => {
     try {
       await addDoc(collection(db, COLLECTIONS.SALES_CONTACTS), {
         contactId: contact.id,

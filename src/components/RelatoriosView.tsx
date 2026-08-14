@@ -102,6 +102,7 @@ interface RelatoriosViewProps {
   ligacoes?: Ligacao[];
   analysisSchemes?: AnalysisScheme[];
   solicitacoesManutencao?: SolicitacaoManutencao[];
+  salesContacts?: SalesContact[];
   profile: UserProfile;
   onToast: (m: string, t?: "success" | "error") => void;
 }
@@ -121,6 +122,7 @@ export function RelatoriosView({
   ligacoes = [],
   analysisSchemes = [],
   solicitacoesManutencao = [],
+  salesContacts = [],
   profile,
   onToast
 }: RelatoriosViewProps) {
