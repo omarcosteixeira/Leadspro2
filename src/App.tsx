@@ -401,6 +401,12 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.GESTOR_COMERCIAL,
     ROLES.ACADEMICO,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
     ROLES.FDV_COMERCIAL,
     ROLES.FINANCEIRO,
     ROLES.TECNICO,
@@ -410,6 +416,12 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.LIDER_FDV,
     ROLES.GESTOR_COMERCIAL,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
   ],
   relatorios: [
     ROLES.ADMIN_MASTER,
@@ -417,6 +429,12 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.GESTOR_UNIDADE,
     ROLES.GESTOR_COMERCIAL,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
   ],
   cadastro: [
     ROLES.ADMIN_MASTER,
@@ -430,6 +448,12 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.PROMOTOR_RUA,
     ROLES.FDV_COMERCIAL,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
   ],
   historico: [
     ROLES.ADMIN_MASTER,
@@ -441,6 +465,12 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.GESTOR_COMERCIAL,
     ROLES.FDV_COMERCIAL,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
   ],
   bases: [
     ROLES.ADMIN_MASTER,
@@ -449,6 +479,12 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.LIDER_FDV,
     ROLES.GESTOR_COMERCIAL,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
     ROLES.GESTOR_UNIDADE,
     ROLES.FDV,
     ROLES.FDV_COMERCIAL,
@@ -474,6 +510,12 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.GESTOR_COMERCIAL,
     ROLES.ACADEMICO,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
     ROLES.FDV_COMERCIAL,
     ROLES.FINANCEIRO,
     ROLES.TECNICO,
@@ -487,6 +529,12 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.GESTOR_COMERCIAL,
     ROLES.FDV_COMERCIAL,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
   ],
   empresas: [
     ROLES.ADMIN_MASTER,
@@ -497,6 +545,12 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.GESTOR_COMERCIAL,
     ROLES.FDV_COMERCIAL,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
     ROLES.QG,
     ROLES.SSA,
     ROLES.PROMOTOR,
@@ -516,6 +570,12 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.SSA,
     ROLES.FDV_COMERCIAL,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
   ],
   mapao: [
     ROLES.ADMIN_MASTER,
@@ -528,6 +588,12 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.GESTOR_COMERCIAL,
     ROLES.ACADEMICO,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
     ROLES.FDV_COMERCIAL,
     ROLES.FINANCEIRO,
     ROLES.TECNICO,
@@ -559,12 +625,24 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.LIDER_FDV,
     ROLES.GESTOR_COMERCIAL,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
   ],
   controleConcorrencia: [
     ROLES.ADMIN_MASTER,
     ROLES.LIDER_FDV,
     ROLES.GESTOR_COMERCIAL,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
     ROLES.GESTOR_UNIDADE,
     ROLES.FDV,
     ROLES.FDV_COMERCIAL,
@@ -579,6 +657,12 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.LIDER_FDV,
     ROLES.GESTOR_UNIDADE,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
     ROLES.GESTOR_COMERCIAL,
   ],
   crm: [
@@ -590,6 +674,12 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.LIDER_FDV,
     ROLES.GESTOR_COMERCIAL,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
     ROLES.FDV_COMERCIAL,
     ROLES.GESTOR_UNIDADE,
   ],
@@ -599,6 +689,12 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.GESTOR_UNIDADE,
     ROLES.GESTOR_COMERCIAL,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
     ROLES.LIDER_FDV,
     ROLES.FDV,
     ROLES.FDV_COMERCIAL,
@@ -615,6 +711,12 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.GESTOR_COMERCIAL,
     ROLES.ACADEMICO,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
     ROLES.FDV_COMERCIAL,
     ROLES.FINANCEIRO,
     ROLES.TECNICO,
@@ -632,6 +734,12 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.ADMIN_MASTER,
     ROLES.FDV_COMERCIAL,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
     ROLES.LIDER_FDV,
     ROLES.FINANCEIRO,
   ],
@@ -644,11 +752,23 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.GESTOR_COMERCIAL,
     ROLES.FDV_COMERCIAL,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
   ],
   controleLigacoes: [
     ROLES.ADMIN_MASTER,
     ROLES.GESTOR_COMERCIAL,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
     ROLES.LIDER_FDV,
     ROLES.FDV,
     ROLES.FDV_COMERCIAL,
@@ -5321,6 +5441,12 @@ export default function App() {
           ROLES.GESTOR_COMERCIAL,
           ROLES.FINANCEIRO,
           ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
         ].includes(profile.role)
       ) {
         calendarioQuery = query(
@@ -5394,6 +5520,12 @@ export default function App() {
         ROLES.ADMIN_MASTER,
         ROLES.GESTOR_COMERCIAL,
         ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
         ROLES.FINANCEIRO,
       ].includes(profile.role);
 
@@ -9183,6 +9315,23 @@ function CadastroView({
   calendarioAcoes?: CalendarioAcao[];
   uniqueUnidades?: string[];
 }) {
+  const handleContatoViaSales = async (contact: any, origem: string) => {
+    try {
+      await addDoc(collection(db, COLLECTIONS.SALES_CONTACTS), {
+        contactId: contact.id,
+        nome: contact.nome,
+        telefone: contact.telefone,
+        curso: contact.cursoInteresse || contact.curso || "Não informado",
+        origem,
+        createdAt: serverTimestamp(),
+      });
+      onToast("Contato via Sales registrado com sucesso!", "success");
+    } catch (err: any) {
+      console.error(err);
+      onToast("Erro ao registrar Contato via Sales.", "error");
+    }
+  };
+  
   const [formData, setFormData] = useState({
     acao: "",
     acaoId: "",
@@ -9898,6 +10047,12 @@ function HistoricoView({
     ROLES.LIDER_FDV,
     ROLES.GESTOR_COMERCIAL,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
+    ROLES.QG,
+    ROLES.SALA_MATRICULA,
+    ROLES.FDV,
+    ROLES.PROMOTOR,
+    ROLES.PROMOTOR_RUA,
+    ROLES.FDV_COMERCIAL,
   ].includes(profile.role);
 
   const handleAddCustomMessage = async (e: React.FormEvent) => {
@@ -11216,6 +11371,23 @@ function BasesView({
   basesRenovacao: BaseEntry[];
   profile: UserProfile;
 }) {
+  const handleContatoViaSales = async (contact: any, origem: string) => {
+    try {
+      await addDoc(collection(db, COLLECTIONS.SALES_CONTACTS), {
+        contactId: contact.id,
+        nome: contact.nome,
+        telefone: contact.telefone,
+        curso: contact.cursoInteresse || contact.curso || "Não informado",
+        origem,
+        createdAt: serverTimestamp(),
+      });
+      onToast("Contato via Sales registrado com sucesso!", "success");
+    } catch (err: any) {
+      console.error(err);
+      onToast("Erro ao registrar Contato via Sales.", "error");
+    }
+  };
+  
   const [formData, setFormData] = useState({
     nomeBase: "",
     nome: "",
@@ -13107,6 +13279,23 @@ function BasesRenovacaoView({
     messages: { telefone: string; message: string; nome?: string }[],
   ) => void;
 }) {
+  const handleContatoViaSales = async (contact: any, origem: string) => {
+    try {
+      await addDoc(collection(db, COLLECTIONS.SALES_CONTACTS), {
+        contactId: contact.id,
+        nome: contact.nome,
+        telefone: contact.telefone,
+        curso: contact.cursoInteresse || contact.curso || "Não informado",
+        origem,
+        createdAt: serverTimestamp(),
+      });
+      onToast("Contato via Sales registrado com sucesso!", "success");
+    } catch (err: any) {
+      console.error(err);
+      onToast("Erro ao registrar Contato via Sales.", "error");
+    }
+  };
+  
   const [formData, setFormData] = useState({
     nomeBase: "",
     nome: "",
@@ -14097,6 +14286,23 @@ function GapView({
       setSelectedEntries([]);
     }
   };
+  const handleContatoViaSales = async (contact: any, origem: string) => {
+    try {
+      await addDoc(collection(db, COLLECTIONS.SALES_CONTACTS), {
+        contactId: contact.id,
+        nome: contact.nome,
+        telefone: contact.telefone,
+        curso: contact.cursoInteresse || contact.curso || "Não informado",
+        origem,
+        createdAt: serverTimestamp(),
+      });
+      onToast("Contato via Sales registrado com sucesso!", "success");
+    } catch (err: any) {
+      console.error(err);
+      onToast("Erro ao registrar Contato via Sales.", "error");
+    }
+  };
+  
   const [formData, setFormData] = useState({
     nome: "",
     telefone: "",
