@@ -10752,7 +10752,7 @@ function HistoricoView({
                               <span>WhatsApp</span>
                             </button>
                           )}
-                          {lead.status === "Convertido" && (
+                          {lead.status === "Convertido" && !invalidLeadIds.has(lead.id) && (
                             <button
                               onClick={() => handleMoveToGap(lead)}
                               className="text-purple-600 hover:text-purple-700 font-bold text-sm flex items-center space-x-1"
@@ -11353,7 +11353,8 @@ function BasesView({
       // If conversion status toggled to Convertido, check and sync with GAP
       if (
         editFormData.status === "Convertido" &&
-        editingCandidate.status !== "Convertido"
+        editingCandidate.status !== "Convertido" &&
+        !invalidBaseIds.has(editingCandidate.id)
       ) {
         const q = query(
           collection(db, COLLECTIONS.GAP),
@@ -11636,7 +11637,7 @@ function BasesView({
     try {
       await updateDoc(doc(db, COLLECTIONS.BASES, entry.id), { status });
 
-      if (status === "Convertido") {
+      if (status === "Convertido" && !invalidBaseIds.has(entry.id)) {
         // Logic for transferring to GAP
         const q = query(
           collection(db, COLLECTIONS.GAP),

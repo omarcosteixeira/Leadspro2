@@ -238,7 +238,8 @@ export function FormulariosView({ user, onToast }: FormulariosViewProps) {
 
   const getPublicUrl = (formId: string) => {
     const baseUrl = window.location.origin + window.location.pathname;
-    return `${baseUrl}?formId=${formId}`;
+    const servidor = localStorage.getItem('servidor_selected') || 'principal';
+    return `${baseUrl}?formId=${formId}&servidor=${servidor}`;
   };
 
   const copyToClipboard = (text: string) => {
