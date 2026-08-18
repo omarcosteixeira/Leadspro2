@@ -21788,6 +21788,12 @@ function AdminView({
         </section>
       )}
 
+      {activeTab === "metaSM" && (
+        <MetaSMView metaSM={metaSM} onToast={onToast} />
+      )}
+      {activeTab === "metaCursos" && (
+        <MetaCursosView metaCursos={metaCursos} onToast={onToast} />
+      )}
       {activeTab === "metaDia" && (
         <div className="space-y-8">
           <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 max-w-4xl mx-auto">
