@@ -1388,7 +1388,7 @@ export function RelatoriosView({
               ) : (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    {metaSM.sort((a,b) => b.semestre.localeCompare(a.semestre)).slice(0, 1).map(m => (
+                    {[...metaSM].sort((a,b) => (b.semestre || "").localeCompare(a.semestre || "")).slice(0, 1).map(m => (
                       <React.Fragment key={m.id}>
                         <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
                           <p className="text-sm font-bold text-slate-500 uppercase">Semestre {m.semestre}</p>
@@ -1425,7 +1425,7 @@ export function RelatoriosView({
                     </h4>
                     <div className="h-[300px]">
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={[...metaSM].sort((a,b) => a.semestre.localeCompare(b.semestre))}>
+                        <LineChart data={[...metaSM].sort((a,b) => (a.semestre || "").localeCompare(b.semestre || ""))}>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                           <XAxis dataKey="semestre" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#64748b" }} />
                           <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#64748b" }} />
@@ -1461,7 +1461,7 @@ export function RelatoriosView({
               ) : (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {metaCursos.sort((a,b) => b.semestre.localeCompare(a.semestre) || a.curso.localeCompare(b.curso)).map(m => (
+                    {[...metaCursos].sort((a,b) => (b.semestre || "").localeCompare(a.semestre || "") || (a.curso || "").localeCompare(b.curso || "")).map(m => (
                       <div key={m.id} className="bg-slate-50 border border-slate-200 rounded-2xl p-5 shadow-sm">
                         <div className="mb-4">
                           <span className="bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">{m.semestre}</span>
@@ -1513,9 +1513,9 @@ export function RelatoriosView({
                       Crescimento Anual por Curso
                     </h4>
                     {Array.from(new Set(metaCursos.map(m => m.curso))).sort().map(cursoNome => {
-                      const dadosCurso = metaCursos
+                      const dadosCurso = [...metaCursos]
                         .filter(m => m.curso === cursoNome)
-                        .sort((a,b) => a.semestre.localeCompare(b.semestre));
+                        .sort((a,b) => (a.semestre || "").localeCompare(b.semestre || ""));
                       
                       return (
                         <div key={cursoNome} className="border border-slate-100 rounded-2xl p-6 bg-slate-50/50">

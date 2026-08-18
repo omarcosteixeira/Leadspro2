@@ -6666,7 +6666,7 @@ export default function App() {
               {currentView === "dashboard" && (
                 <DashboardView
                   leads={leads}
-                  planner={planner}
+                  planner={[...planner]}
                   links={links}
                   profile={profile!}
                   onToast={showToast}
@@ -6937,7 +6937,7 @@ export default function App() {
                   leads={leads}
                   bases={bases}
                   gap={gap}
-                  planner={planner}
+                  planner={[...planner]}
                   campanhas={campanhas}
                   bomDia={bomDia}
                   forecast={forecast}
@@ -8707,7 +8707,7 @@ function DashboardView({
             </h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {metaSM.sort((a,b) => b.semestre.localeCompare(a.semestre)).map(m => (
+            {[...metaSM].sort((a,b) => (b.semestre || "").localeCompare(a.semestre || "")).map(m => (
               <React.Fragment key={m.id}>
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                   <p className="text-xs font-bold text-slate-500 uppercase">Semestre {m.semestre}</p>
@@ -8748,7 +8748,7 @@ function DashboardView({
             </h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {metaCursos.sort((a,b) => b.semestre.localeCompare(a.semestre) || a.curso.localeCompare(b.curso)).map(m => (
+            {[...metaCursos].sort((a,b) => (b.semestre || "").localeCompare(a.semestre || "") || (a.curso || "").localeCompare(b.curso || "")).map(m => (
               <div key={m.id} className="bg-slate-50 border border-slate-200 rounded-2xl p-5 shadow-sm">
                 <div className="mb-4">
                   <span className="bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">{m.semestre}</span>
@@ -23542,7 +23542,7 @@ function AdminView({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {planner
+                  {[...planner]
                     .sort((a, b) => {
                       const days = [
                         "Segunda-feira",

@@ -245,7 +245,7 @@ export default function MetaCursosView({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {metaCursos.sort((a,b) => b.semestre.localeCompare(a.semestre) || a.curso.localeCompare(b.curso)).map((item) => (
+              {[...metaCursos].sort((a,b) => (b.semestre || "").localeCompare(a.semestre || "") || (a.curso || "").localeCompare(b.curso || "")).map((item) => (
                 <tr
                   key={item.id}
                   className="hover:bg-slate-50/50 transition-colors"
