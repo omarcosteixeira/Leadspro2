@@ -663,3 +663,24 @@ export interface Conversation {
   unidade?: string;
   sentiment?: "Positivo" | "Negativo" | "Neutro";
 }
+
+export interface MetaSM {
+  id: string;
+  semestre: string;
+  metaAA: number;
+  metaDia: number;
+  metaFinal: number;
+  realizado: number;
+  createdAt?: any;
+}
+
+export interface MetaCurso {
+  id: string;
+  semestre: string;
+  curso: string;
+  metaAA: number;
+  metaDia: number;
+  metaFinal: number;
+  realizado: number;
+  createdAt?: any;
+}

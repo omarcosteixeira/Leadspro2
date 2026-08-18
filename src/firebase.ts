@@ -75,6 +75,8 @@ export const COLLECTIONS = new Proxy({} as any, {
       BOT_CONFIG: `artifacts/${currentProjectId}/public/data/bot_config`,
       BOT_REPORTS: `artifacts/${currentProjectId}/public/data/bot_reports`,
       META_DIA: `artifacts/${currentProjectId}/public/data/meta_dia`,
+      META_SM: `artifacts/${currentProjectId}/public/data/meta_sm`,
+      META_CURSOS: `artifacts/${currentProjectId}/public/data/meta_cursos`,
       QG_LIGACOES: `artifacts/${currentProjectId}/public/data/qg_ligacoes`,
       SOLICITACAO_FOLGA: `artifacts/${currentProjectId}/public/data/solicitacoes_folga`,
       CURSOS: `artifacts/${currentProjectId}/public/data/cursos`,

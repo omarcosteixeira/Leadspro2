@@ -1,32 +1,21 @@
 const fs = require('fs');
 let code = fs.readFileSync('firestore.rules', 'utf8');
 
-const fpAnchor = `    match /artifacts/gestaopro-761e1/public/data/fies_prouni/{entryId} {
-      allow get, list: if isAuthenticated() && (isMasterUser() || isComercial() || canAccessUnit(resource.data.unidade));
-      allow create, update: if (isMasterUser() || isComercial() || isLider() || isSalaMatricula() || isSSA()) && (isMasterUser() || isComercial() || canAccessUnit(request.resource.data.unidade));
-      allow delete: if isMasterUser() || isComercial() || isLider();
+const target = `    match /artifacts/gestaodeleadspro-d4230/public/data/meta_dia/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isPrincipal() || isComercial();
+    }`;
+    
+const replacement = target + `
+    match /artifacts/gestaodeleadspro-d4230/public/data/meta_sm/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isPrincipal() || isComercial();
     }
-    match /artifacts/gestaopro-761e1/public/data/fies_prouni_vagas/{entryId} {
-      allow get, list: if isAuthenticated() && (isMasterUser() || isComercial() || canAccessUnit(resource.data.unidade));
-      allow create, update: if (isMasterUser() || isComercial() || isLider() || isSalaMatricula() || isSSA()) && (isMasterUser() || isComercial() || canAccessUnit(request.resource.data.unidade));
-      allow delete: if isMasterUser() || isComercial() || isLider();
+    match /artifacts/gestaodeleadspro-d4230/public/data/meta_cursos/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isPrincipal() || isComercial();
     }`;
 
-const fpReplacement = `    match /artifacts/gestaopro-761e1/public/data/fies_prouni/{entryId} {
-      allow get, list: if isAuthenticated() && (isMasterUser() || isComercial() || isSSA() || canAccessUnit(resource.data.unidade));
-      allow create, update: if (isMasterUser() || isComercial() || isLider() || isSalaMatricula() || isSSA()) && (isMasterUser() || isComercial() || isSSA() || canAccessUnit(request.resource.data.unidade));
-      allow delete: if isMasterUser() || isComercial() || isLider();
-    }
-    match /artifacts/gestaopro-761e1/public/data/fies_prouni_vagas/{entryId} {
-      allow get, list: if isAuthenticated() && (isMasterUser() || isComercial() || isSSA() || canAccessUnit(resource.data.unidade));
-      allow create, update: if (isMasterUser() || isComercial() || isLider() || isSalaMatricula() || isSSA()) && (isMasterUser() || isComercial() || isSSA() || canAccessUnit(request.resource.data.unidade));
-      allow delete: if isMasterUser() || isComercial() || isLider();
-    }`;
+code = code.replace(target, replacement);
 
-if(code.includes(fpAnchor)) {
-  code = code.replace(fpAnchor, fpReplacement);
-  fs.writeFileSync('firestore.rules', code, 'utf8');
-  console.log("Patched firestore.rules");
-} else {
-  console.log("Anchor not found in firestore.rules");
-}
+fs.writeFileSync('firestore.rules', code);
