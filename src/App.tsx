@@ -8720,12 +8720,24 @@ function DashboardView({
                 <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/50">
                   <p className="text-xs font-bold text-slate-500 uppercase">GAP Meta Dia</p>
                   <p className="text-lg font-black text-blue-700">{m.metaDia - m.realizado}</p>
-                  <p className="text-xs text-blue-400">Meta: {m.metaDia}</p>
+                  <div className="mt-2 w-full bg-blue-100 rounded-full h-1.5">
+                    <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, (m.realizado / (m.metaDia || 1)) * 100)}%` }}></div>
+                  </div>
+                  <div className="flex justify-between items-center mt-1">
+                    <p className="text-xs text-blue-400">Meta: {m.metaDia}</p>
+                    <p className="text-xs font-bold text-blue-500">{((m.realizado / (m.metaDia || 1)) * 100).toFixed(1)}%</p>
+                  </div>
                 </div>
                 <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100/50">
                   <p className="text-xs font-bold text-slate-500 uppercase">GAP A.A</p>
                   <p className="text-lg font-black text-emerald-700">{m.metaAA - m.realizado}</p>
-                  <p className="text-xs text-emerald-400">Ano Anterior: {m.metaAA}</p>
+                  <div className="mt-2 w-full bg-emerald-100 rounded-full h-1.5">
+                    <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, (m.realizado / (m.metaAA || 1)) * 100)}%` }}></div>
+                  </div>
+                  <div className="flex justify-between items-center mt-1">
+                    <p className="text-xs text-emerald-400">Ano Anterior: {m.metaAA}</p>
+                    <p className="text-xs font-bold text-emerald-500">{((m.realizado / (m.metaAA || 1)) * 100).toFixed(1)}%</p>
+                  </div>
                 </div>
                 <div className="bg-purple-50/50 p-4 rounded-2xl border border-purple-100/50">
                   <p className="text-xs font-bold text-slate-500 uppercase">GAP Final</p>
@@ -8733,7 +8745,10 @@ function DashboardView({
                   <div className="mt-2 w-full bg-purple-100 rounded-full h-1.5">
                     <div className="bg-purple-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, (m.realizado / (m.metaFinal || 1)) * 100)}%` }}></div>
                   </div>
-                  <p className="text-xs text-purple-500 mt-1">{((m.realizado / (m.metaFinal || 1)) * 100).toFixed(1)}% Alcançado</p>
+                  <div className="flex justify-between items-center mt-1">
+                    <p className="text-xs text-purple-400">Meta: {m.metaFinal}</p>
+                    <p className="text-xs font-bold text-purple-500">{((m.realizado / (m.metaFinal || 1)) * 100).toFixed(1)}%</p>
+                  </div>
                 </div>
               </React.Fragment>
             ))}
