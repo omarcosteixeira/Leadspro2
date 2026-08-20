@@ -6,10 +6,10 @@ import { COLLECTIONS } from "../firebase";
 import { MetaSM } from "../types";
 
 export default function MetaSMView({
-  metaSM,
+  metaSM = [],
   onToast,
 }: {
-  metaSM: MetaSM[];
+  metaSM?: MetaSM[];
   onToast: (m: string, t?: "success" | "error") => void;
 }) {
   const [editingItem, setEditingItem] = useState<MetaSM | null>(null);
@@ -222,7 +222,7 @@ export default function MetaSMView({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {[...metaSM].sort((a,b) => (b.semestre || "").localeCompare(a.semestre || "")).map((item) => (
+              {[...(metaSM || [])].sort((a,b) => (b.semestre || "").localeCompare(a.semestre || "")).map((item) => (
                 <tr
                   key={item.id}
                   className="hover:bg-slate-50/50 transition-colors"
@@ -262,7 +262,7 @@ export default function MetaSMView({
                   </td>
                 </tr>
               ))}
-              {metaSM.length === 0 && (
+              {(!metaSM || metaSM.length === 0) && (
                 <tr>
                   <td
                     colSpan={6}

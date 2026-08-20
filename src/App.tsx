@@ -192,6 +192,8 @@ import { EvasaoView } from "./components/EvasaoView";
 import NovasOportunidadesView from "./components/NovasOportunidadesView";
 import ControleLigacoesView from "./components/ControleLigacoesView";
 import CRMView from "./components/CRMView";
+import MetaSMView from "./components/MetaSMView";
+import MetaCursosView from "./components/MetaCursosView";
 
 // --- Helpers ---
 export const replaceMessageVariables = (
@@ -8106,6 +8108,7 @@ function DashboardView({
     periodo: true,
     qgLigacoes: true,
     metaSM: true,
+    metaCursos: true,
     aniversarios: true,
   };
   const widgets = profile?.dashboardWidgets
@@ -8698,7 +8701,7 @@ function DashboardView({
       )}
 
       {/* Meta SM Dashboard Card */}
-      {widgets.metaSM && metaSM.length > 0 && (
+      {widgets.metaSM && (metaSM && metaSM.length > 0) && (
         <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
           <div className="flex items-center space-x-2 text-indigo-600 mb-6">
             <Target size={24} />
@@ -8739,7 +8742,7 @@ function DashboardView({
       )}
 
       {/* Meta Cursos Dashboard Card */}
-      {widgets.metaCursos && metaCursos.length > 0 && (
+      {widgets.metaCursos && (metaCursos && metaCursos.length > 0) && (
         <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
           <div className="flex items-center space-x-2 text-indigo-600 mb-6">
             <Target size={24} />

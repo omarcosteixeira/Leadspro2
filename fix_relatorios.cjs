@@ -1,21 +1,40 @@
 const fs = require('fs');
+
 let code = fs.readFileSync('src/components/RelatoriosView.tsx', 'utf8');
 
+// First revert the bad import
 code = code.replace(
-  '  const [metaDiaDataInicio, setMetaDiaDataInicio] = useState("");\n  const [metaDiaDataFim, setMetaDiaDataFim] = useState("");\n',
-  ''
+  'import {\n  MetaSM,\n  MetaCurso,\n  LineChart,',
+  'import {\n  LineChart,'
 );
 
-const anchor = '  const [ligacoesSearchTerm, setLigacoesSearchTerm] = useState("");';
-const replacement = '  const [ligacoesSearchTerm, setLigacoesSearchTerm] = useState("");\n  const [metaDiaDataInicio, setMetaDiaDataInicio] = useState("");\n  const [metaDiaDataFim, setMetaDiaDataFim] = useState("");';
+code = code.replace(
+  'import {\n  MetaSM,\n  MetaCurso,\n  Search,',
+  'import {\n  Search,'
+);
 
-if (code.includes(anchor)) {
-    code = code.replace(anchor, replacement);
+code = code.replace(
+  'import {\n  MetaSM,\n  MetaCurso,\n  ChevronDown,',
+  'import {\n  ChevronDown,'
+);
+
+// Then add to correct place
+if (code.includes('import { Lead, SolicitacaoFolga')) {
+  code = code.replace(
+    'import { Lead, SolicitacaoFolga',
+    'import { Lead, SolicitacaoFolga, MetaSM, MetaCurso'
+  );
+} else if (code.includes('import { Lead')) {
+  code = code.replace(
+    'import { Lead',
+    'import { Lead, MetaSM, MetaCurso'
+  );
 } else {
-    // maybe it was replaced differently? Let's just put it at the top of the component
-    const compAnchor = 'export function RelatoriosView({';
-    code = code.replace(compAnchor, compAnchor + '\n  const [metaDiaDataInicio, setMetaDiaDataInicio] = useState("");\n  const [metaDiaDataFim, setMetaDiaDataFim] = useState("");\n');
+  // Just add it
+  code = code.replace(
+    'import { COLLECTIONS } from "../firebase";',
+    'import { COLLECTIONS } from "../firebase";\nimport { MetaSM, MetaCurso } from "../types";'
+  );
 }
 
-fs.writeFileSync('src/components/RelatoriosView.tsx', code, 'utf8');
-console.log("Fixed RelatoriosView.");
+fs.writeFileSync('src/components/RelatoriosView.tsx', code);

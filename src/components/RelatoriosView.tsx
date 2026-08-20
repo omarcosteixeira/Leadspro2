@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from "react";
-import { 
+import {
   BarChart3, 
   Download, 
   Users, 
@@ -57,7 +57,9 @@ import {
   Ligacao,
   AnalysisScheme,
   SolicitacaoManutencao,
-  SalesContact
+  SalesContact,
+  MetaSM,
+  MetaCurso
 } from "../types";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
@@ -1380,7 +1382,7 @@ export function RelatoriosView({
                 <p className="text-slate-500 text-sm">Resumo e projeção de crescimento do canal SM</p>
               </div>
 
-              {metaSM.length === 0 ? (
+              {(!metaSM || metaSM.length === 0) ? (
                 <div className="text-center py-12 text-slate-400">
                   <Target size={48} className="mx-auto mb-4 opacity-50" />
                   <p>Nenhum dado cadastrado.</p>
@@ -1453,7 +1455,7 @@ export function RelatoriosView({
                 <p className="text-slate-500 text-sm">Resumo e projeção de crescimento por curso</p>
               </div>
 
-              {metaCursos.length === 0 ? (
+              {(!metaCursos || metaCursos.length === 0) ? (
                 <div className="text-center py-12 text-slate-400">
                   <Target size={48} className="mx-auto mb-4 opacity-50" />
                   <p>Nenhum dado cadastrado.</p>

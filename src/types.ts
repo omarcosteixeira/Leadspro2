@@ -34,6 +34,8 @@ export interface UserProfile {
     periodo: boolean;
     qgLigacoes?: boolean;
     aniversarios?: boolean;
+    metaSM?: boolean;
+    metaCursos?: boolean;
   };
 }
 

@@ -6,10 +6,10 @@ import { COLLECTIONS } from "../firebase";
 import { MetaCurso } from "../types";
 
 export default function MetaCursosView({
-  metaCursos,
+  metaCursos = [],
   onToast,
 }: {
-  metaCursos: MetaCurso[];
+  metaCursos?: MetaCurso[];
   onToast: (m: string, t?: "success" | "error") => void;
 }) {
   const [editingItem, setEditingItem] = useState<MetaCurso | null>(null);
@@ -245,7 +245,7 @@ export default function MetaCursosView({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {[...metaCursos].sort((a,b) => (b.semestre || "").localeCompare(a.semestre || "") || (a.curso || "").localeCompare(b.curso || "")).map((item) => (
+              {[...(metaCursos || [])].sort((a,b) => (b.semestre || "").localeCompare(a.semestre || "") || (a.curso || "").localeCompare(b.curso || "")).map((item) => (
                 <tr
                   key={item.id}
                   className="hover:bg-slate-50/50 transition-colors"
@@ -288,7 +288,7 @@ export default function MetaCursosView({
                   </td>
                 </tr>
               ))}
-              {metaCursos.length === 0 && (
+              {(!metaCursos || metaCursos.length === 0) && (
                 <tr>
                   <td
                     colSpan={7}
