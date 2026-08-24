@@ -324,6 +324,7 @@ export interface MapaoDisciplina {
   dia: string;
   horario: string;
   turma: string;
+  semestre?: string;
   tipoDisciplina: 'PRESENCIAL' | 'TEAMS' | 'ONLINE' | string;
   professor: string;
   matricula: string;

@@ -930,6 +930,7 @@ function MapaoAcademicoView({
     dia: "Segunda-feira",
     horario: "",
     turma: "",
+    semestre: "",
     tipoDisciplina: "PRESENCIAL",
     professor: "",
     matricula: "",
@@ -943,6 +944,11 @@ function MapaoAcademicoView({
     periodo: "",
     disciplinas: [{ ...defaultDisciplina }],
   });
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
+
+  const toggleExpand = (id: string) => {
+    setExpandedCards(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1218,24 +1224,24 @@ function MapaoAcademicoView({
 
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {mapao.map((entry) => {
           const disciplinasList = entry.disciplinas || [];
-
+          const isExpanded = expandedCards[entry.id];
           return (
             <motion.div
               key={entry.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className={cn(
-                "p-5 rounded-3xl border shadow-sm transition-all relative group flex flex-col",
+                "p-6 rounded-[2rem] border shadow-sm transition-all relative group flex flex-col gap-4",
                 entry.tipoCurso === "GRADUACAO"
                   ? "bg-white border-blue-100"
                   : "bg-white border-emerald-100",
               )}
             >
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex gap-2">
+              <div className="flex justify-between items-start">
+                <div className="flex flex-wrap gap-2">
                   <span
                     className={cn(
                       "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
@@ -1250,7 +1256,7 @@ function MapaoAcademicoView({
                     {entry.modalidade}
                   </span>
                 </div>
-                <div className="flex space-x-1">
+                <div className="flex space-x-1 shrink-0 bg-white/50 p-1 rounded-xl shadow-sm border border-slate-100/50 backdrop-blur-sm">
                   {canEdit && (
                     <>
                       <button
@@ -1294,8 +1300,8 @@ function MapaoAcademicoView({
                 </div>
               </div>
 
-              <div className="flex-1 flex flex-row gap-6">
-                <div className="w-1/3 flex flex-col justify-center border-r border-slate-100 pr-6">
+              <div className="flex justify-between items-center gap-4 cursor-pointer" onClick={() => toggleExpand(entry.id)}>
+                <div>
                   <h3 className="text-xl font-bold text-slate-900 leading-tight mb-1">
                     {entry.curso}
                   </h3>
@@ -1303,47 +1309,89 @@ function MapaoAcademicoView({
                     {entry.periodo}
                   </p>
                 </div>
-                <div className="w-2/3 grid grid-cols-2 gap-3">
-                  {disciplinasList.map((disc, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-slate-50 p-3 rounded-2xl border border-slate-100 flex flex-col justify-between"
-                    >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleExpand(entry.id);
+                  }}
+                  className="bg-slate-50 hover:bg-slate-100 p-2 rounded-full text-slate-500 transition-colors shrink-0"
+                >
+                  {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </button>
+              </div>
+
+              {isExpanded && (
+              <div className="flex-1 space-y-3 mt-2">
+                {disciplinasList.map((disc, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col gap-2 relative overflow-hidden"
+                  >
+                    <div className="flex justify-between items-start gap-2">
                       <div>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">
                           {disc.codDisc}
                         </p>
-                        <p className="text-sm font-bold text-slate-800 leading-tight mb-2">
+                        <p className="text-sm font-bold text-slate-800 leading-tight">
                           {disc.disciplina}
                         </p>
-                        <p className="text-[10px] text-slate-600 font-medium">
-                          Prof: {disc.professor}
-                        </p>
                       </div>
+                      <span className={cn(
+                        "px-2 py-1 text-[9px] font-bold uppercase tracking-wider rounded-lg shrink-0",
+                        disc.tipoDisciplina === "PRESENCIAL" ? "bg-purple-100 text-purple-600" :
+                        disc.tipoDisciplina === "TEAMS" || disc.tipoDisciplina === "ONLINE" ? "bg-blue-100 text-blue-600" :
+                        "bg-orange-100 text-orange-600"
+                      )}>
+                        {disc.tipoDisciplina || "PRESENCIAL"}
+                      </span>
+                    </div>
 
-                      <div className="grid grid-cols-2 gap-2 mt-2">
-                        <div className="flex items-center space-x-1.5 text-slate-600 bg-white px-2 py-1 rounded-lg border border-slate-100">
-                          <Clock size={10} className="text-blue-500" />
-                          <span className="text-[9px] font-bold truncate">
-                            {disc.horario}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-1.5 text-slate-600 bg-white px-2 py-1 rounded-lg border border-slate-100">
-                          <Users size={10} className="text-emerald-500" />
-                          <span className="text-[9px] font-bold truncate">
-                            {disc.turma}
-                          </span>
-                        </div>
+                    <p className="text-xs text-slate-600 font-medium mt-1">
+                      <span className="text-slate-400 font-normal">Prof:</span> {disc.professor || "-"}
+                    </p>
+
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <div className="flex items-center space-x-1.5 text-slate-600 bg-white px-2.5 py-1.5 rounded-lg border border-slate-100 shadow-sm">
+                        <Calendar size={12} className="text-blue-500" />
+                        <span className="text-[10px] font-bold">
+                          {disc.dia || "-"}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-1.5 text-slate-600 bg-white px-2.5 py-1.5 rounded-lg border border-slate-100 shadow-sm">
+                        <Clock size={12} className="text-amber-500" />
+                        <span className="text-[10px] font-bold">
+                          {disc.horario || "-"}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-1.5 text-slate-600 bg-white px-2.5 py-1.5 rounded-lg border border-slate-100 shadow-sm">
+                        <Users size={12} className="text-emerald-500" />
+                        <span className="text-[10px] font-bold">
+                          {disc.turma || "-"}
+                          {disc.semestre ? ` (${disc.semestre})` : ""}
+                        </span>
                       </div>
                     </div>
-                  ))}
-                </div>
+
+                    {disc.observacao && (
+                      <div className="mt-3 text-xs text-slate-600 bg-white p-2.5 rounded-xl border border-slate-200 border-dashed">
+                        {disc.observacao}
+                      </div>
+                    )}
+                    {disc.linkAula && (
+                      <a href={disc.linkAula} target="_blank" rel="noopener noreferrer" className="mt-2 flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors w-fit bg-blue-50 px-3 py-1.5 rounded-lg">
+                        <ExternalLink size={14} /> Link da Aula
+                      </a>
+                    )}
+                  </div>
+                ))}
                 {disciplinasList.length === 0 && (
-                  <p className="text-xs text-slate-500 italic text-center py-4">
-                    Nenhuma disciplina cadastrada.
-                  </p>
+                  <div className="bg-slate-50 border border-slate-100 border-dashed rounded-2xl py-8 flex flex-col items-center justify-center text-slate-400">
+                    <GraduationCap size={24} className="mb-2 opacity-50" />
+                    <p className="text-xs italic">Nenhuma disciplina cadastrada.</p>
+                  </div>
                 )}
               </div>
+              )}
             </motion.div>
           );
         })}
@@ -1581,6 +1629,34 @@ function MapaoAcademicoView({
                             }
                             required
                           />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-500 mb-1">
+                            Semestre
+                          </label>
+                          <select
+                            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 outline-none text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500"
+                            value={disc.semestre || ""}
+                            onChange={(e) =>
+                              handleChangeDisciplina(
+                                idx,
+                                "semestre",
+                                e.target.value,
+                              )
+                            }
+                          >
+                            <option value="">Selecione...</option>
+                            <option value="1º">1º</option>
+                            <option value="2º">2º</option>
+                            <option value="3º">3º</option>
+                            <option value="4º">4º</option>
+                            <option value="5º">5º</option>
+                            <option value="6º">6º</option>
+                            <option value="7º">7º</option>
+                            <option value="8º">8º</option>
+                            <option value="9º">9º</option>
+                            <option value="10º">10º</option>
+                          </select>
                         </div>
                         <div>
                           <label className="block text-xs font-bold text-slate-500 mb-1">
