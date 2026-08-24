@@ -14555,6 +14555,8 @@ function GapView({
   const [gapSubTab, setGapSubTab] = useState<"dashboard" | "lista">(
     "dashboard",
   );
+  const [duplicateIds, setDuplicateIds] = useState<Set<string>>(new Set());
+  const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
 
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [selectedEntryForWhatsapp, setSelectedEntryForWhatsapp] =
@@ -14963,6 +14965,53 @@ Pela internet: https://sia.estacio.br/sianet/Logon`);
     }
   };
 
+  const handleCheckDuplicates = () => {
+    if (showDuplicatesOnly) {
+      setShowDuplicatesOnly(false);
+      setDuplicateIds(new Set());
+      return;
+    }
+
+    const seenCpfs = new Set<string>();
+    const seenTels = new Set<string>();
+    const dups = new Set<string>();
+
+    const sortedGap = [...gap].sort((a, b) => {
+      const da = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+      const dbTime = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+      return dbTime - da;
+    });
+
+    for (const entry of sortedGap) {
+      const hasCpf = entry.cpf && entry.cpf.trim() !== "";
+      const hasTel = entry.telefone && entry.telefone.trim() !== "";
+      
+      let isDup = false;
+      if (hasCpf && seenCpfs.has(entry.cpf)) {
+        isDup = true;
+      }
+      if (hasTel && seenTels.has(entry.telefone)) {
+        isDup = true;
+      }
+
+      if (isDup) {
+        dups.add(entry.id);
+      } else {
+        if (hasCpf) seenCpfs.add(entry.cpf);
+        if (hasTel) seenTels.add(entry.telefone);
+      }
+    }
+    
+    if (dups.size === 0) {
+      onToast("Nenhuma duplicidade encontrada.", "success");
+      return;
+    }
+
+    setDuplicateIds(dups);
+    setShowDuplicatesOnly(true);
+    onToast(`Encontrados ${dups.size} registros mais antigos possivelmente duplicados.`, "success");
+  };
+
   const handleExport = () => {
     const data = filteredGap.map((g) => ({
       Nome: g.nome,
@@ -15272,6 +15321,16 @@ Pela internet: https://sia.estacio.br/sianet/Logon`);
                   className="hidden"
                 />
               </label>
+              <button
+                onClick={handleCheckDuplicates}
+                disabled={loading}
+                className={cn("px-4 py-2 rounded-xl flex items-center space-x-2 transition-all text-sm font-bold disabled:opacity-50", showDuplicatesOnly ? "bg-purple-600 text-white" : "bg-purple-100 text-purple-600 hover:bg-purple-200")}
+              >
+                {showDuplicatesOnly ? <EyeOff size={18} /> : <Eye size={18} />}
+                <span className="hidden sm:inline">
+                  {showDuplicatesOnly ? "Limpar Filtro de Duplicados" : "Verificar Duplicidade"}
+                </span>
+              </button>
               <button
                 onClick={handleExport}
                 className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-slate-200 transition-all text-sm font-bold"
