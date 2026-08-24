@@ -1030,6 +1030,63 @@ function MapaoAcademicoView({
     setFormData((prev) => ({ ...prev, disciplinas: newDisciplinas }));
   };
 
+  const handleExport = () => {
+    const dataStr = JSON.stringify(mapao.map(m => {
+      const { id, createdAt, ...rest } = m;
+      return rest;
+    }), null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "mapao_academico.json";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const content = e.target?.result as string;
+        const data = JSON.parse(content);
+        if (!Array.isArray(data)) {
+          onToast("Formato de arquivo inválido. Deve ser um array JSON.", "error");
+          return;
+        }
+
+        let importedCount = 0;
+        for (const item of data) {
+          const isDuplicate = mapao.some(
+            (m) =>
+              m.curso?.toLowerCase() === item.curso?.toLowerCase() &&
+              m.modalidade === item.modalidade &&
+              m.periodo === item.periodo
+          );
+
+          if (!isDuplicate) {
+            await addDoc(collection(db, COLLECTIONS.MAPAO_ACADEMICO), {
+              ...item,
+              createdAt: serverTimestamp(),
+            });
+            importedCount++;
+          }
+        }
+        
+        onToast(`${importedCount} registros importados com sucesso!`, "success");
+      } catch (err: any) {
+        onToast("Erro ao importar arquivo.", "error");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = ''; // Reset input
+  };
+
   const canEdit = true;
 
   return (
@@ -1043,23 +1100,48 @@ function MapaoAcademicoView({
             Gestão de cursos, disciplinas e horários
           </p>
         </div>
+
         {canEdit && (
-          <button
-            onClick={() => {
-              setEditingEntry(null);
-              setFormData({
-                modalidade: "Presencial",
-                tipoCurso: "GRADUACAO",
-                disciplinas: [{ ...defaultDisciplina }],
-              });
-              setShowModal(true);
-            }}
-            className="bg-blue-600 text-white px-6 py-2.5 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center space-x-2"
-          >
-            <Plus size={20} />
-            <span>Novo Cadastro</span>
-          </button>
+          <div className="flex gap-2">
+            <input
+              type="file"
+              accept=".json"
+              className="hidden"
+              id="import-mapao-file"
+              onChange={handleImport}
+            />
+            <label
+              htmlFor="import-mapao-file"
+              className="cursor-pointer bg-slate-100 text-slate-700 px-4 py-2.5 rounded-2xl font-bold hover:bg-slate-200 transition-all flex items-center space-x-2"
+            >
+              <Upload size={18} />
+              <span className="hidden sm:inline">Importar</span>
+            </label>
+            <button
+              onClick={handleExport}
+              className="bg-slate-100 text-slate-700 px-4 py-2.5 rounded-2xl font-bold hover:bg-slate-200 transition-all flex items-center space-x-2"
+            >
+              <Download size={18} />
+              <span className="hidden sm:inline">Exportar</span>
+            </button>
+            <button
+              onClick={() => {
+                setEditingEntry(null);
+                setFormData({
+                  modalidade: "Presencial",
+                  tipoCurso: "GRADUACAO",
+                  disciplinas: [{ ...defaultDisciplina }],
+                });
+                setShowModal(true);
+              }}
+              className="bg-blue-600 text-white px-6 py-2.5 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center space-x-2"
+            >
+              <Plus size={20} />
+              <span>Novo Cadastro</span>
+            </button>
+          </div>
         )}
+
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
