@@ -338,6 +338,7 @@ export interface MapaoAcademicoEntry {
   curso: string;
   periodo: string;
   tipoCurso: 'GRADUACAO' | 'TECNICO';
+  semestre?: string;
   disciplinas: MapaoDisciplina[];
   createdAt: any;
 }

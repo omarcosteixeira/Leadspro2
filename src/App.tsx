@@ -942,9 +942,16 @@ function MapaoAcademicoView({
     modalidade: "Presencial",
     tipoCurso: "GRADUACAO",
     periodo: "",
+    semestre: "",
     disciplinas: [{ ...defaultDisciplina }],
   });
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
+  
+  // Filters
+  const [filterCurso, setFilterCurso] = useState("");
+  const [filterPeriodo, setFilterPeriodo] = useState("");
+  const [filterSemestre, setFilterSemestre] = useState("");
+  const [filterTipoCurso, setFilterTipoCurso] = useState("");
 
   const toggleExpand = (id: string) => {
     setExpandedCards(prev => ({ ...prev, [id]: !prev[id] }));
@@ -988,6 +995,8 @@ function MapaoAcademicoView({
       setFormData({
         modalidade: "Presencial",
         tipoCurso: "GRADUACAO",
+        periodo: "",
+        semestre: "",
         disciplinas: [{ ...defaultDisciplina }],
       });
     } catch (err: any) {
@@ -1224,8 +1233,67 @@ function MapaoAcademicoView({
 
       </div>
 
+      {/* Filter Bar */}
+      <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex flex-col md:flex-row gap-4 mb-6">
+        <div className="flex-1 relative">
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Filtrar por Curso"
+            value={filterCurso}
+            onChange={(e) => setFilterCurso(e.target.value)}
+            className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 outline-none font-bold text-sm text-slate-700 focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div className="flex-1">
+          <input
+            type="text"
+            placeholder="Filtrar por Período"
+            value={filterPeriodo}
+            onChange={(e) => setFilterPeriodo(e.target.value)}
+            className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none font-bold text-sm text-slate-700 focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div className="w-full md:w-48 shrink-0">
+          <select
+            value={filterSemestre}
+            onChange={(e) => setFilterSemestre(e.target.value)}
+            className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none font-bold text-sm text-slate-700 focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Qualquer Semestre</option>
+            <option value="1º">1º</option>
+            <option value="2º">2º</option>
+            <option value="3º">3º</option>
+            <option value="4º">4º</option>
+            <option value="5º">5º</option>
+            <option value="6º">6º</option>
+            <option value="7º">7º</option>
+            <option value="8º">8º</option>
+            <option value="9º">9º</option>
+            <option value="10º">10º</option>
+          </select>
+        </div>
+        <div className="w-full md:w-48 shrink-0">
+          <select
+            value={filterTipoCurso}
+            onChange={(e) => setFilterTipoCurso(e.target.value)}
+            className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none font-bold text-sm text-slate-700 focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Qualquer Tipo</option>
+            <option value="GRADUACAO">GRADUAÇÃO</option>
+            <option value="TECNICO">TÉCNICO</option>
+          </select>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {mapao.map((entry) => {
+        {mapao.filter((entry) => {
+          const matchCurso = !filterCurso || entry.curso?.toLowerCase().includes(filterCurso.toLowerCase());
+          const matchPeriodo = !filterPeriodo || entry.periodo?.toLowerCase().includes(filterPeriodo.toLowerCase());
+          const matchSemestre = !filterSemestre || entry.semestre === filterSemestre;
+          const matchTipo = !filterTipoCurso || entry.tipoCurso === filterTipoCurso;
+          return matchCurso && matchPeriodo && matchSemestre && matchTipo;
+        }).map((entry) => {
           const disciplinasList = entry.disciplinas || [];
           const isExpanded = expandedCards[entry.id];
           return (
@@ -1264,6 +1332,7 @@ function MapaoAcademicoView({
                           setEditingEntry(entry);
                           setFormData({
                             ...entry,
+                            semestre: entry.semestre || "",
                             disciplinas:
                               disciplinasList.length > 0
                                 ? disciplinasList
@@ -1306,7 +1375,7 @@ function MapaoAcademicoView({
                     {entry.curso}
                   </h3>
                   <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">
-                    {entry.periodo}
+                    {entry.periodo} {entry.semestre ? ` - ${entry.semestre}` : ""}
                   </p>
                 </div>
                 <button
@@ -1432,6 +1501,31 @@ function MapaoAcademicoView({
                     }
                     required
                   />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">
+                    Semestre
+                  </label>
+                  <select
+                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700"
+                    value={formData.semestre || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, semestre: e.target.value })
+                    }
+                    required
+                  >
+                    <option value="">Selecione...</option>
+                    <option value="1º">1º</option>
+                    <option value="2º">2º</option>
+                    <option value="3º">3º</option>
+                    <option value="4º">4º</option>
+                    <option value="5º">5º</option>
+                    <option value="6º">6º</option>
+                    <option value="7º">7º</option>
+                    <option value="8º">8º</option>
+                    <option value="9º">9º</option>
+                    <option value="10º">10º</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">
