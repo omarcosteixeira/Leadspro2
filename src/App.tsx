@@ -1031,42 +1031,116 @@ function MapaoAcademicoView({
   };
 
   const handleExport = () => {
-    const dataStr = JSON.stringify(mapao.map(m => {
-      const { id, createdAt, ...rest } = m;
-      return rest;
-    }), null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "mapao_academico.json";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const exportData: any[] = [];
+    mapao.forEach(m => {
+      const disciplinas = m.disciplinas || [];
+      if (disciplinas.length === 0) {
+        exportData.push({
+          Modalidade: m.modalidade,
+          Curso: m.curso,
+          Período: m.periodo,
+          "Tipo Curso": m.tipoCurso,
+          "Cód. Disciplina": "",
+          Disciplina: "",
+          Dia: "",
+          Horário: "",
+          Turma: "",
+          "Tipo Disciplina": "",
+          Professor: "",
+          Matrícula: "",
+          Observação: "",
+          "Link Aula": ""
+        });
+      } else {
+        disciplinas.forEach(d => {
+          exportData.push({
+            Modalidade: m.modalidade,
+            Curso: m.curso,
+            Período: m.periodo,
+            "Tipo Curso": m.tipoCurso,
+            "Cód. Disciplina": d.codDisc,
+            Disciplina: d.disciplina,
+            Dia: d.dia,
+            Horário: d.horario,
+            Turma: d.turma,
+            "Tipo Disciplina": d.tipoDisciplina,
+            Professor: d.professor,
+            Matrícula: d.matricula,
+            Observação: d.observacao,
+            "Link Aula": d.linkAula || ""
+          });
+        });
+      }
+    });
+    exportToExcel(exportData, "Mapao_Academico");
   };
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = async (e) => {
+    importFromExcel(file, async (data) => {
       try {
-        const content = e.target?.result as string;
-        const data = JSON.parse(content);
-        if (!Array.isArray(data)) {
-          onToast("Formato de arquivo inválido. Deve ser um array JSON.", "error");
-          return;
-        }
+        const getVal = (row: any, ...keys: string[]) => {
+          const rowKeys = Object.keys(row);
+          for (const key of keys) {
+            const foundKey = rowKeys.find(
+              (k) => k.toLowerCase() === key.toLowerCase(),
+            );
+            if (foundKey && row[foundKey] !== undefined) return row[foundKey];
+          }
+          return "";
+        };
 
+        const map = new Map<string, any>();
+        
+        data.forEach((row: any) => {
+          const curso = String(getVal(row, "curso") || "").trim();
+          const modalidade = String(getVal(row, "modalidade") || "").trim();
+          const periodo = String(getVal(row, "período", "periodo") || "").trim();
+          
+          if (!curso) return; 
+          
+          const key = `${curso.toLowerCase()}|${modalidade.toLowerCase()}|${periodo.toLowerCase()}`;
+          
+          if (!map.has(key)) {
+            map.set(key, {
+              curso,
+              modalidade: modalidade || "Presencial",
+              periodo,
+              tipoCurso: String(getVal(row, "tipo curso", "tipocurso") || "GRADUACAO").trim(),
+              disciplinas: []
+            });
+          }
+          
+          const entry = map.get(key);
+          const disciplina = String(getVal(row, "disciplina") || "").trim();
+          
+          if (disciplina) {
+            entry.disciplinas.push({
+              codDisc: String(getVal(row, "cód. disciplina", "cod disciplina", "coddisc") || "").trim(),
+              disciplina,
+              dia: String(getVal(row, "dia") || "").trim() || "Segunda-feira",
+              horario: String(getVal(row, "horário", "horario") || "").trim(),
+              turma: String(getVal(row, "turma") || "").trim(),
+              tipoDisciplina: String(getVal(row, "tipo disciplina", "tipodisciplina") || "").trim() || "PRESENCIAL",
+              professor: String(getVal(row, "professor") || "").trim(),
+              matricula: String(getVal(row, "matrícula", "matricula") || "").trim(),
+              observacao: String(getVal(row, "observação", "observacao") || "").trim(),
+              linkAula: String(getVal(row, "link aula", "linkaula") || "").trim()
+            });
+          }
+        });
+        
         let importedCount = 0;
-        for (const item of data) {
+        const newEntries = Array.from(map.values());
+        
+        for (const item of newEntries) {
           const isDuplicate = mapao.some(
             (m) =>
               m.curso?.toLowerCase() === item.curso?.toLowerCase() &&
-              m.modalidade === item.modalidade &&
-              m.periodo === item.periodo
+              m.modalidade?.toLowerCase() === item.modalidade?.toLowerCase() &&
+              m.periodo?.toLowerCase() === item.periodo?.toLowerCase()
           );
 
           if (!isDuplicate) {
@@ -1077,13 +1151,13 @@ function MapaoAcademicoView({
             importedCount++;
           }
         }
-        
-        onToast(`${importedCount} registros importados com sucesso!`, "success");
+                
+        onToast(`${importedCount} novos registros importados com sucesso!`, "success");
       } catch (err: any) {
         onToast("Erro ao importar arquivo.", "error");
       }
-    };
-    reader.readAsText(file);
+    });
+    
     e.target.value = ''; // Reset input
   };
 
@@ -1105,7 +1179,7 @@ function MapaoAcademicoView({
           <div className="flex gap-2">
             <input
               type="file"
-              accept=".json"
+              accept=".xlsx, .xls"
               className="hidden"
               id="import-mapao-file"
               onChange={handleImport}
