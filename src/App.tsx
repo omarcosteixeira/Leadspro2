@@ -930,7 +930,6 @@ function MapaoAcademicoView({
     dia: "Segunda-feira",
     horario: "",
     turma: "",
-    semestre: "",
     tipoDisciplina: "PRESENCIAL",
     professor: "",
     matricula: "",
@@ -1436,7 +1435,7 @@ function MapaoAcademicoView({
                         <Users size={12} className="text-emerald-500" />
                         <span className="text-[10px] font-bold">
                           {disc.turma || "-"}
-                          {disc.semestre ? ` (${disc.semestre})` : ""}
+
                         </span>
                       </div>
                     </div>
@@ -1724,34 +1723,7 @@ function MapaoAcademicoView({
                             required
                           />
                         </div>
-                        <div>
-                          <label className="block text-xs font-bold text-slate-500 mb-1">
-                            Semestre
-                          </label>
-                          <select
-                            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 outline-none text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500"
-                            value={disc.semestre || ""}
-                            onChange={(e) =>
-                              handleChangeDisciplina(
-                                idx,
-                                "semestre",
-                                e.target.value,
-                              )
-                            }
-                          >
-                            <option value="">Selecione...</option>
-                            <option value="1º">1º</option>
-                            <option value="2º">2º</option>
-                            <option value="3º">3º</option>
-                            <option value="4º">4º</option>
-                            <option value="5º">5º</option>
-                            <option value="6º">6º</option>
-                            <option value="7º">7º</option>
-                            <option value="8º">8º</option>
-                            <option value="9º">9º</option>
-                            <option value="10º">10º</option>
-                          </select>
-                        </div>
+
                         <div>
                           <label className="block text-xs font-bold text-slate-500 mb-1">
                             Tipo Disciplina
@@ -9245,42 +9217,42 @@ function DashboardView({
                           },
                           {
                             label: "Gap Meta Dia",
-                            calc: (m: keyof BomDiaMetrics) =>
-                              card.real && card.metaDia
-                                ? card.real[m] - card.metaDia[m]
-                                : 0,
-                            color: (m: keyof BomDiaMetrics) =>
-                              card.real &&
-                              card.metaDia &&
-                              card.real[m] - card.metaDia[m] >= 0
-                                ? "text-emerald-600"
-                                : "text-rose-600",
+                            calc: (m: keyof BomDiaMetrics) => {
+                              if (!card.real || !card.metaDia) return 0;
+                              const val = card.real[m] - card.metaDia[m];
+                              return val > 0 ? `+${val}` : val;
+                            },
+                            color: (m: keyof BomDiaMetrics) => {
+                              if (!card.real || !card.metaDia) return "text-slate-600";
+                              const val = card.real[m] - card.metaDia[m];
+                              return val > 0 ? "text-emerald-600" : (val < 0 ? "text-rose-600" : "text-slate-600");
+                            },
                           },
                           {
                             label: "Gap Ano Ant.",
-                            calc: (m: keyof BomDiaMetrics) =>
-                              card.real && card.anoAnterior
-                                ? card.real[m] - card.anoAnterior[m]
-                                : 0,
-                            color: (m: keyof BomDiaMetrics) =>
-                              card.real &&
-                              card.anoAnterior &&
-                              card.real[m] - card.anoAnterior[m] >= 0
-                                ? "text-emerald-600"
-                                : "text-rose-600",
+                            calc: (m: keyof BomDiaMetrics) => {
+                              if (!card.real || !card.anoAnterior) return 0;
+                              const val = card.real[m] - card.anoAnterior[m];
+                              return val > 0 ? `+${val}` : val;
+                            },
+                            color: (m: keyof BomDiaMetrics) => {
+                              if (!card.real || !card.anoAnterior) return "text-slate-600";
+                              const val = card.real[m] - card.anoAnterior[m];
+                              return val > 0 ? "text-emerald-600" : (val < 0 ? "text-rose-600" : "text-slate-600");
+                            },
                           },
                           {
                             label: "Gap Meta Final",
-                            calc: (m: keyof BomDiaMetrics) =>
-                              card.real && card.metaFinal
-                                ? card.real[m] - card.metaFinal[m]
-                                : 0,
-                            color: (m: keyof BomDiaMetrics) =>
-                              card.real &&
-                              card.metaFinal &&
-                              card.real[m] - card.metaFinal[m] >= 0
-                                ? "text-emerald-600"
-                                : "text-rose-600",
+                            calc: (m: keyof BomDiaMetrics) => {
+                              if (!card.real || !card.metaFinal) return 0;
+                              const val = card.real[m] - card.metaFinal[m];
+                              return val > 0 ? `+${val}` : val;
+                            },
+                            color: (m: keyof BomDiaMetrics) => {
+                              if (!card.real || !card.metaFinal) return "text-slate-600";
+                              const val = card.real[m] - card.metaFinal[m];
+                              return val > 0 ? "text-emerald-600" : (val < 0 ? "text-rose-600" : "text-slate-600");
+                            },
                           },
                         ].map((row, idx) => (
                           <tr key={`calc-${idx}`} className="bg-slate-100/50">
@@ -9448,9 +9420,9 @@ function DashboardView({
                           Gap Fechamento
                         </span>
                         <span
-                          className={`text-xs font-bold ${gapFech >= 0 ? "text-emerald-600" : "text-rose-600"}`}
+                          className={`text-xs font-bold ${gapFech > 0 ? "text-emerald-600" : gapFech < 0 ? "text-rose-600" : "text-slate-600"}`}
                         >
-                          {gapFech >= 0 ? "+" : ""}
+                          {gapFech > 0 ? "+" : ""}
                           {gapFech}
                         </span>
                       </div>

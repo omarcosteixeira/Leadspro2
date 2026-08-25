@@ -136,33 +136,29 @@ export interface BaseEntry {
 
 export interface GapEntry {
   id: string;
-  nome: string;
-  telefone: string;
-  cpf: string;
-  produto: 'Graduação' | 'Técnico' | 'Pós-graduação';
-  numeroOportunidade: string;
-  curso: string;
-  metodologia: string;
-  formaIngresso: string;
-  matAcad: boolean | string;
-  numeroMatricula?: string;
-  periodo?: string;
+  nome?: string;
+  telefone?: string;
+  cpf?: string;
+  produto?: string;
+  numeroOportunidade?: string;
+  curso?: string;
   semestre?: string;
-  documentos: {
-    rg?: boolean;
-    cpf?: boolean;
-    diploma?: boolean;
-    enem?: boolean;
-    historico?: boolean;
-    planoEnsino?: boolean;
-    contrato?: boolean;
-    carta?: boolean;
-  };
-  acao?: string;
-  acaoId?: string;
+  metodologia?: string;
+  formaIngresso?: string;
+  periodo?: string;
+  numeroMatricula?: string;
+  matAcad?: any;
+  documentos?: any;
   unidade?: string;
-  createdAt: any;
+  contrato?: any;
+  carta?: any;
+  acaoId?: string;
+  acao?: any;
+  status?: string;
+  createdAt?: any;
 }
+
+export interface GapDocs { [key: string]: boolean; }
 
 export interface ControleConcorrencia {
   id: string;
@@ -215,6 +211,7 @@ export interface PlannerTask {
 export interface FiesProuniVaga {
   id: string;
   periodo: string;
+  semestre?: string;
   codCurso: string;
   curso: string;
   turno: string;
@@ -250,6 +247,7 @@ export interface FiesProuniEntry {
   endereco: string;
   observacao: string;
   periodo: string;
+  semestre?: string;
   lista: string;
   posicaoRanking: string;
   sisprouniStatus?: 'Pendente' | 'Aprovado' | 'Reprovado';
@@ -324,7 +322,7 @@ export interface MapaoDisciplina {
   dia: string;
   horario: string;
   turma: string;
-  semestre?: string;
+
   tipoDisciplina: 'PRESENCIAL' | 'TEAMS' | 'ONLINE' | string;
   professor: string;
   matricula: string;
@@ -337,8 +335,9 @@ export interface MapaoAcademicoEntry {
   modalidade: string;
   curso: string;
   periodo: string;
-  tipoCurso: 'GRADUACAO' | 'TECNICO';
   semestre?: string;
+  tipoCurso: 'GRADUACAO' | 'TECNICO';
+
   disciplinas: MapaoDisciplina[];
   createdAt: any;
 }
@@ -594,6 +593,7 @@ export interface Ligacao {
 
 export interface PeriodAnalysis {
   periodo: string;
+  semestre?: string;
   meta: number;
   realizado: number;
 }
@@ -678,13 +678,24 @@ export interface MetaSM {
   createdAt?: any;
 }
 
-export interface MetaCurso {
-  id: string;
-  semestre: string;
-  curso: string;
+export interface MetaCursoMetrics {
   metaAA: number;
   metaDia: number;
   metaFinal: number;
   realizado: number;
+}
+
+export interface MetaCurso {
+  id: string;
+  semestre: string;
+  curso: string;
+  inscritos?: MetaCursoMetrics;
+  financeiro?: MetaCursoMetrics;
+  academico?: MetaCursoMetrics;
+  // Legacy fields
+  metaAA?: number;
+  metaDia?: number;
+  metaFinal?: number;
+  realizado?: number;
   createdAt?: any;
 }

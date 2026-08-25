@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+const fs = require('fs');
+
+const code = `import React, { useState } from "react";
 import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
-import { COLLECTIONS } from "../firebase";
+import { COLLECTIONS } from "../constants";
 import { Edit2, Plus, Trash2 } from "lucide-react";
 import { MetaCurso } from "../types";
 
@@ -378,3 +380,7 @@ export default function MetaCursosView({
     </div>
   );
 }
+`
+
+fs.writeFileSync('src/components/MetaCursosView.tsx', code);
+console.log("Rewrote MetaCursosView.tsx");
