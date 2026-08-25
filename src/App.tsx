@@ -9017,7 +9017,10 @@ function DashboardView({
                 </div>
                 <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/50">
                   <p className="text-xs font-bold text-slate-500 uppercase">GAP Meta Dia</p>
-                  <p className="text-lg font-black text-blue-700">{m.metaDia - m.realizado}</p>
+                  <p className="text-lg font-black">{(() => {
+                    const gap = m.realizado - (m.metaDia || 0);
+                    return <span className={gap > 0 ? "text-emerald-600" : gap < 0 ? "text-rose-600" : "text-slate-600"}>{gap > 0 ? "+" : ""}{gap}</span>;
+                  })()}</p>
                   <div className="mt-2 w-full bg-blue-100 rounded-full h-1.5">
                     <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, (m.realizado / (m.metaDia || 1)) * 100)}%` }}></div>
                   </div>
@@ -9028,7 +9031,10 @@ function DashboardView({
                 </div>
                 <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100/50">
                   <p className="text-xs font-bold text-slate-500 uppercase">GAP A.A</p>
-                  <p className="text-lg font-black text-emerald-700">{m.metaAA - m.realizado}</p>
+                  <p className="text-lg font-black">{(() => {
+                    const gap = m.realizado - (m.metaAA || 0);
+                    return <span className={gap > 0 ? "text-emerald-600" : gap < 0 ? "text-rose-600" : "text-slate-600"}>{gap > 0 ? "+" : ""}{gap}</span>;
+                  })()}</p>
                   <div className="mt-2 w-full bg-emerald-100 rounded-full h-1.5">
                     <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, (m.realizado / (m.metaAA || 1)) * 100)}%` }}></div>
                   </div>
@@ -9039,7 +9045,10 @@ function DashboardView({
                 </div>
                 <div className="bg-purple-50/50 p-4 rounded-2xl border border-purple-100/50">
                   <p className="text-xs font-bold text-slate-500 uppercase">GAP Final</p>
-                  <p className="text-lg font-black text-purple-700">{m.metaFinal - m.realizado}</p>
+                  <p className="text-lg font-black">{(() => {
+                    const gap = m.realizado - (m.metaFinal || 0);
+                    return <span className={gap > 0 ? "text-emerald-600" : gap < 0 ? "text-rose-600" : "text-slate-600"}>{gap > 0 ? "+" : ""}{gap}</span>;
+                  })()}</p>
                   <div className="mt-2 w-full bg-purple-100 rounded-full h-1.5">
                     <div className="bg-purple-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, (m.realizado / (m.metaFinal || 1)) * 100)}%` }}></div>
                   </div>
@@ -9063,239 +9072,80 @@ function DashboardView({
               Acompanhamento de Meta Cursos
             </h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
             {[...metaCursos].sort((a,b) => (b.semestre || "").localeCompare(a.semestre || "") || (a.curso || "").localeCompare(b.curso || "")).map(m => (
-              <div key={m.id} className="bg-slate-50 border border-slate-200 rounded-2xl p-5 shadow-sm">
-                <div className="mb-4">
-                  <span className="bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">{m.semestre}</span>
-                  <h4 className="text-lg font-black text-slate-900 mt-2">{m.curso}</h4>
+              <div key={m.id} className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                <div className="bg-indigo-600 p-4 flex justify-between items-center">
+                  <h4 className="font-bold text-white text-sm uppercase tracking-wider">{m.curso}</h4>
+                  <span className="bg-white/20 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase">{m.semestre}</span>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">Realizado</p>
-                    <p className="text-xl font-black text-slate-900">{m.realizado}</p>
-                  </div>
-                  <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">Meta Dia</p>
-                    <p className="text-xl font-black text-slate-900">{m.metaDia}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-500 font-medium">GAP Meta Dia</span>
-                    <span className="font-bold text-blue-600">{m.metaDia - m.realizado}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm border-t border-slate-200 pt-2">
-                    <span className="text-slate-500 font-medium">GAP A.A (Meta: {m.metaAA})</span>
-                    <span className="font-bold text-emerald-600">{m.metaAA - m.realizado}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm border-t border-slate-200 pt-2">
-                    <span className="text-slate-500 font-medium">GAP Final (Meta: {m.metaFinal})</span>
-                    <span className="font-bold text-purple-600">{m.metaFinal - m.realizado}</span>
-                  </div>
-                  
-                  <div className="mt-4">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs font-bold text-slate-500 uppercase">Alcance</span>
-                      <span className="text-xs font-black text-purple-600">{((m.realizado / (m.metaFinal || 1)) * 100).toFixed(1)}%</span>
-                    </div>
-                    <div className="w-full bg-slate-200 rounded-full h-2">
-                      <div className="bg-purple-500 h-2 rounded-full transition-all" style={{ width: `${Math.min(100, (m.realizado / (m.metaFinal || 1)) * 100)}%` }}></div>
-                    </div>
-                  </div>
+                <div className="p-4">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="text-slate-400 font-bold uppercase tracking-tighter">
+                        <th className="text-left pb-2">Indicador</th>
+                        <th className="text-center pb-2">INSC</th>
+                        <th className="text-center pb-2">FINANC</th>
+                        <th className="text-center pb-2">ACAD</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      {[
+                        { label: "Meta Final", key: "metaFinal", color: "text-slate-600" },
+                        { label: "Meta Dia", key: "metaDia", color: "text-slate-600" },
+                        { label: "Ano Anterior", key: "metaAA", color: "text-slate-400" },
+                        { label: "Realizado", key: "realizado", color: "text-emerald-600 font-bold" }
+                      ].map((row, idx) => (
+                        <tr key={idx} className="hover:bg-white/50 transition-colors">
+                          <td className="py-2 font-semibold text-slate-500">{row.label}</td>
+                          <td className={`py-2 text-center ${row.color}`}>{m.inscritos?.[row.key as keyof typeof m.inscritos] ?? m[row.key as keyof typeof m] ?? 0}</td>
+                          <td className={`py-2 text-center ${row.color}`}>{m.financeiro?.[row.key as keyof typeof m.financeiro] ?? "-"}</td>
+                          <td className={`py-2 text-center ${row.color}`}>{m.academico?.[row.key as keyof typeof m.academico] ?? "-"}</td>
+                        </tr>
+                      ))}
+                      
+                      {/* Calculated Gaps */}
+                      {[
+                        { label: "Gap Meta Dia", metaKey: "metaDia" },
+                        { label: "Gap Ano Ant.", metaKey: "metaAA" },
+                        { label: "Gap Final", metaKey: "metaFinal" }
+                      ].map((row, idx) => (
+                        <tr key={`calc-${idx}`} className="bg-slate-100/50">
+                          <td className="py-1.5 font-bold text-[9px] text-slate-400 uppercase">{row.label}</td>
+                          <td className="py-1.5 text-center text-[10px] font-bold">
+                            {(() => {
+                              const real = m.inscritos?.realizado ?? m.realizado ?? 0;
+                              const meta = m.inscritos?.[row.metaKey as keyof typeof m.inscritos] ?? m[row.metaKey as keyof typeof m] ?? 0;
+                              const gap = real - meta;
+                              if (gap === 0 && !m.inscritos) return <span className="text-slate-600">0</span>;
+                              return <span className={gap > 0 ? "text-emerald-600" : gap < 0 ? "text-rose-600" : "text-slate-600"}>{gap > 0 ? "+" : ""}{gap}</span>;
+                            })()}
+                          </td>
+                          <td className="py-1.5 text-center text-[10px] font-bold">
+                            {(() => {
+                              if (!m.financeiro) return <span className="text-slate-400">-</span>;
+                              const real = m.financeiro.realizado || 0;
+                              const meta = m.financeiro[row.metaKey as keyof typeof m.financeiro] || 0;
+                              const gap = real - meta;
+                              return <span className={gap > 0 ? "text-emerald-600" : gap < 0 ? "text-rose-600" : "text-slate-600"}>{gap > 0 ? "+" : ""}{gap}</span>;
+                            })()}
+                          </td>
+                          <td className="py-1.5 text-center text-[10px] font-bold">
+                            {(() => {
+                              if (!m.academico) return <span className="text-slate-400">-</span>;
+                              const real = m.academico.realizado || 0;
+                              const meta = m.academico[row.metaKey as keyof typeof m.academico] || 0;
+                              const gap = real - meta;
+                              return <span className={gap > 0 ? "text-emerald-600" : gap < 0 ? "text-rose-600" : "text-slate-600"}>{gap > 0 ? "+" : ""}{gap}</span>;
+                            })()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             ))}
-          </div>
-        </section>
-      )}
-
-      {/* Bom Dia Captação (Complete - All cards) */}
-      {widgets.bomDia && bomDia.filter((b) => !b.oculto).length > 0 && (
-        <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-2 text-emerald-600">
-              <Sun size={24} />
-              <h3 className="text-xl font-bold text-slate-900">
-                Bom Dia Captação
-              </h3>
-            </div>
-            <p className="text-xs text-slate-400 font-medium">
-              Última atualização:{" "}
-              {new Date(
-                bomDia.filter((b) => !b.oculto)[
-                  bomDia.filter((b) => !b.oculto).length - 1
-                ].data,
-              ).toLocaleDateString()}
-            </p>
-          </div>
-          <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
-            {bomDia
-              .filter((b) => !b.oculto)
-              .map((card) => (
-                <div
-                  key={card.id}
-                  className="bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden"
-                >
-                  <div className="bg-emerald-600 p-4">
-                    <h4 className="font-bold text-white text-sm uppercase tracking-wider">
-                      {card.titulo}
-                    </h4>
-                  </div>
-                  <div className="p-4">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="text-slate-400 font-bold uppercase tracking-tighter">
-                          <th className="text-left pb-2">Indicador</th>
-                          <th className="text-center pb-2">INSC</th>
-                          <th className="text-center pb-2">MAT FIN</th>
-                          <th className="text-center pb-2">MAT ACAD</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200">
-                        {[
-                          {
-                            label: "Meta Final",
-                            data: card.metaFinal,
-                            color: "text-slate-600",
-                          },
-                          {
-                            label: "Meta Dia",
-                            data: card.metaDia,
-                            color: "text-slate-600",
-                          },
-                          {
-                            label: "Ano Anterior",
-                            data: card.anoAnterior,
-                            color: "text-slate-400",
-                          },
-                          {
-                            label: "Real",
-                            data: card.real,
-                            color: "text-emerald-600 font-bold",
-                          },
-                        ].map((row, idx) => (
-                          <tr
-                            key={idx}
-                            className="hover:bg-white/50 transition-colors"
-                          >
-                            <td className="py-2 font-semibold text-slate-500">
-                              {row.label}
-                            </td>
-                            <td className={cn("py-2 text-center", row.color)}>
-                              {row.data?.insc ?? 0}
-                            </td>
-                            <td className={cn("py-2 text-center", row.color)}>
-                              {row.data?.matFin ?? 0}
-                            </td>
-                            <td className={cn("py-2 text-center", row.color)}>
-                              {row.data?.matAcad ?? 0}
-                            </td>
-                          </tr>
-                        ))}
-                        {/* Calculated Rows */}
-                        {[
-                          {
-                            label: "% Meta Dia",
-                            calc: (m: keyof BomDiaMetrics) =>
-                              card.metaDia && card.metaDia[m] > 0 && card.real
-                                ? `${((card.real[m] / card.metaDia[m]) * 100).toFixed(0)}%`
-                                : "0%",
-                            color: "text-blue-600 font-bold",
-                          },
-                          {
-                            label: "% Ano Ant.",
-                            calc: (m: keyof BomDiaMetrics) =>
-                              card.anoAnterior &&
-                              card.anoAnterior[m] > 0 &&
-                              card.real
-                                ? `${((card.real[m] / card.anoAnterior[m]) * 100).toFixed(0)}%`
-                                : "0%",
-                            color: "text-slate-500 font-bold",
-                          },
-                          {
-                            label: "Gap Meta Dia",
-                            calc: (m: keyof BomDiaMetrics) => {
-                              if (!card.real || !card.metaDia) return 0;
-                              const val = card.real[m] - card.metaDia[m];
-                              return val > 0 ? `+${val}` : val;
-                            },
-                            color: (m: keyof BomDiaMetrics) => {
-                              if (!card.real || !card.metaDia) return "text-slate-600";
-                              const val = card.real[m] - card.metaDia[m];
-                              return val > 0 ? "text-emerald-600" : (val < 0 ? "text-rose-600" : "text-slate-600");
-                            },
-                          },
-                          {
-                            label: "Gap Ano Ant.",
-                            calc: (m: keyof BomDiaMetrics) => {
-                              if (!card.real || !card.anoAnterior) return 0;
-                              const val = card.real[m] - card.anoAnterior[m];
-                              return val > 0 ? `+${val}` : val;
-                            },
-                            color: (m: keyof BomDiaMetrics) => {
-                              if (!card.real || !card.anoAnterior) return "text-slate-600";
-                              const val = card.real[m] - card.anoAnterior[m];
-                              return val > 0 ? "text-emerald-600" : (val < 0 ? "text-rose-600" : "text-slate-600");
-                            },
-                          },
-                          {
-                            label: "Gap Meta Final",
-                            calc: (m: keyof BomDiaMetrics) => {
-                              if (!card.real || !card.metaFinal) return 0;
-                              const val = card.real[m] - card.metaFinal[m];
-                              return val > 0 ? `+${val}` : val;
-                            },
-                            color: (m: keyof BomDiaMetrics) => {
-                              if (!card.real || !card.metaFinal) return "text-slate-600";
-                              const val = card.real[m] - card.metaFinal[m];
-                              return val > 0 ? "text-emerald-600" : (val < 0 ? "text-rose-600" : "text-slate-600");
-                            },
-                          },
-                        ].map((row, idx) => (
-                          <tr key={`calc-${idx}`} className="bg-slate-100/50">
-                            <td className="py-1.5 font-bold text-[9px] text-slate-400 uppercase">
-                              {row.label}
-                            </td>
-                            <td
-                              className={cn(
-                                "py-1.5 text-center text-[10px] font-bold",
-                                typeof row.color === "function"
-                                  ? row.color("insc")
-                                  : row.color,
-                              )}
-                            >
-                              {row.calc("insc")}
-                            </td>
-                            <td
-                              className={cn(
-                                "py-1.5 text-center text-[10px] font-bold",
-                                typeof row.color === "function"
-                                  ? row.color("matFin")
-                                  : row.color,
-                              )}
-                            >
-                              {row.calc("matFin")}
-                            </td>
-                            <td
-                              className={cn(
-                                "py-1.5 text-center text-[10px] font-bold",
-                                typeof row.color === "function"
-                                  ? row.color("matAcad")
-                                  : row.color,
-                              )}
-                            >
-                              {row.calc("matAcad")}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ))}
           </div>
         </section>
       )}
