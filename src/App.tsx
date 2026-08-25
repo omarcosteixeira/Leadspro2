@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 import { initializeApp, getApp } from "firebase/app";
 import {
   onAuthStateChanged,
@@ -963,40 +964,20 @@ function MapaoAcademicoView({
     const element = document.getElementById(`mapao-card-${cardId}`);
     if (!element) return;
     try {
+      onToast("Gerando PDF, aguarde...", "success");
       const canvas = await html2canvas(element, { backgroundColor: '#ffffff', scale: 2 });
-      canvas.toBlob(async (blob) => {
-        if (!blob) return;
-        const file = new File([blob], `mapao-${cardName}.png`, { type: 'image/png' });
-        
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          try {
-            await navigator.share({
-              files: [file],
-              title: `Mapão Acadêmico - ${cardName}`
-            });
-            onToast("Imagem compartilhada com sucesso!", "success");
-          } catch (error) {
-            console.error('Error sharing:', error);
-          }
-        } else {
-          try {
-              const item = new ClipboardItem({ "image/png": blob });
-              await navigator.clipboard.write([item]);
-              onToast("Imagem copiada! Cole no WhatsApp.", "success");
-          } catch (err) {
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `mapao-${cardName}.png`;
-              a.click();
-              URL.revokeObjectURL(url);
-              onToast("Imagem baixada. Envie no WhatsApp.", "success");
-          }
-        }
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+        unit: 'px',
+        format: [canvas.width, canvas.height]
       });
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      pdf.save(`mapao-${cardName}.pdf`);
+      onToast("PDF gerado com sucesso!", "success");
     } catch (error) {
-      console.error('Failed to generate image', error);
-      onToast("Erro ao gerar imagem.", "error");
+      console.error('Failed to generate PDF', error);
+      onToast("Erro ao gerar PDF.", "error");
     }
   };
 
@@ -1371,10 +1352,10 @@ function MapaoAcademicoView({
                 <div className="flex space-x-1 shrink-0 bg-white/50 p-1 rounded-xl shadow-sm border border-slate-100/50 backdrop-blur-sm">
                   <button
                     onClick={() => handleShareCard(entry.id, entry.curso || "Curso")}
-                    className="p-1.5 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
-                    title="Compartilhar via WhatsApp"
+                    className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                    title="Baixar como PDF"
                   >
-                    <Share2 size={14} />
+                    <FileText size={14} />
                   </button>
                   {canEdit && (
                     <>
