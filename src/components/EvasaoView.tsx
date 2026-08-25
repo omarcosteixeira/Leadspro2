@@ -59,6 +59,7 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
   const [periodoFilter, setPeriodoFilter] = useState("Todos");
   const [tipoSolicitacaoFilter, setTipoSolicitacaoFilter] = useState("Todos");
   const [statusFilter, setStatusFilter] = useState("Todos");
+  const [resultadoFilter, setResultadoFilter] = useState("Todos");
   const [dataInicioFilter, setDataInicioFilter] = useState("");
   const [dataFimFilter, setDataFimFilter] = useState("");
 
@@ -135,6 +136,13 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
     return Array.from(new Set(statuses)).sort();
   }, [data]);
 
+  const uniqueResultados = useMemo(() => {
+    const resultados = data
+      .map(item => item.resultado)
+      .filter((r): r is string => !!r);
+    return Array.from(new Set(resultados)).sort();
+  }, [data]);
+
   const filteredData = useMemo(() => {
     let filtered = data;
     
@@ -157,6 +165,10 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
 
     if (statusFilter !== "Todos") {
       filtered = filtered.filter(item => item.status === statusFilter);
+    }
+
+    if (resultadoFilter !== "Todos") {
+      filtered = filtered.filter(item => item.resultado === resultadoFilter);
     }
 
     if (dataInicioFilter) {
@@ -197,7 +209,7 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
       const dateB = b.createdAt?.toDate?.() || new Date(0);
       return dateA.getTime() - dateB.getTime();
     });
-  }, [data, profile, modalidadeFilter, periodoFilter, tipoSolicitacaoFilter, statusFilter, searchTerm, dataInicioFilter, dataFimFilter]);
+  }, [data, profile, modalidadeFilter, periodoFilter, tipoSolicitacaoFilter, statusFilter, resultadoFilter, searchTerm, dataInicioFilter, dataFimFilter]);
 
   // Top 5 Cursos
   const topCursos = useMemo(() => {
@@ -715,6 +727,17 @@ export function EvasaoView({ profile, onToast }: EvasaoViewProps) {
               <option value="Todos">Todos Status</option>
               {uniqueStatus.map(s => (
                 <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+            {/* Resultado Filter */}
+            <select
+              value={resultadoFilter}
+              onChange={(e) => setResultadoFilter(e.target.value)}
+              className="px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+            >
+              <option value="Todos">Todos Resultados</option>
+              {uniqueResultados.map(r => (
+                <option key={r} value={r}>{r}</option>
               ))}
             </select>
           </div>
