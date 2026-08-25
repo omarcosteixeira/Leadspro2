@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import html2canvas from "html2canvas";
 import { initializeApp, getApp } from "firebase/app";
 import {
   onAuthStateChanged,
@@ -64,6 +65,7 @@ import {
   Megaphone,
   Sun,
   Edit2,
+  Share2,
   Edit,
   Save,
   MapPin,
@@ -956,6 +958,48 @@ function MapaoAcademicoView({
     setExpandedCards(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
+
+  const handleShareCard = async (cardId: string, cardName: string) => {
+    const element = document.getElementById(`mapao-card-${cardId}`);
+    if (!element) return;
+    try {
+      const canvas = await html2canvas(element, { backgroundColor: '#ffffff', scale: 2 });
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        const file = new File([blob], `mapao-${cardName}.png`, { type: 'image/png' });
+        
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: `Mapão Acadêmico - ${cardName}`
+            });
+            onToast("Imagem compartilhada com sucesso!", "success");
+          } catch (error) {
+            console.error('Error sharing:', error);
+          }
+        } else {
+          try {
+              const item = new ClipboardItem({ "image/png": blob });
+              await navigator.clipboard.write([item]);
+              onToast("Imagem copiada! Cole no WhatsApp.", "success");
+          } catch (err) {
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `mapao-${cardName}.png`;
+              a.click();
+              URL.revokeObjectURL(url);
+              onToast("Imagem baixada. Envie no WhatsApp.", "success");
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Failed to generate image', error);
+      onToast("Erro ao gerar imagem.", "error");
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -1297,11 +1341,12 @@ function MapaoAcademicoView({
           const isExpanded = expandedCards[entry.id];
           return (
             <motion.div
+              id={`mapao-card-${entry.id}`}
               key={entry.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className={cn(
-                "p-6 rounded-[2rem] border shadow-sm transition-all relative group flex flex-col gap-4",
+                "p-6 rounded-[2rem] border shadow-sm transition-all relative group flex flex-col gap-4 bg-white",
                 entry.tipoCurso === "GRADUACAO"
                   ? "bg-white border-blue-100"
                   : "bg-white border-emerald-100",
@@ -1324,6 +1369,13 @@ function MapaoAcademicoView({
                   </span>
                 </div>
                 <div className="flex space-x-1 shrink-0 bg-white/50 p-1 rounded-xl shadow-sm border border-slate-100/50 backdrop-blur-sm">
+                  <button
+                    onClick={() => handleShareCard(entry.id, entry.curso || "Curso")}
+                    className="p-1.5 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                    title="Compartilhar via WhatsApp"
+                  >
+                    <Share2 size={14} />
+                  </button>
                   {canEdit && (
                     <>
                       <button
@@ -9010,10 +9062,17 @@ function DashboardView({
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[...metaSM].sort((a,b) => (b.semestre || "").localeCompare(a.semestre || "")).map(m => (
               <React.Fragment key={m.id}>
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                  <p className="text-xs font-bold text-slate-500 uppercase">Semestre {m.semestre}</p>
-                  <p className="text-lg font-black text-slate-900">{m.realizado}</p>
-                  <p className="text-xs text-slate-400">Realizado SM</p>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col justify-between">
+                  <div>
+                    <p className="text-xs font-bold text-slate-500 uppercase">Semestre {m.semestre}</p>
+                    <p className="text-lg font-black text-slate-900">{m.realizado}</p>
+                    <p className="text-xs text-slate-400">Realizado SM</p>
+                  </div>
+                  <div className="w-full text-right mt-2 pt-2 border-t border-slate-200">
+                    <p className="text-[9px] text-slate-400 font-medium uppercase tracking-wider">
+                      Atualizado: {m.createdAt?.seconds ? new Date(m.createdAt.seconds * 1000).toLocaleDateString("pt-BR") : m.createdAt ? new Date(m.createdAt).toLocaleDateString("pt-BR") : "-"}
+                    </p>
+                  </div>
                 </div>
                 <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/50">
                   <p className="text-xs font-bold text-slate-500 uppercase">GAP Meta Dia</p>
@@ -9144,8 +9203,199 @@ function DashboardView({
                     </tbody>
                   </table>
                 </div>
+                <div className="bg-slate-100 p-2 text-right">
+                  <span className="text-[9px] text-slate-400 font-medium uppercase tracking-wider">
+                    Atualizado: {m.createdAt?.seconds ? new Date(m.createdAt.seconds * 1000).toLocaleDateString("pt-BR") : m.createdAt ? new Date(m.createdAt).toLocaleDateString("pt-BR") : "-"}
+                  </span>
+                </div>
               </div>
             ))}
+          </div>
+        </section>
+      )}
+
+      
+      {/* Bom Dia Captação (Complete - All cards) */}
+      {widgets.bomDia && bomDia.filter((b) => !b.oculto).length > 0 && (
+        <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-2 text-emerald-600">
+              <Sun size={24} />
+              <h3 className="text-xl font-bold text-slate-900">
+                Bom Dia Captação
+              </h3>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
+            {bomDia
+              .filter((b) => !b.oculto)
+              .map((card) => (
+                <div
+                  key={card.id}
+                  className="bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden"
+                >
+                  <div className="bg-emerald-600 p-4">
+                    <h4 className="font-bold text-white text-sm uppercase tracking-wider">
+                      {card.titulo}
+                    </h4>
+                  </div>
+                  <div className="p-4">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="text-slate-400 font-bold uppercase tracking-tighter">
+                          <th className="text-left pb-2">Indicador</th>
+                          <th className="text-center pb-2">INSC</th>
+                          <th className="text-center pb-2">MAT FIN</th>
+                          <th className="text-center pb-2">MAT ACAD</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200">
+                        {[
+                          {
+                            label: "Meta Final",
+                            data: card.metaFinal,
+                            color: "text-slate-600",
+                          },
+                          {
+                            label: "Meta Dia",
+                            data: card.metaDia,
+                            color: "text-slate-600",
+                          },
+                          {
+                            label: "Ano Anterior",
+                            data: card.anoAnterior,
+                            color: "text-slate-400",
+                          },
+                          {
+                            label: "Real",
+                            data: card.real,
+                            color: "text-emerald-600 font-bold",
+                          },
+                        ].map((row, idx) => (
+                          <tr
+                            key={idx}
+                            className="hover:bg-white/50 transition-colors"
+                          >
+                            <td className="py-2 font-semibold text-slate-500">
+                              {row.label}
+                            </td>
+                            <td className={cn("py-2 text-center", row.color)}>
+                              {row.data?.insc ?? 0}
+                            </td>
+                            <td className={cn("py-2 text-center", row.color)}>
+                              {row.data?.matFin ?? 0}
+                            </td>
+                            <td className={cn("py-2 text-center", row.color)}>
+                              {row.data?.matAcad ?? 0}
+                            </td>
+                          </tr>
+                        ))}
+                        {/* Calculated Rows */}
+                        {[
+                          {
+                            label: "% Meta Dia",
+                            calc: (m: keyof BomDiaMetrics) =>
+                              card.metaDia && card.metaDia[m] > 0 && card.real
+                                ? `${((card.real[m] / card.metaDia[m]) * 100).toFixed(0)}%`
+                                : "0%",
+                            color: "text-blue-600 font-bold",
+                          },
+                          {
+                            label: "% Ano Ant.",
+                            calc: (m: keyof BomDiaMetrics) =>
+                              card.anoAnterior &&
+                              card.anoAnterior[m] > 0 &&
+                              card.real
+                                ? `${((card.real[m] / card.anoAnterior[m]) * 100).toFixed(0)}%`
+                                : "0%",
+                            color: "text-slate-500 font-bold",
+                          },
+                          {
+                            label: "Gap Meta Dia",
+                            calc: (m: keyof BomDiaMetrics) => {
+                              if (!card.real || !card.metaDia) return 0;
+                              const val = card.real[m] - card.metaDia[m];
+                              return val > 0 ? `+${val}` : val;
+                            },
+                            color: (m: keyof BomDiaMetrics) => {
+                              if (!card.real || !card.metaDia) return "text-slate-600";
+                              const val = card.real[m] - card.metaDia[m];
+                              return val > 0 ? "text-emerald-600" : (val < 0 ? "text-rose-600" : "text-slate-600");
+                            },
+                          },
+                          {
+                            label: "Gap Ano Ant.",
+                            calc: (m: keyof BomDiaMetrics) => {
+                              if (!card.real || !card.anoAnterior) return 0;
+                              const val = card.real[m] - card.anoAnterior[m];
+                              return val > 0 ? `+${val}` : val;
+                            },
+                            color: (m: keyof BomDiaMetrics) => {
+                              if (!card.real || !card.anoAnterior) return "text-slate-600";
+                              const val = card.real[m] - card.anoAnterior[m];
+                              return val > 0 ? "text-emerald-600" : (val < 0 ? "text-rose-600" : "text-slate-600");
+                            },
+                          },
+                          {
+                            label: "Gap Meta Final",
+                            calc: (m: keyof BomDiaMetrics) => {
+                              if (!card.real || !card.metaFinal) return 0;
+                              const val = card.real[m] - card.metaFinal[m];
+                              return val > 0 ? `+${val}` : val;
+                            },
+                            color: (m: keyof BomDiaMetrics) => {
+                              if (!card.real || !card.metaFinal) return "text-slate-600";
+                              const val = card.real[m] - card.metaFinal[m];
+                              return val > 0 ? "text-emerald-600" : (val < 0 ? "text-rose-600" : "text-slate-600");
+                            },
+                          },
+                        ].map((row, idx) => (
+                          <tr key={`calc-${idx}`} className="bg-slate-100/50">
+                            <td className="py-1.5 font-bold text-[9px] text-slate-400 uppercase">
+                              {row.label}
+                            </td>
+                            <td
+                              className={cn(
+                                "py-1.5 text-center text-[10px] font-bold",
+                                typeof row.color === "function"
+                                  ? row.color("insc")
+                                  : row.color,
+                              )}
+                            >
+                              {row.calc("insc")}
+                            </td>
+                            <td
+                              className={cn(
+                                "py-1.5 text-center text-[10px] font-bold",
+                                typeof row.color === "function"
+                                  ? row.color("matFin")
+                                  : row.color,
+                              )}
+                            >
+                              {row.calc("matFin")}
+                            </td>
+                            <td
+                              className={cn(
+                                "py-1.5 text-center text-[10px] font-bold",
+                                typeof row.color === "function"
+                                  ? row.color("matAcad")
+                                  : row.color,
+                              )}
+                            >
+                              {row.calc("matAcad")}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="bg-slate-100 p-2 text-right">
+                    <span className="text-[9px] text-slate-400 font-medium uppercase tracking-wider">
+                      Atualizado: {card.createdAt?.seconds ? new Date(card.createdAt.seconds * 1000).toLocaleDateString("pt-BR") : card.createdAt ? new Date(card.createdAt).toLocaleDateString("pt-BR") : "-"}
+                    </span>
+                  </div>
+                </div>
+              ))}
           </div>
         </section>
       )}
@@ -9178,6 +9428,11 @@ function DashboardView({
                 </div>
                 <div className="text-xs text-slate-500 font-medium bg-emerald-100/50 px-2 py-1 rounded-md mt-2">
                   {qg.horario}
+                </div>
+                <div className="w-full text-right mt-2 pt-2 border-t border-slate-200/60">
+                  <span className="text-[9px] text-slate-400 font-medium uppercase tracking-wider">
+                    Atualizado: {qg.createdAt?.seconds ? new Date(qg.createdAt.seconds * 1000).toLocaleDateString("pt-BR") : qg.createdAt ? new Date(qg.createdAt).toLocaleDateString("pt-BR") : "-"}
+                  </span>
                 </div>
               </div>
             ))}
@@ -9290,6 +9545,11 @@ function DashboardView({
                         </span>
                         <span className="text-xs font-bold text-slate-800">
                           {diasRestantes}
+                        </span>
+                      </div>
+                      <div className="w-full text-right mt-2 pt-2 border-t border-slate-200/60">
+                        <span className="text-[9px] text-slate-400 font-medium uppercase tracking-wider">
+                          Atualizado: {f.createdAt?.seconds ? new Date(f.createdAt.seconds * 1000).toLocaleDateString("pt-BR") : f.createdAt ? new Date(f.createdAt).toLocaleDateString("pt-BR") : "-"}
                         </span>
                       </div>
                     </div>
