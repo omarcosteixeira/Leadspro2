@@ -36,6 +36,7 @@ export interface UserProfile {
     aniversarios?: boolean;
     metaSM?: boolean;
     metaCursos?: boolean;
+    metaDia?: boolean;
   };
 }
 
