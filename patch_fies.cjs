@@ -1,49 +1,58 @@
 const fs = require('fs');
-let code = fs.readFileSync('src/App.tsx', 'utf8');
+let rules = fs.readFileSync('firestore.rules', 'utf8');
 
-// Update frontend filter in FiesProuniView
-const frontendDataFilter = `    if (
-      profile.role !== ROLES.ADMIN_MASTER &&
-      profile.role !== ROLES.GESTOR_COMERCIAL &&
-      profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL
-    ) {
-      if (profile.unidade && item.unidade && item.unidade !== profile.unidade) {
-        return false;
-      }
+const oldFiesRules = `    match /artifacts/gestaodeleadspro-d4230/public/data/fies_prouni/{entryId} {
+      allow get, list: if isAuthenticated() && (isMasterUser() || isComercial() || isFinanceiro() || canAccessUnit(resource.data.unidade));
+      allow create, update: if (isMasterUser() || isComercial() || isLider() || isSalaMatricula() || isSSA()) && (isMasterUser() || isComercial() || canAccessUnit(request.resource.data.unidade));
+      allow delete: if isMasterUser() || isComercial() || isLider();
     }`;
-const frontendDataFilterReplacement = `    if (
-      profile.role !== ROLES.ADMIN_MASTER &&
-      profile.role !== ROLES.GESTOR_COMERCIAL &&
-      profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL &&
-      profile.role !== ROLES.SSA
-    ) {
-      if (profile.unidade && item.unidade && item.unidade !== profile.unidade) {
-        return false;
-      }
+
+const newFiesRules = `    match /artifacts/gestaodeleadspro-d4230/public/data/fies_prouni/{entryId} {
+      allow get, list: if isAuthenticated() && hasAnyRole(["Admin Master", "Gestor Comercial", "Gerente Comercial (Comercial)", "Financeiro", "Sala de Matrícula", "Líder/FDV", "SSA", "Gestor Unidade", "Regional"]);
+      allow create, update: if isAuthenticated() && hasAnyRole(["Admin Master", "Gestor Comercial", "Gerente Comercial (Comercial)", "Líder/FDV", "Sala de Matrícula", "SSA", "Gestor Unidade", "Regional"]);
+      allow delete: if isAuthenticated() && hasAnyRole(["Admin Master", "Gestor Comercial", "Gerente Comercial (Comercial)", "Líder/FDV"]);
     }`;
-code = code.replaceAll(frontendDataFilter, frontendDataFilterReplacement);
 
-// Update database query filter for FiesProuni
-const backendFilter = `    if (profile && VIEW_PERMISSIONS.fiesProuni.includes(profile.role)) {
-      const isRestricted =
-        profile.role !== ROLES.ADMIN_MASTER &&
-        profile.role !== ROLES.GESTOR_COMERCIAL &&
-        profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL &&
-        profile.role !== ROLES.LIDER_FDV &&
-        !["canaldonutri@gmail.com", "marcos.teixeira@estacio.br"].includes(
-          user?.email || "",
-        );`;
-const backendFilterReplacement = `    if (profile && VIEW_PERMISSIONS.fiesProuni.includes(profile.role)) {
-      const isRestricted =
-        profile.role !== ROLES.ADMIN_MASTER &&
-        profile.role !== ROLES.GESTOR_COMERCIAL &&
-        profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL &&
-        profile.role !== ROLES.LIDER_FDV &&
-        profile.role !== ROLES.SSA &&
-        !["canaldonutri@gmail.com", "marcos.teixeira@estacio.br"].includes(
-          user?.email || "",
-        );`;
-code = code.replace(backendFilter, backendFilterReplacement);
+rules = rules.replace(oldFiesRules, newFiesRules);
 
-fs.writeFileSync('src/App.tsx', code, 'utf8');
-console.log("App.tsx patched");
+const oldFiesVagasRules = `    match /artifacts/gestaodeleadspro-d4230/public/data/fies_prouni_vagas/{entryId} {
+      allow get, list: if isAuthenticated() && (isMasterUser() || isComercial() || isFinanceiro() || canAccessUnit(resource.data.unidade));
+      allow create, update: if (isMasterUser() || isComercial() || isLider() || isSalaMatricula() || isSSA()) && (isMasterUser() || isComercial() || canAccessUnit(request.resource.data.unidade));
+      allow delete: if isMasterUser() || isComercial() || isLider();
+    }`;
+
+const newFiesVagasRules = `    match /artifacts/gestaodeleadspro-d4230/public/data/fies_prouni_vagas/{entryId} {
+      allow get, list: if isAuthenticated() && hasAnyRole(["Admin Master", "Gestor Comercial", "Gerente Comercial (Comercial)", "Financeiro", "Sala de Matrícula", "Líder/FDV", "SSA", "Gestor Unidade", "Regional"]);
+      allow create, update: if isAuthenticated() && hasAnyRole(["Admin Master", "Gestor Comercial", "Gerente Comercial (Comercial)", "Líder/FDV", "Sala de Matrícula", "SSA", "Gestor Unidade", "Regional"]);
+      allow delete: if isAuthenticated() && hasAnyRole(["Admin Master", "Gestor Comercial", "Gerente Comercial (Comercial)", "Líder/FDV"]);
+    }`;
+
+rules = rules.replace(oldFiesVagasRules, newFiesVagasRules);
+
+// also for gestaopro-761e1
+const oldFiesRules1 = `    match /artifacts/gestaopro-761e1/public/data/fies_prouni/{entryId} {
+      allow get, list: if isAuthenticated() && (isMasterUser() || isComercial() || isFinanceiro() || canAccessUnit(resource.data.unidade));
+      allow create, update: if (isMasterUser() || isComercial() || isLider() || isSalaMatricula() || isSSA()) && (isMasterUser() || isComercial() || canAccessUnit(request.resource.data.unidade));
+      allow delete: if isMasterUser() || isComercial() || isLider();
+    }`;
+const newFiesRules1 = `    match /artifacts/gestaopro-761e1/public/data/fies_prouni/{entryId} {
+      allow get, list: if isAuthenticated() && hasAnyRole(["Admin Master", "Gestor Comercial", "Gerente Comercial (Comercial)", "Financeiro", "Sala de Matrícula", "Líder/FDV", "SSA", "Gestor Unidade", "Regional"]);
+      allow create, update: if isAuthenticated() && hasAnyRole(["Admin Master", "Gestor Comercial", "Gerente Comercial (Comercial)", "Líder/FDV", "Sala de Matrícula", "SSA", "Gestor Unidade", "Regional"]);
+      allow delete: if isAuthenticated() && hasAnyRole(["Admin Master", "Gestor Comercial", "Gerente Comercial (Comercial)", "Líder/FDV"]);
+    }`;
+rules = rules.replace(oldFiesRules1, newFiesRules1);
+
+const oldFiesVagasRules1 = `    match /artifacts/gestaopro-761e1/public/data/fies_prouni_vagas/{entryId} {
+      allow get, list: if isAuthenticated() && (isMasterUser() || isComercial() || isFinanceiro() || canAccessUnit(resource.data.unidade));
+      allow create, update: if (isMasterUser() || isComercial() || isLider() || isSalaMatricula() || isSSA()) && (isMasterUser() || isComercial() || canAccessUnit(request.resource.data.unidade));
+      allow delete: if isMasterUser() || isComercial() || isLider();
+    }`;
+const newFiesVagasRules1 = `    match /artifacts/gestaopro-761e1/public/data/fies_prouni_vagas/{entryId} {
+      allow get, list: if isAuthenticated() && hasAnyRole(["Admin Master", "Gestor Comercial", "Gerente Comercial (Comercial)", "Financeiro", "Sala de Matrícula", "Líder/FDV", "SSA", "Gestor Unidade", "Regional"]);
+      allow create, update: if isAuthenticated() && hasAnyRole(["Admin Master", "Gestor Comercial", "Gerente Comercial (Comercial)", "Líder/FDV", "Sala de Matrícula", "SSA", "Gestor Unidade", "Regional"]);
+      allow delete: if isAuthenticated() && hasAnyRole(["Admin Master", "Gestor Comercial", "Gerente Comercial (Comercial)", "Líder/FDV"]);
+    }`;
+rules = rules.replace(oldFiesVagasRules1, newFiesVagasRules1);
+
+fs.writeFileSync('firestore.rules', rules);
+console.log("Patched firestore.rules for fies_prouni successfully!");
