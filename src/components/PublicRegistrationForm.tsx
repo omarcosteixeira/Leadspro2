@@ -27,7 +27,7 @@ import {
   where,
   getDocs,
 } from "firebase/firestore";
-import { UserProfile } from "../types";
+import { UserProfile, ServidorType } from "../types";
 
 interface PublicRegistrationFormProps {
   onToast: (msg: string, type?: "success" | "error") => void;
@@ -210,7 +210,7 @@ export function PublicRegistrationForm({
       let promotorId = "default_form_system";
       let promotorName = "Cadastro Público";
       let promotorRole = "Admin Master";
-      let servidor: "principal" | "comercial" = "principal";
+      let servidor: ServidorType = "principal";
       let linkadoA = "";
 
       if (referrerProfile) {

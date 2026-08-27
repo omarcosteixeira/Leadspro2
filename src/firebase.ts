@@ -22,10 +22,23 @@ export const firebaseConfigComercial = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID_COMERCIAL || "1:964003766645:web:75aea7b1a825ddfe44333c"
 };
 
+export const firebaseConfigRegional = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY_REGIONAL || "AIzaSyDkycX1dwccDcRjUsF4LjM4z7F6JjcKYlk",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN_REGIONAL || "gen-lang-client-0111023338.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID_REGIONAL || "gen-lang-client-0111023338",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET_REGIONAL || "gen-lang-client-0111023338.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID_REGIONAL || "866976553624",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID_REGIONAL || "1:866976553624:web:59c67baefc81f6f4420eed"
+};
+
 const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
 const urlServidor = params ? params.get('servidor') : null;
 const savedServidor = urlServidor || localStorage.getItem('servidor_selected') || 'principal';
-const activeConfig = savedServidor === 'comercial' ? firebaseConfigComercial : firebaseConfigPrincipal;
+const activeConfig = savedServidor === 'regional'
+  ? firebaseConfigRegional
+  : savedServidor === 'comercial'
+    ? firebaseConfigComercial
+    : firebaseConfigPrincipal;
 
 const app = initializeApp(activeConfig);
 export const auth = getAuth(app);
@@ -100,6 +113,8 @@ export const COLLECTIONS = new Proxy({} as any, {
       EMAIL_CAMPAIGN_CONTACTS: `artifacts/${currentProjectId}/public/data/email_campaign_contacts`,
       EMAIL_CAMPAIGN_LOGS: `artifacts/${currentProjectId}/public/data/email_campaign_logs`,
       SALES_CONTACTS: `artifacts/${currentProjectId}/public/data/sales_contacts`,
+      CHECKLIST: `artifacts/${currentProjectId}/public/data/checklist`,
+      FORMULARIOS_RESPOSTAS: `artifacts/${currentProjectId}/public/data/formularios_respostas`,
     };
     return paths[prop];
   }

@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type UserRole = 'Admin Master' | 'Promotor' | 'FDV' | 'Sala de Matrícula' | 'QG' | 'Líder/FDV' | 'SSA' | 'Gestor Unidade' | 'Gestor Comercial' | 'Acadêmico' | 'Promotor/rua' | 'Gerente Comercial (Comercial)' | 'FDV (Comercial)' | 'Financeiro' | 'Técnico';
+export type UserRole = 'Admin Master' | 'Promotor' | 'FDV' | 'Sala de Matrícula' | 'QG' | 'Líder/FDV' | 'SSA' | 'Gestor Unidade' | 'Gestor Comercial' | 'Acadêmico' | 'Promotor/rua' | 'Gerente Comercial (Comercial)' | 'FDV (Comercial)' | 'Financeiro' | 'Técnico' | 'Administrador' | 'Gerente Regional SM';
+
+export type ServidorType = 'principal' | 'comercial' | 'regional';
 
 export interface UserProfile {
   uid: string;
@@ -20,7 +22,7 @@ export interface UserProfile {
   mustChangePassword?: boolean;
   botNumber?: string;
   unidade?: string;
-  servidor?: 'principal' | 'comercial';
+  servidor?: ServidorType;
   linkadoA?: string; // used for Promotor/rua to link to FDV
   createdAt: any;
   updatedAt?: any;
@@ -533,10 +535,49 @@ export interface Funcionario {
   id: string;
   nome: string;
   email: string;
-  tipo: 'docente' | 'administrativo';
+  tipo: 'docente' | 'administrativo' | 'sm';
   matricula: string;
   unidade?: string;
+  telefone?: string;
+  cargo?: string;
+  dataNascimento?: string;
+  status?: 'Ativo' | 'Inativo';
+  observacao?: string;
   createdAt: any;
+  updatedAt?: any;
+}
+
+export interface FuncionarioSM {
+  id: string;
+  nome: string;
+  email: string;
+  matricula: string;
+  unidade: string;
+  telefone?: string;
+  cargo?: string;
+  dataNascimento?: string; // YYYY-MM-DD or DD/MM/YYYY
+  status?: 'Ativo' | 'Inativo';
+  observacao?: string;
+  createdAt: any;
+  updatedAt?: any;
+}
+
+export interface ChecklistItem {
+  id: string;
+  titulo: string;
+  descricao?: string;
+  categoria?: 'Abertura' | 'Atendimento' | 'Matrículas' | 'Auditoria' | 'Fechamento' | 'Geral';
+  prioridade?: 'Alta' | 'Média' | 'Baixa';
+  periodo?: 'Diário' | 'Semanal' | 'Mensal';
+  unidade?: string;
+  responsavelNome?: string;
+  responsavelRole?: string;
+  concluido: boolean;
+  concluidoEm?: any;
+  concluidoPorNome?: string;
+  concluidoPorUid?: string;
+  createdAt: any;
+  updatedAt?: any;
 }
 
 export interface InsumoBaixa {
