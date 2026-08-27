@@ -965,19 +965,25 @@ function MapaoAcademicoView({
     if (!element) return;
     try {
       onToast("Gerando PDF, aguarde...", "success");
-      const canvas = await html2canvas(element, { backgroundColor: '#ffffff', scale: 2 });
-      const imgData = canvas.toDataURL('image/png');
+      const canvas = await html2canvas(element, { backgroundColor: '#ffffff', scale: 1, useCORS: true, logging: false });
+      if (canvas.width === 0 || canvas.height === 0) {
+        throw new Error("Canvas gerado está vazio (tamanho 0). O elemento pode estar oculto.");
+      }
+      const imgData = canvas.toDataURL('image/jpeg', 0.9);
+      if (typeof jsPDF !== "function") throw new Error("jsPDF não carregado corretamente");
+      // Fallback for jspdf format
       const pdf = new jsPDF({
         orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
         unit: 'px',
         format: [canvas.width, canvas.height]
       });
-      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-      pdf.save(`mapao-${cardName}.pdf`);
+      pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
+      const safeName = cardName.replace(/[^a-zA-Z0-9]/g, '_');
+      pdf.save(`mapao-${safeName}.pdf`);
       onToast("PDF gerado com sucesso!", "success");
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to generate PDF', error);
-      onToast("Erro ao gerar PDF.", "error");
+      onToast(`Erro ao gerar PDF: ${error.message || "Erro desconhecido"}`, "error");
     }
   };
 

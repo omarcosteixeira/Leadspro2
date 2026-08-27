@@ -112,6 +112,19 @@ export interface Lead {
   linkadoA?: string;
   unidade?: string;
   email?: string;
+  // CRM Evolução
+  etapaFunil?: string;
+  temperatura?: 'FRIO' | 'MORNO' | 'QUENTE';
+  score?: number;
+  tags?: string[];
+  origem?: string;
+  modalidade?: string;
+  dataNascimento?: string;
+  ultimaInteracao?: any;
+  proximoContato?: any;
+  observacoes?: string;
+  valorOportunidade?: number;
+  motivoPerda?: string;
 }
 
 export interface BaseEntry {
@@ -698,4 +711,27 @@ export interface MetaCurso {
   metaFinal?: number;
   realizado?: number;
   createdAt?: any;
+}
+
+export interface CRMHistoryLog {
+  id?: string;
+  leadId: string;
+  dataHora: any;
+  usuarioId: string;
+  usuarioNome: string;
+  acao: string;
+  detalhes?: string;
+  origem: string;
+}
+
+export interface CRMTask {
+  id?: string;
+  leadId: string;
+  titulo: string;
+  descricao?: string;
+  prazo: any;
+  prioridade: 'BAIXA' | 'MEDIA' | 'ALTA';
+  responsavelId: string;
+  status: 'PENDENTE' | 'CONCLUIDA';
+  createdAt: any;
 }
