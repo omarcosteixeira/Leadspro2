@@ -100,7 +100,6 @@ export const COLLECTIONS = new Proxy({} as any, {
       EMAIL_CAMPAIGN_CONTACTS: `artifacts/${currentProjectId}/public/data/email_campaign_contacts`,
       EMAIL_CAMPAIGN_LOGS: `artifacts/${currentProjectId}/public/data/email_campaign_logs`,
       SALES_CONTACTS: `artifacts/${currentProjectId}/public/data/sales_contacts`,
-      MENSAGENS_ENVIADAS_LOG: `artifacts/${currentProjectId}/public/data/mensagens_enviadas_log`,
     };
     return paths[prop];
   }

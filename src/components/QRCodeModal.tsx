@@ -1,136 +1,78 @@
-import React from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { QrCode, X, RefreshCw, CheckCircle2, Smartphone } from "lucide-react";
+import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X } from 'lucide-react';
 
 interface QRCodeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  qrUrl?: string | null;
-  status?: string;
-  onRefresh?: () => void;
+  qrUrl?: string;
 }
 
-export const QRCodeModal: React.FC<QRCodeModalProps> = ({
-  isOpen,
-  onClose,
-  qrUrl,
-  status,
-  onRefresh,
-}) => {
-  if (!isOpen) return null;
-
+export default function QRCodeModal({ isOpen, onClose, qrUrl }: QRCodeModalProps) {
   return (
     <AnimatePresence>
-      <div
-        id="qr-code-modal-backdrop"
-        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) onClose();
-        }}
-      >
-        <motion.div
-          id="qr-code-modal-content"
-          initial={{ opacity: 0, scale: 0.95, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100"
-        >
-          {/* Header */}
-          <div className="bg-gradient-to-r from-emerald-600 to-teal-700 p-6 text-white relative">
-            <button
-              id="qr-modal-close-btn"
-              onClick={onClose}
-              className="absolute top-5 right-5 text-white/80 hover:text-white p-1 rounded-full hover:bg-white/10 transition"
-              title="Fechar"
-            >
-              <X size={20} />
-            </button>
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-white/20 rounded-2xl backdrop-blur-md">
-                <QrCode size={24} className="text-white" />
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            onClick={onClose}
+          />
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-slate-800">Conectar WhatsApp</h3>
+                <button
+                  onClick={onClose}
+                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <div>
-                <h3 className="font-bold text-lg leading-tight">
-                  Conexão WhatsApp
-                </h3>
-                <p className="text-xs text-emerald-100 mt-0.5">
-                  Escaneie o QR Code no seu aplicativo WhatsApp
-                </p>
+
+              <div className="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                {qrUrl ? (
+                  <>
+                    <img 
+                      src={qrUrl} 
+                      alt="WhatsApp QR Code" 
+                      className="w-64 h-64 object-contain rounded-xl shadow-sm border border-slate-200"
+                    />
+                    <p className="text-sm font-medium text-slate-500 mt-6 text-center">
+                      Abra o WhatsApp no seu celular, vá em Aparelhos Conectados e escaneie o código acima.
+                    </p>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4" />
+                    <p className="text-sm font-bold text-slate-700">Gerando QR Code...</p>
+                    <p className="text-xs font-medium text-slate-500 mt-2 text-center">
+                      Aguarde um momento, isso pode levar alguns segundos.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-
-          {/* Body */}
-          <div className="p-6 flex flex-col items-center text-center">
-            {qrUrl ? (
-              <div className="space-y-4 w-full flex flex-col items-center">
-                <div className="p-4 bg-white border-2 border-emerald-500/30 rounded-2xl shadow-inner inline-block">
-                  <img
-                    id="qr-code-image"
-                    src={qrUrl}
-                    alt="QR Code WhatsApp"
-                    className="w-64 h-64 object-contain rounded-lg"
-                  />
-                </div>
-
-                <div className="bg-emerald-50 text-emerald-800 text-xs font-semibold px-4 py-2.5 rounded-xl border border-emerald-200/60 flex items-center gap-2">
-                  <Smartphone size={16} className="text-emerald-600 shrink-0" />
-                  <span>
-                    Abra o WhatsApp &gt; Aparelhos Conectados &gt; Conectar um Aparelho
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <div className="py-12 flex flex-col items-center justify-center space-y-4">
-                <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                <div className="space-y-1">
-                  <p className="font-bold text-slate-800 text-sm">
-                    Gerando QR Code...
-                  </p>
-                  <p className="text-xs text-slate-500 max-w-xs">
-                    Aguarde alguns segundos enquanto o servidor inicia a sessão com o WhatsApp.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {status && (
-              <div className="mt-4 flex items-center gap-2 text-xs font-medium text-slate-600">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Status: {status}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Footer */}
-          <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-3">
-            {onRefresh ? (
+            
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
               <button
-                id="qr-refresh-btn"
-                type="button"
-                onClick={onRefresh}
-                className="px-3.5 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl transition flex items-center gap-1.5"
+                onClick={onClose}
+                className="px-6 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold text-sm transition-colors"
               >
-                <RefreshCw size={14} />
-                <span>Atualizar QR</span>
+                Cancelar
               </button>
-            ) : (
-              <div />
-            )}
-            <button
-              id="qr-done-btn"
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition shadow-sm flex items-center gap-1.5"
-            >
-              <CheckCircle2 size={14} />
-              <span>Concluído</span>
-            </button>
-          </div>
-        </motion.div>
-      </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </AnimatePresence>
   );
-};
-
-export default QRCodeModal;
+}

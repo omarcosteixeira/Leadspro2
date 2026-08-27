@@ -24,9 +24,7 @@ import {
   ChevronUp,
   ChevronDown, Filter,
   Wrench,
-  AlertTriangle,
-  MessageSquare,
-  Mail
+  AlertTriangle
 } from "lucide-react";
 import {
   BarChart,
@@ -61,14 +59,12 @@ import {
   SolicitacaoManutencao,
   SalesContact,
   MetaSM,
-  MetaCurso,
-  MensagemEnviadaLog
+  MetaCurso
 } from "../types";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { InsumosDashboard } from "./InsumosDashboard";
 import { RelatorioSales } from "./RelatorioSales";
-import { RelatorioMensagensEnviadas } from "./RelatorioMensagensEnviadas";
 
 // Reusing StatCard or defining it locally for portability
 const StatCard = ({
@@ -111,7 +107,6 @@ interface RelatoriosViewProps {
   analysisSchemes?: AnalysisScheme[];
   solicitacoesManutencao?: SolicitacaoManutencao[];
   salesContacts?: SalesContact[];
-  mensagensEnviadasLog?: MensagemEnviadaLog[];
   profile: UserProfile;
   onToast: (m: string, t?: "success" | "error") => void;
 }
@@ -134,12 +129,11 @@ export function RelatoriosView({
   analysisSchemes = [],
   solicitacoesManutencao = [],
   salesContacts = [],
-  mensagensEnviadasLog = [],
   profile,
   onToast
 }: RelatoriosViewProps) {
   const [activeTab, setActiveTab] = useState<
-    "historico" | "bases" | "fiesProuni" | "planoAcao" | "empresas" | "insumos" | "isencoes" | "pedidos_cursos" | "metaDia" | "ligacoes" | "crescimento" | "manutencao" | "sales" | "metaSM" | "metaCursos" | "mensagensEnviadas"
+    "historico" | "bases" | "fiesProuni" | "planoAcao" | "empresas" | "insumos" | "isencoes" | "pedidos_cursos" | "metaDia" | "ligacoes" | "crescimento" | "manutencao" | "sales" | "metaSM" | "metaCursos"
   >("historico");
 
   const dashboardRef = useRef<HTMLDivElement>(null);
@@ -748,7 +742,6 @@ export function RelatoriosView({
           { id: "metaCursos", label: "Meta Cursos", icon: Target },
           { id: "crescimento", label: "Crescimento", icon: TrendingUp },
           { id: "sales", label: "Sales (WhatsApp)", icon: PhoneOutgoing },
-          { id: "mensagensEnviadas", label: "Disparos & Mala Direta", icon: MessageSquare },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -790,9 +783,7 @@ export function RelatoriosView({
                         activeTab === "isencoes" ? "Acompanhamento de Isenções" : 
                         activeTab === "ligacoes" ? "Controle de Ligações" :
                         activeTab === "manutencao" ? "Gestão de Manutenção" :
-                        activeTab === "metaDia" ? "Meta Dia" :
-                        activeTab === "sales" ? "Contato via Sales" :
-                        activeTab === "mensagensEnviadas" ? "Mensagens Enviadas (Whats / Mala Direta / Bot)" : "Pedidos de Cursos"}
+                        activeTab === "metaDia" ? "Meta Dia" : activeTab === "sales" ? "Contato via Sales" : "Pedidos de Cursos"}
           </h3>
           <span className="text-xs font-mono text-slate-400">Gerado em: {new Date().toLocaleString("pt-BR")}</span>
         </div>
@@ -1296,10 +1287,6 @@ export function RelatoriosView({
 
         {activeTab === "sales" && (
           <RelatorioSales salesContacts={salesContacts} />
-        )}
-
-        {activeTab === "mensagensEnviadas" && (
-          <RelatorioMensagensEnviadas mensagensEnviadasLog={mensagensEnviadasLog} />
         )}
 
         {activeTab === "metaDia" && (
