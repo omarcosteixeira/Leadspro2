@@ -394,6 +394,7 @@ export const ROLES: Record<string, UserRole> = {
   FDV_COMERCIAL: "FDV (Comercial)",
   FINANCEIRO: "Financeiro",
   TECNICO: "T√©cnico",
+  REGIONAL: "Regional",
 };
 
 const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
@@ -417,6 +418,7 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.FDV_COMERCIAL,
     ROLES.FINANCEIRO,
     ROLES.TECNICO,
+    ROLES.REGIONAL,
   ],
   formularios: [
     ROLES.ADMIN_MASTER,
@@ -429,6 +431,7 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.PROMOTOR,
     ROLES.PROMOTOR_RUA,
     ROLES.FDV_COMERCIAL,
+    ROLES.REGIONAL,
   ],
   relatorios: [
     ROLES.ADMIN_MASTER,
@@ -442,6 +445,7 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.PROMOTOR,
     ROLES.PROMOTOR_RUA,
     ROLES.FDV_COMERCIAL,
+    ROLES.REGIONAL,
   ],
   cadastro: [
     ROLES.ADMIN_MASTER,
@@ -659,6 +663,10 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.PROMOTOR_RUA,
     ROLES.FINANCEIRO,
   ],
+  checklist: [
+    ROLES.ADMIN_MASTER,
+    ROLES.REGIONAL
+  ],
   admin: [
     ROLES.ADMIN_MASTER,
     ROLES.LIDER_FDV,
@@ -671,6 +679,7 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.PROMOTOR_RUA,
     ROLES.FDV_COMERCIAL,
     ROLES.GESTOR_COMERCIAL,
+    ROLES.REGIONAL,
   ],
   crm: [
     ROLES.ADMIN_MASTER,
@@ -6880,6 +6889,7 @@ export default function App() {
                 label: "Envio de e-mail Marketing",
                 icon: Mail,
               },
+              { id: "checklist", label: "CheckList", icon: CheckSquare },
               { id: "admin", label: "Administra√ß√£o", icon: Settings },
             ].map(
               (item) =>
@@ -7266,6 +7276,12 @@ export default function App() {
 
             {currentView === "evasao" && (
                 <EvasaoView profile={profile} onToast={showToast} />
+              )}
+              {currentView === "checklist" && (
+                <div className="p-8">
+                  <h2 className="text-2xl font-bold mb-4 text-slate-800">CheckList</h2>
+                  <p className="text-slate-500">Conte√∫do em breve.</p>
+                </div>
               )}
               {currentView === "admin" && (
                 <AdminView
@@ -8448,9 +8464,28 @@ function DashboardView({
     metaCursos: true,
     aniversarios: true,
   };
-  const widgets = profile?.dashboardWidgets
+  const isRegional = profile?.role === ROLES.REGIONAL;
+  
+  let widgets = profile?.dashboardWidgets
     ? { ...defaultWidgets, ...profile.dashboardWidgets }
     : defaultWidgets;
+    
+  if (isRegional) {
+    widgets = {
+      ...defaultWidgets,
+      stats: false,
+      planner: false,
+      qg: false,
+      periodos: false,
+      bomDia: false,
+      forecast: false,
+      metaDia: false,
+      metaCursos: false,
+      metaSM: false,
+      aniversarios: true,
+      links: true
+    };
+  }
 
   const currentMonthNum = new Date().getMonth() + 1; // 1-12
   const monthNamesPt = [
@@ -13579,12496 +13614,297 @@ function BasesView({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1">
-                    Produto *
-                  </label>
-                  <select
-                    value={editFormData.produto}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        produto: e.target.value as any,
-                      })
-                    }
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500 bg-white"
-                  >
-                    {uniqueProdutos.map((p) => (
-                      <option key={p} value={p}>
-                        {p}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1">
-                    Semestre *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={editFormData.semestre}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        semestre: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1">
-                    Per√≠odo
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.periodo}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        periodo: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1">
-                    Metodologia
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.metodologia}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        metodologia: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1">
-                    Forma de Ingresso
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.formaIngresso}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        formaIngresso: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1">
-                    N¬∫ Matr√≠cula
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.numeroMatricula}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        numeroMatricula: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1">
-                    Status do Candidato *
-                  </label>
-                  <select
-                    value={editFormData.status}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        status: e.target.value as any,
-                      })
-                    }
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500 bg-white"
-                  >
-                    <option value="Pendente">Pendente</option>
-                    <option value="Interessado">Interessado</option>
-                    <option value="Convertido">Convertido</option>
-                    <option value="N√£o tem interesse">N√£o tem interesse</option>
-                    <option value="Sem retorno">Sem retorno</option>
-<option value="Contato via Sales">Contato via Sales</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Form buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsEditModalOpen(false);
-                    setEditingCandidate(null);
-                  }}
-                  className="px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md transition-colors flex items-center gap-1.5 disabled:opacity-50"
-                >
-                  {loading ? "Salvando..." : "Salvar Altera√ß√µes"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      <WhatsAppMessageSelector
-        isOpen={selectorOpen}
-        onClose={() => setSelectorOpen(false)}
-        leadName={selectedEntry?.nome || ""}
-        leadCurso={selectedEntry?.curso || ""}
-        leadMatricula={selectedEntry?.numeroMatricula || ""}
-        messages={whatsappMessages.filter((m) => m.tipo === "bases")}
-        onSelect={(msg) => {
-          if (selectedEntry) {
-            window.open(getWhatsAppUrl(selectedEntry.telefone, msg), "_blank");
-          }
-        }}
-        botConfig={botConfig}
-        onSendBot={(msg, contactName) => {
-          if (selectedEntry) {
-            onSendBot(
-              selectedEntry.telefone,
-              Array.isArray(msg) ? msg[0] : msg,
-              contactName || selectedEntry.nome,
-            );
-          }
-        }}
-      />
-
-      <WhatsAppMessageSelector
-        isOpen={massSelectorOpen}
-        onClose={() => setMassSelectorOpen(false)}
-        leadName="Candidatos"
-        messages={whatsappMessages.filter((m) => m.tipo === "bases")}
-        onSelect={(msg) => {}}
-        botConfig={botConfig}
-        onSendBot={(msgTemplates) => {
-          const templates = Array.isArray(msgTemplates) ? msgTemplates : [msgTemplates];
-          const selectedLeadObjs = bases.filter(
-            (b) => selectedEntries.includes(b.id) && !invalidBaseIds.has(b.id),
-          );
-          const messagesPayload = selectedLeadObjs.map((l, idx) => {
-            const template = templates[idx % templates.length];
-            return {
-              telefone: l.telefone,
-              message: replaceMessageVariables(template, l),
-              nome: l.nome,
-            };
-          });
-          onMassSendBot(messagesPayload);
-          setMassSelectorOpen(false);
-          setSelectedEntries([]);
-        }}
-        forceBotOnly={true}
-      />
-
-      <AnimatePresence>
-        <MessageTemplateModal
-          isOpen={isAddMsgModalOpen}
-          onClose={() => setIsAddMsgModalOpen(false)}
-          tipo="bases"
-          onToast={onToast}
-          availableVariables={[
-            {
-              key: "[nome]",
-              label: "Nome do Lead",
-              previewValue: "Maria Souza",
-            },
-            { key: "[curso]", label: "Curso", previewValue: "Administra√ß√£o" },
-            {
-              key: "[unidade]",
-              label: "Unidade",
-              previewValue: "Unidade Central",
-            },
-            {
-              key: "[data_contato]",
-              label: "Data",
-              previewValue: new Date().toLocaleDateString("pt-BR"),
-            },
-            { key: "[saudacao]", label: "Sauda√ß√£o", previewValue: "Ol√°" },
-          ]}
-        />
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function BasesRenovacaoView({
-  bases,
-  onToast,
-  profile,
-  whatsappMessages,
-  botConfig,
-  onSendBot,
-  onMassSendBot,
-}: {
-  bases: BaseEntry[];
-  onToast: (m: string, t?: "success" | "error") => void;
-  profile: UserProfile;
-  whatsappMessages: WhatsAppMessage[];
-  botConfig: BotConfig;
-  onSendBot: (tel: string, msg: string, contactName?: string) => void;
-  onMassSendBot: (
-    messages: { telefone: string; message: string; nome?: string }[],
-  ) => void;
-}) {
-  const handleContatoViaSales = async (contact: any, origem: string) => {
-    try {
-      await addDoc(collection(db, COLLECTIONS.SALES_CONTACTS), {
-        contactId: contact.id,
-        nome: contact.nome,
-        telefone: contact.telefone,
-        curso: contact.cursoInteresse || contact.curso || "N√£o informado",
-        origem,
-        createdAt: serverTimestamp(),
-      });
-      onToast("Contato via Sales registrado com sucesso!", "success");
-    } catch (err: any) {
-      console.error(err);
-      onToast("Erro ao registrar Contato via Sales.", "error");
-    }
-  };
-  
-  const [formData, setFormData] = useState({
-    nomeBase: "",
-    nome: "",
-    telefone: "",
-    email: "",
-    cpf: "",
-    curso: "",
-    produto: "Gradua√ß√£o" as "Gradua√ß√£o" | "T√©cnico" | "P√≥s-gradua√ß√£o",
-    numeroOportunidade: "",
-    semestre: "",
-    periodo: "",
-    metodologia: "",
-    formaIngresso: "",
-    numeroMatricula: "",
-  });
-  const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [baseFilter, setBaseFilter] = useState<string[]>([]);
-  const [statusFilter, setStatusFilter] = useState("");
-  const [produtoFilter, setProdutoFilter] = useState("");
-  const [cursoFilter, setCursoFilter] = useState("");
-  const [semestreFilter, setSemestreFilter] = useState("");
-  const [selectorOpen, setSelectorOpen] = useState(false);
-  const [selectedEntry, setSelectedEntry] = useState<BaseEntry | null>(null);
-  const [massSelectorOpen, setMassSelectorOpen] = useState(false);
-  const [isAddMsgModalOpen, setIsAddMsgModalOpen] = useState(false);
-  const [newMsgData, setNewMsgData] = useState({ modelName: "", texto: "" });
-
-  const filteredBases = bases.filter((b) => {
-    // Gestor Unidade filtering
-    if (profile.role === "Gestor Unidade") {
-      if (!profile.unidade || b.unidade !== profile.unidade) {
-        return false;
-      }
-    }
-
-    const matchesSearch = b.nome
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesBase =
-      baseFilter.length === 0 || baseFilter.includes(b.nomeBase);
-    const matchesStatus = !statusFilter || b.status === statusFilter;
-    const matchesProduto = !produtoFilter || b.produto === produtoFilter;
-    const matchesCurso =
-      !cursoFilter || b.curso.toLowerCase().includes(cursoFilter.toLowerCase());
-    const matchesSemestre =
-      !semestreFilter ||
-      (b.semestre &&
-        b.semestre.toLowerCase().includes(semestreFilter.toLowerCase()));
-    return (
-      matchesSearch &&
-      matchesBase &&
-      matchesStatus &&
-      matchesProduto &&
-      matchesCurso &&
-      matchesSemestre
-    );
-  });
-
-  const uniqueBases = Array.from(new Set(bases.map((b) => b.nomeBase))).sort();
-  const uniqueProdutos = ["Gradua√ß√£o", "T√©cnico", "P√≥s-gradua√ß√£o"];
-  const uniqueCursos = Array.from(new Set(bases.map((b) => b.curso))).sort();
-  const uniqueSemestres = Array.from(
-    new Set(bases.map((b) => b.semestre).filter(Boolean)),
-  ).sort();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const cleanCpf = formData.cpf ? formData.cpf.replace(/\D/g, "") : "";
-    const cleanTelefone = formData.telefone.replace(/\D/g, "");
-
-    const isDuplicate = bases.some(
-      (b) =>
-        (cleanCpf && b.cpf === cleanCpf) ||
-        (!cleanCpf && cleanTelefone && b.telefone === cleanTelefone),
-    );
-
-    if (isDuplicate) {
-      onToast("Registro j√° existe na base (verificado CPF/Telefone).", "error");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await addDoc(collection(db, COLLECTIONS.BASES_RENOVACAO), {
-        ...formData,
-        status: "Pendente",
-        createdAt: serverTimestamp(),
-      });
-      onToast("Registro salvo na base de renova√ß√£o!");
-      setFormData({
-        nomeBase: "",
-        nome: "",
-        telefone: "",
-        email: "",
-        cpf: "",
-        curso: "",
-        produto: "Gradua√ß√£o",
-        numeroOportunidade: "",
-        semestre: "",
-        periodo: "",
-        metodologia: "",
-        formaIngresso: "",
-        numeroMatricula: "",
-      });
-    } catch (err: any) {
-      onToast(err.message, "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const [selectedEntries, setSelectedEntries] = useState<string[]>([]);
-
-  const handleBulkDelete = async () => {
-    if (selectedEntries.length === 0) return;
-    if (
-      window.confirm(
-        `Deseja excluir ${selectedEntries.length} registros selecionados?`,
-      )
-    ) {
-      try {
-        for (const id of selectedEntries) {
-          await deleteDoc(doc(db, COLLECTIONS.BASES_RENOVACAO, id));
-        }
-        onToast(`${selectedEntries.length} registros removidos.`);
-        setSelectedEntries([]);
-      } catch (err: any) {
-        onToast("Erro ao excluir registros.", "error");
-      }
-    }
-  };
-
-  const toggleSelect = (id: string, checked: boolean) => {
-    if (checked) {
-      setSelectedEntries([...selectedEntries, id]);
-    } else {
-      setSelectedEntries(selectedEntries.filter((s) => s !== id));
-    }
-  };
-
-  const toggleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedEntries(filteredBases.map((b) => b.id));
-    } else {
-      setSelectedEntries([]);
-    }
-  };
-
-  const handleStatusChange = async (entry: BaseEntry, status: string) => {
-    try {
-      await updateDoc(doc(db, COLLECTIONS.BASES_RENOVACAO, entry.id), {
-        status,
-      });
-      onToast("Status atualizado!");
-    } catch (err: any) {
-      onToast(err.message, "error");
-    }
-  };
-
-  const handleDeleteBase = async (id: string) => {
-    if (window.confirm("Deseja excluir este registro da base?")) {
-      try {
-        await deleteDoc(doc(db, COLLECTIONS.BASES_RENOVACAO, id));
-        onToast("Registro removido.");
-      } catch (err: any) {
-        onToast("Erro ao excluir registro.", "error");
-      }
-    }
-  };
-
-  const handleExport = () => {
-    const data = filteredBases.map((b) => ({
-      Nome: b.nome,
-      Telefone: b.telefone,
-      CPF: b.cpf || "",
-      Curso: b.curso,
-      Produto: b.produto || "Gradua√ß√£o",
-      "N¬∫ Oportunidade": b.numeroOportunidade || "",
-      Semestre: b.semestre || "",
-      Periodo: b.periodo || "",
-      Metodologia: b.metodologia || "",
-      "Forma de Ingresso": b.formaIngresso || "",
-      "N¬∫ Matr√≠cula": b.numeroMatricula || "",
-      Base: b.nomeBase,
-      Status: b.status,
-    }));
-    exportToExcel(data, "Bases_Renovacao");
-  };
-
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    importFromExcel(file, async (data) => {
-      try {
-        const getVal = (row: any, ...keys: string[]) => {
-          const rowKeys = Object.keys(row);
-          for (const key of keys) {
-            const foundKey = rowKeys.find(
-              (k) => k.toLowerCase() === key.toLowerCase(),
-            );
-            if (foundKey && row[foundKey] !== undefined) return row[foundKey];
-          }
-          return undefined;
-        };
-
-        const normalizeProduto = (val: string) => {
-          if (!val) return "Gradua√ß√£o";
-          const lower = val.trim().toLowerCase();
-          if (lower.includes("gradua")) return "Gradua√ß√£o";
-          if (lower.includes("tecnic") || lower.includes("t√©cnic"))
-            return "T√©cnico";
-          if (lower.includes("pos") || lower.includes("p√≥s"))
-            return "P√≥s-gradua√ß√£o";
-          return val;
-        };
-
-        const normalizeMetodologia = (val: string) => {
-          if (!val) return "";
-          const lower = val.trim().toLowerCase();
-          if (lower === "ead") return "EAD";
-          if (lower === "presencial") return "Presencial";
-          if (lower === "semipresencial") return "Semipresencial";
-          if (lower === "flex") return "Flex";
-          if (lower === "hibrido" || lower === "h√≠brido") return "H√≠brido";
-          if (lower === "digital") return "Digital";
-          return val;
-        };
-
-        const normalizeStatusBase = (val: string) => {
-          if (!val) return "Pendente";
-          const lower = val.trim().toLowerCase();
-          if (lower === "pendente") return "Pendente";
-          if (lower === "matriculado") return "Matriculado";
-          if (
-            lower === "ligacao efetuada" ||
-            lower === "liga√ß√£o efetuada" ||
-            lower.includes("liga")
-          )
-            return "Liga√ß√£o Efetuada";
-          if (lower === "sem interesse" || lower.includes("sem inter"))
-            return "Sem Interesse";
-          return val.charAt(0).toUpperCase() + val.slice(1);
-        };
-
-        const batch = data.map((item) => ({
-          nome: String(getVal(item, "Nome", "nome") || "").trim(),
-          telefone: String(getVal(item, "Telefone", "telefone") || "").replace(
-            /\D/g,
-            "",
-          ),
-          cpf: String(getVal(item, "CPF", "cpf") || "").replace(/\D/g, ""),
-          curso: String(getVal(item, "Curso", "curso") || "").trim(),
-          produto: normalizeProduto(
-            String(getVal(item, "Produto", "produto") || ""),
-          ),
-          numeroOportunidade: String(
-            getVal(
-              item,
-              "N¬∫ Oportunidade",
-              "numeroOportunidade",
-              "oportunidade",
-            ) || "",
-          ).trim(),
-          semestre: String(getVal(item, "Semestre", "semestre") || "").trim(),
-          periodo: String(
-            getVal(item, "Periodo", "periodo", "per√≠odo") || "",
-          ).trim(),
-          metodologia: normalizeMetodologia(
-            String(getVal(item, "Metodologia", "metodologia") || ""),
-          ),
-          formaIngresso: String(
-            getVal(item, "Forma de Ingresso", "formaIngresso", "ingresso") ||
-              "",
-          ).trim(),
-          numeroMatricula: String(
-            getVal(
-              item,
-              "N¬∫ Matr√≠cula",
-              "numeroMatricula",
-              "matricula",
-              "matr√≠cula",
-            ) || "",
-          ).trim(),
-          nomeBase: String(
-            getVal(item, "Base", "nomeBase") || "Importado Renova√ß√£o",
-          ).trim(),
-          status: normalizeStatusBase(
-            String(getVal(item, "Status", "status") || ""),
-          ),
-          createdAt: serverTimestamp(),
-        }));
-
-        let imported = 0;
-        let skipped = 0;
-        const insertedCpfs = new Set();
-        const insertedTels = new Set();
-
-        for (const entry of batch) {
-          const isDupCpf =
-            entry.cpf &&
-            (bases.some((b) => b.cpf === entry.cpf) ||
-              insertedCpfs.has(entry.cpf));
-          const isDupTel =
-            entry.telefone &&
-            (bases.some((b) => b.telefone === entry.telefone) ||
-              insertedTels.has(entry.telefone));
-
-          if (!isDupCpf && !isDupTel) {
-            await addDoc(collection(db, COLLECTIONS.BASES_RENOVACAO), entry);
-            if (entry.cpf) insertedCpfs.add(entry.cpf);
-            if (entry.telefone) insertedTels.add(entry.telefone);
-            imported++;
-          } else {
-            skipped++;
-          }
-        }
-        onToast(
-          `${imported} registros importados com sucesso! ${skipped > 0 ? `${skipped} ignorados por duplicidade.` : ""}`,
-        );
-      } catch (err: any) {
-        onToast("Erro ao importar dados.", "error");
-      }
-    });
-  };
-
-  const handleAddCustomMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMsgData.texto.trim()) return;
-    setLoading(true);
-    try {
-      await addDoc(collection(db, COLLECTIONS.WHATSAPP_MESSAGES), {
-        tipo: "bases_renovacao",
-        texto: newMsgData.texto,
-        nome: newMsgData.modelName || undefined,
-        createdAt: serverTimestamp(),
-      });
-      onToast("Mensagem de renova√ß√£o salva!");
-      setNewMsgData({ modelName: "", texto: "" });
-      setIsAddMsgModalOpen(false);
-    } catch (err: any) {
-      console.error("Erro ao salvar mensagem renova√ß√£o:", err);
-      onToast(`Erro ao salvar mensagem: ${err.message}`, "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleInsertDefaultRenovacaoMessages = async () => {
-    try {
-      const existing = whatsappMessages.filter(
-        (m) => m.tipo === "bases_renovacao",
-      );
-      if (existing.length > 0) {
-        if (
-          !window.confirm(
-            "J√° existem mensagens de renova√ß√£o. Deseja adicionar as mensagens padr√µes mesmo assim?",
-          )
-        ) {
-          return;
-        }
-      }
-
-      const defaults = [
-        "Ol√° [nome], notamos que sua matr√≠cula ainda n√£o foi renovada. Vamos garantir sua vaga para o pr√≥ximo semestre?",
-        "Oi [nome], preparamos condi√ß√µes exclusivas para sua renova√ß√£o hoje! Vamos conferir?",
-        "Aten√ß√£o [nome]! O prazo para renova√ß√£o est√° terminando. N√£o perca sua vaga!",
-      ];
-
-      for (const texto of defaults) {
-        await addDoc(collection(db, COLLECTIONS.WHATSAPP_MESSAGES), {
-          tipo: "bases_renovacao",
-          texto,
-          createdAt: serverTimestamp(),
-        });
-      }
-      onToast("Mensagens padr√µes inseridas com sucesso!");
-    } catch (err: any) {
-      onToast("Erro ao inserir mensagens padr√µes.", "error");
-    }
-  };
-
-  const totalAlunos = filteredBases.length;
-  const renovados = filteredBases.filter(
-    (b) => b.status === "Convertido",
-  ).length;
-  const naoRenovados = totalAlunos - renovados;
-
-  return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-center max-w-xl mx-auto gap-4">
-        <h3 className="text-xl font-bold text-slate-900 whitespace-nowrap">
-          Base L√≠quida
-        </h3>
-        <div className="flex flex-wrap justify-center gap-2">
-          <button
-            onClick={() => setIsAddMsgModalOpen(true)}
-            className="bg-emerald-50 text-emerald-600 px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-emerald-100 transition-all text-sm font-bold"
-          >
-            <Plus size={18} />
-            <span>Inserir Mensagens</span>
-          </button>
-          <button
-            onClick={handleInsertDefaultRenovacaoMessages}
-            className="bg-slate-50 text-slate-400 px-3 py-2 rounded-xl flex items-center space-x-2 hover:bg-slate-100 transition-all text-[10px] font-bold"
-            title="Inserir Mensagens Padr√µes"
-          >
-            <MessageSquare size={14} />
-          </button>
-          <label className="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-blue-100 transition-all text-sm font-bold cursor-pointer">
-            <Upload size={18} />
-            <span>Importar</span>
-            <input
-              type="file"
-              accept=".xlsx, .xls"
-              onChange={handleImport}
-              className="hidden"
-            />
-          </label>
-          <button
-            onClick={handleExport}
-            className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-slate-200 transition-all text-sm font-bold"
-          >
-            <Download size={18} />
-            <span>Exportar</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-center items-center text-center">
-          <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">
-            Total na Base
-          </div>
-          <div className="text-3xl font-black text-slate-800">
-            {totalAlunos}
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-emerald-100 flex flex-col justify-center items-center text-center">
-          <div className="text-sm font-bold text-emerald-600 uppercase tracking-wider mb-2">
-            Renovados
-          </div>
-          <div className="text-3xl font-black text-emerald-700">
-            {renovados}
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-orange-100 flex flex-col justify-center items-center text-center">
-          <div className="text-sm font-bold text-orange-600 uppercase tracking-wider mb-2">
-            N√£o Renovados
-          </div>
-          <div className="text-3xl font-black text-orange-700">
-            {naoRenovados}
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-rose-100 flex flex-col justify-center items-center text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-rose-50 opacity-50"></div>
-          <div className="relative z-10 w-full">
-            <div className="text-sm font-bold text-rose-600 uppercase tracking-wider mb-2">
-              Gap
-            </div>
-            <div className="text-3xl font-black text-rose-700">
-              {totalAlunos > 0 ? naoRenovados : 0}
-            </div>
-            <div className="text-xs text-rose-500 font-bold mt-1">
-              Faltam{" "}
-              {totalAlunos > 0
-                ? ((naoRenovados / totalAlunos) * 100).toFixed(1)
-                : 0}
-              % para a meta
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-xl mx-auto">
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-          <h3 className="text-xl font-bold text-slate-900 mb-4">
-            Novo Registro em Renova√ß√£o
-          </h3>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              placeholder="Nome da Base (Ex: Renova√ß√£o 2024.2)"
-              required
-              value={formData.nomeBase}
-              onChange={(e) =>
-                setFormData({ ...formData, nomeBase: e.target.value })
-              }
-              className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-            />
-            <div className="grid grid-cols-2 gap-4">
-              <input
-                placeholder="Nome"
-                required
-                value={formData.nome}
-                onChange={(e) =>
-                  setFormData({ ...formData, nome: e.target.value })
-                }
-                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-              <input
-                placeholder="Telefone"
-                required
-                value={formData.telefone}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    telefone: formatPhone(e.target.value),
-                  })
-                }
-                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <input
-                placeholder="CPF"
-                value={formData.cpf}
-                onChange={(e) =>
-                  setFormData({ ...formData, cpf: formatCPF(e.target.value) })
-                }
-                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-              <input
-                placeholder="N¬∞ de Matr√≠cula"
-                required
-                value={formData.numeroMatricula}
-                onChange={(e) =>
-                  setFormData({ ...formData, numeroMatricula: e.target.value })
-                }
-                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <input
-                placeholder="Semestre"
-                required
-                value={formData.semestre}
-                onChange={(e) =>
-                  setFormData({ ...formData, semestre: e.target.value })
-                }
-                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-              <select
-                value={formData.produto}
-                onChange={(e) =>
-                  setFormData({ ...formData, produto: e.target.value as any })
-                }
-                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-              >
-                {uniqueProdutos.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="grid grid-cols-1">
-              <input
-                placeholder="Metodologia"
-                required
-                value={formData.metodologia}
-                onChange={(e) =>
-                  setFormData({ ...formData, metodologia: e.target.value })
-                }
-                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-            </div>
-            <input
-              placeholder="Curso"
-              required
-              value={formData.curso}
-              onChange={(e) =>
-                setFormData({ ...formData, curso: e.target.value })
-              }
-              className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50"
-            >
-              {loading ? "Salvando..." : "Adicionar √† Renova√ß√£o"}
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h3 className="text-xl font-bold text-slate-900">
-            Bases a Trabalhar (L√≠quida)
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            <div className="relative">
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                size={16}
-              />
-              <input
-                type="text"
-                placeholder="Buscar por nome..."
-                className="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 w-48"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <MultiSelect
-              options={uniqueBases}
-              selectedValues={baseFilter}
-              onChange={setBaseFilter}
-              placeholder="Todas as Bases"
-              allLabel="Todas as Bases"
-            />
-            <select
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500"
-              value={produtoFilter}
-              onChange={(e) => setProdutoFilter(e.target.value)}
-            >
-              <option value="">Todos os Produtos</option>
-              {uniqueProdutos.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
-            <select
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500"
-              value={cursoFilter}
-              onChange={(e) => setCursoFilter(e.target.value)}
-            >
-              <option value="">Todos os Cursos</option>
-              {uniqueCursos.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-            <select
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500"
-              value={semestreFilter}
-              onChange={(e) => setSemestreFilter(e.target.value)}
-            >
-              <option value="">Todos os Semestres</option>
-              {uniqueSemestres.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-            <select
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="">Todos Status</option>
-              <option value="Pendente">Pendente</option>
-              <option value="Interessado">Interessado</option>
-              <option value="Convertido">Convertido</option>
-              <option value="N√£o tem interesse">N√£o tem interesse</option>
-              <option value="Sem retorno">Sem retorno</option>
-<option value="Contato via Sales">Contato via Sales</option>
-            </select>
-          </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider">
-                <th className="px-6 py-4 w-12 text-center">#</th>
-                <th className="px-6 py-4 w-12">
-                  <input
-                    type="checkbox"
-                    checked={
-                      selectedEntries.length === filteredBases.length &&
-                      filteredBases.length > 0
-                    }
-                    onChange={(e) => toggleSelectAll(e.target.checked)}
-                  />
-                </th>
-                <th className="px-6 py-4">Nome</th>
-                <th className="px-6 py-4">Base</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 flex items-center gap-4">
-                  {selectedEntries.length > 0 && (
-                    <button
-                      onClick={handleBulkDelete}
-                      className="text-rose-600 font-bold hover:underline"
-                    >
-                      excluir selecionados
-                    </button>
-                  )}
-                  {selectedEntries.length > 0 && botConfig.url && (
-                    <button
-                      onClick={() => setMassSelectorOpen(true)}
-                      className="text-blue-600 font-bold hover:underline py-1 px-2 bg-blue-50 rounded-lg flex items-center gap-1"
-                    >
-                      <Bot size={14} /> Em Massa
-                    </button>
-                  )}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredBases.map((entry, index) => (
-                <tr
-                  key={entry.id}
-                  className="hover:bg-slate-50/50 transition-all"
-                >
-                  <td className="px-6 py-4 text-center font-bold text-slate-400 text-xs">
-                    {index + 1}
-                  </td>
-                  <td className="px-6 py-4">
-                    <input
-                      type="checkbox"
-                      checked={selectedEntries.includes(entry.id)}
-                      onChange={(e) => toggleSelect(entry.id, e.target.checked)}
-                    />
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col">
-                      <span className="font-bold text-slate-900">
-                        {entry.nome}
-                      </span>
-                      <span className="text-xs text-slate-500">
-                        {entry.curso}
-                      </span>
-                      <div className="flex items-center space-x-2 mt-1">
-                        {entry.telefone && (
-                          <span className="text-[10px] text-slate-400 font-bold">
-                            {entry.telefone}
-                          </span>
-                        )}
-                        {entry.semestre && (
-                          <span className="text-[10px] text-blue-500 font-bold px-2 py-0.5 bg-blue-50 rounded-full">
-                            {entry.semestre}
-                          </span>
-                        )}
-                        {entry.periodo && (
-                          <span className="text-[10px] text-purple-500 font-bold px-2 py-0.5 bg-purple-50 rounded-full">
-                            {entry.periodo}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-slate-600">
-                    {entry.nomeBase}
-                  </td>
-                  <td className="px-6 py-4">
-                    <select
-                      value={entry.status}
-                      onChange={(e) =>
-                        handleStatusChange(entry, e.target.value)
-                      }
-                      className={cn(
-                        "px-2 py-1 rounded-lg text-xs font-bold outline-none border-none",
-                        entry.status === "Pendente" &&
-                          "bg-slate-100 text-slate-600",
-                        entry.status === "Interessado" &&
-                          "bg-blue-100 text-blue-600",
-                        entry.status === "Convertido" &&
-                          "bg-emerald-100 text-emerald-600",
-                        entry.status === "N√£o tem interesse" &&
-                          "bg-rose-100 text-rose-600",
-                        entry.status === "Sem retorno" &&
-                            "bg-orange-100 text-orange-600",
-                          entry.status === "Contato via Sales" &&
-                            "bg-purple-100 text-purple-600",
-                      )}
-                    >
-                      <option value="Pendente">Pendente</option>
-                      <option value="Interessado">Interessado</option>
-                      <option value="Convertido">Convertido</option>
-                      <option value="N√£o tem interesse">
-                        N√£o tem interesse
-                      </option>
-                      <option value="Sem retorno">Sem retorno</option>
-<option value="Contato via Sales">Contato via Sales</option>
-                    </select>
-                  </td>
-                  <td className="px-6 py-4 flex items-center space-x-2">
-                    <button
-                      onClick={() => {
-                        setSelectedEntry(entry);
-                        setSelectorOpen(true);
-                      }}
-                      className="text-emerald-600 hover:text-emerald-700 font-bold text-sm flex items-center space-x-1"
-                    >
-                      <MessageSquare size={14} />
-                      <span>WhatsApp</span>
-                    </button>
-                    <button
-                      onClick={() => handleContatoViaSales(entry, entry.nomeBase || 'Bases Renova√ß√£o')}
-                      className="text-sky-600 font-bold text-sm flex items-center space-x-1 hover:text-sky-700 bg-sky-50 px-2 py-1 rounded-lg ml-2"
-                      title="Registrar Contato via Sales"
-                    >
-                      <PhoneOutgoing size={14} />
-                      <span>Sales</span>
-                    </button>
-                    <button
-                      onClick={() => handleDeleteBase(entry.id)}
-                      className="text-rose-400 hover:text-rose-600 p-2 hover:bg-rose-50 rounded-lg transition-all"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {filteredBases.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="px-6 py-12 text-center text-slate-400 italic"
-                  >
-                    Nenhum registro encontrado com os filtros aplicados.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <WhatsAppMessageSelector
-        isOpen={selectorOpen}
-        onClose={() => setSelectorOpen(false)}
-        leadName={selectedEntry?.nome || ""}
-        leadCurso={selectedEntry?.curso || ""}
-        leadMatricula={selectedEntry?.numeroMatricula || ""}
-        messages={whatsappMessages.filter((m) => m.tipo === "bases_renovacao")}
-        onSelect={(msg) => {
-          if (selectedEntry) {
-            window.open(getWhatsAppUrl(selectedEntry.telefone, msg), "_blank");
-          }
-        }}
-        botConfig={botConfig}
-        onSendBot={(msg, contactName) => {
-          if (selectedEntry) {
-            onSendBot(
-              selectedEntry.telefone,
-              Array.isArray(msg) ? msg[0] : msg,
-              contactName || selectedEntry.nome,
-            );
-          }
-        }}
-      />
-
-      <WhatsAppMessageSelector
-        isOpen={massSelectorOpen}
-        onClose={() => setMassSelectorOpen(false)}
-        leadName="Candidatos"
-        messages={whatsappMessages.filter((m) => m.tipo === "bases_renovacao")}
-        onSelect={(msg) => {}}
-        botConfig={botConfig}
-        onSendBot={(msgTemplates) => {
-          const templates = Array.isArray(msgTemplates) ? msgTemplates : [msgTemplates];
-          const selectedLeadObjs = bases.filter((b) =>
-            selectedEntries.includes(b.id),
-          );
-          const messagesPayload = selectedLeadObjs.map((l, idx) => {
-            const template = templates[idx % templates.length];
-            return {
-              telefone: l.telefone,
-              message: replaceMessageVariables(template, l),
-              nome: l.nome,
-            };
-          });
-          onMassSendBot(messagesPayload);
-          setMassSelectorOpen(false);
-          setSelectedEntries([]);
-        }}
-        forceBotOnly={true}
-      />
-
-      <AnimatePresence>
-        <MessageTemplateModal
-          isOpen={isAddMsgModalOpen}
-          onClose={() => setIsAddMsgModalOpen(false)}
-          tipo="bases_renovacao"
-          onToast={onToast}
-          availableVariables={[
-            {
-              key: "[nome]",
-              label: "Nome do Aluno",
-              previewValue: "Maria Souza",
-            },
-            { key: "[curso]", label: "Curso", previewValue: "Administra√ß√£o" },
-            {
-              key: "[unidade]",
-              label: "Unidade",
-              previewValue: "Unidade Central",
-            },
-            {
-              key: "[data_contato]",
-              label: "Data",
-              previewValue: new Date().toLocaleDateString("pt-BR"),
-            },
-            { key: "[saudacao]", label: "Sauda√ß√£o", previewValue: "Ol√°" },
-          ]}
-        />
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function GapView({
-  gap,
-  onToast,
-  profile,
-  whatsappMessages,
-  botConfig,
-  onSendBot,
-  onMassSendBot,
-  calendarioAcoes = [],
-}: {
-  gap: GapEntry[];
-  onToast: (m: string, t?: "success" | "error") => void;
-  profile: UserProfile;
-  whatsappMessages: WhatsAppMessage[];
-  botConfig: BotConfig;
-  onSendBot: (tel: string, msg: string, contactName?: string) => void;
-  onMassSendBot: (
-    messages: { telefone: string; message: string; nome?: string }[],
-  ) => void;
-  calendarioAcoes?: CalendarioAcao[];
-}) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [cpfFilter, setCpfFilter] = useState("");
-  const [produtoFilter, setProdutoFilter] = useState("");
-  const [cursoFilter, setCursoFilter] = useState("");
-  const [periodoFilter, setPeriodoFilter] = useState("");
-  const [matAcadFilter, setMatAcadFilter] = useState("");
-  const [gapFilter, setGapFilter] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingEntry, setEditingEntry] = useState<GapEntry | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [selectedEntries, setSelectedEntries] = useState<string[]>([]);
-  const [gapSubTab, setGapSubTab] = useState<"dashboard" | "lista">(
-    "dashboard",
-  );
-  const [duplicateIds, setDuplicateIds] = useState<Set<string>>(new Set());
-  const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
-
-  const [isSelectorOpen, setIsSelectorOpen] = useState(false);
-  const [selectedEntryForWhatsapp, setSelectedEntryForWhatsapp] =
-    useState<GapEntry | null>(null);
-
-  const gapSpecificMessages = useMemo(() => {
-    return whatsappMessages
-      .filter((m) => m.tipo === "gap" || m.tipo.startsWith("gap_"))
-      .sort((a, b) => {
-        if (a.tipo === "gap" || a.tipo === "gap_0") return -1;
-        if (b.tipo === "gap" || b.tipo === "gap_0") return 1;
-        return a.tipo.localeCompare(b.tipo);
-      });
-  }, [whatsappMessages]);
-
-  const handleBulkDelete = async () => {
-    if (selectedEntries.length === 0) return;
-    if (
-      window.confirm(
-        `Deseja excluir ${selectedEntries.length} registros selecionados do GAP?`,
-      )
-    ) {
-      try {
-        for (const id of selectedEntries) {
-          await deleteDoc(doc(db, COLLECTIONS.GAP, id));
-        }
-        onToast(`${selectedEntries.length} registros no GAP removidos.`);
-        setSelectedEntries([]);
-      } catch (err: any) {
-        onToast("Erro ao excluir registros do GAP.", "error");
-      }
-    }
-  };
-
-  const toggleSelect = (id: string, checked: boolean) => {
-    if (checked) {
-      setSelectedEntries([...selectedEntries, id]);
-    } else {
-      setSelectedEntries(selectedEntries.filter((s) => s !== id));
-    }
-  };
-
-  const toggleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedEntries(filteredGap.map((g) => g.id));
-    } else {
-      setSelectedEntries([]);
-    }
-  };
-  const handleContatoViaSales = async (contact: any, origem: string) => {
-    try {
-      await addDoc(collection(db, COLLECTIONS.SALES_CONTACTS), {
-        contactId: contact.id,
-        nome: contact.nome,
-        telefone: contact.telefone,
-        curso: contact.cursoInteresse || contact.curso || "N√£o informado",
-        origem,
-        createdAt: serverTimestamp(),
-      });
-      onToast("Contato via Sales registrado com sucesso!", "success");
-    } catch (err: any) {
-      console.error(err);
-      onToast("Erro ao registrar Contato via Sales.", "error");
-    }
-  };
-  
-  const [formData, setFormData] = useState({
-    nome: "",
-    telefone: "",
-    cpf: "",
-    produto: "Gradua√ß√£o" as any,
-    numeroOportunidade: "",
-    curso: "",
-    semestre: "",
-    metodologia: "",
-    formaIngresso: "",
-    numeroMatricula: "",
-    periodo: "",
-    acao: "",
-    acaoId: "",
-  });
-
-  const docLabels: Record<string, string> = {
-    rg: "RG",
-    cpf: "CPF",
-    diploma: "Diploma",
-    enem: "ENEM",
-    historico: "Hist.",
-    planoEnsino: "Plano",
-    contrato: "Contr.",
-    carta: "Carta",
-  };
-
-  const stats = useMemo(() => {
-    const total = gap.length;
-    const matFin = total;
-    const matAcadOk = gap.filter(
-      (g) =>
-        g.matAcad === true ||
-        g.matAcad === "Matr√≠cula Gerada" ||
-        g.matAcad === "OK",
-    ).length;
-    const pendingDocs = matFin - matAcadOk;
-    const conversionRate =
-      total > 0 ? ((matAcadOk / total) * 100).toFixed(1) : "0";
-    return { matFin, matAcadOk, pendingDocs, conversionRate };
-  }, [gap]);
-
-  const statsByProduct = useMemo(() => {
-    const groups: { [key: string]: number } = {
-      Gradua√ß√£o: 0,
-      T√©cnico: 0,
-      "P√≥s-gradua√ß√£o": 0,
-    };
-    gap.forEach((g) => {
-      const p = g.produto || "Gradua√ß√£o";
-      if (groups[p] !== undefined) groups[p] += 1;
-    });
-    return Object.entries(groups).map(([name, count]) => ({
-      name,
-      count,
-      percentage:
-        gap.length > 0 ? ((count / gap.length) * 100).toFixed(1) : "0",
-    }));
-  }, [gap]);
-
-  const statsByStatus = useMemo(() => {
-    const groups: { [key: string]: number } = {
-      OK: 0,
-      Pendente: 0,
-      Aguardando: 0,
-      Desistente: 0,
-    };
-    gap.forEach((g) => {
-      const s =
-        g.matAcad === true ||
-        g.matAcad === "Matr√≠cula Gerada" ||
-        g.matAcad === "OK"
-          ? "OK"
-          : g.matAcad === "Aguardando N¬∞ de Matr√≠cula"
-            ? "Aguardando"
-            : g.matAcad === "Desistente"
-              ? "Desistente"
-              : "Pendente";
-      if (groups[s] !== undefined) groups[s] += 1;
-    });
-    return Object.entries(groups).map(([name, count]) => ({
-      name,
-      count,
-      percentage:
-        gap.length > 0 ? ((count / gap.length) * 100).toFixed(1) : "0",
-    }));
-  }, [gap]);
-
-  const filteredGap = useMemo(() => {
-    return gap.filter((g) => {
-      // Gestor Unidade filtering
-      if (profile.role === "Gestor Unidade") {
-        if (!profile.unidade || g.unidade !== profile.unidade) {
-          return false;
-        }
-      }
-
-      const matchesSearch = g.nome
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-      const matchesCpf = !cpfFilter || g.cpf?.includes(cpfFilter);
-      const matchesProduto = !produtoFilter || g.produto === produtoFilter;
-      const matchesCurso =
-        !cursoFilter ||
-        g.curso.toLowerCase().includes(cursoFilter.toLowerCase());
-      const matchesPeriodo =
-        !periodoFilter ||
-        g.periodo?.toLowerCase().includes(periodoFilter.toLowerCase());
-
-      const isOk =
-        g.matAcad === true ||
-        g.matAcad === "Matr√≠cula Gerada" ||
-        g.matAcad === "OK";
-      let matchesMatAcad = true;
-      if (matAcadFilter === "Matr√≠cula Gerada") matchesMatAcad = isOk;
-      else if (matAcadFilter === "Pendente")
-        matchesMatAcad =
-          !g.matAcad || g.matAcad === "false" || g.matAcad === "Pendente";
-      else if (matAcadFilter === "Aguardando N¬∞ de Matr√≠cula")
-        matchesMatAcad = g.matAcad === "Aguardando N¬∞ de Matr√≠cula";
-      else if (matAcadFilter === "Desistente")
-        matchesMatAcad = g.matAcad === "Desistente";
-
-      const docs = g.documentos || {};
-      const hasGap = Object.keys(docLabels).some((key) => !(docs as any)[key]);
-      const matchesGap = !gapFilter || (gapFilter === "Sim" ? hasGap : !hasGap);
-      const matchesAll =
-        matchesSearch &&
-        matchesCpf &&
-        matchesProduto &&
-        matchesCurso &&
-        matchesPeriodo &&
-        matchesMatAcad &&
-        matchesGap;
-      return matchesAll;
-    });
-  }, [
-    gap,
-    searchTerm,
-    cpfFilter,
-    produtoFilter,
-    cursoFilter,
-    periodoFilter,
-    matAcadFilter,
-    gapFilter,
-  ]);
-
-  const toggleDoc = async (id: string, docKey: string, current: boolean) => {
-    try {
-      const entry = gap.find((g) => g.id === id);
-      if (!entry) return;
-      const newDocs = { ...(entry.documentos || {}) };
-      (newDocs as any)[docKey] = !current;
-      await updateDoc(doc(db, COLLECTIONS.GAP, id), { documentos: newDocs });
-      onToast("Documento atualizado!");
-    } catch (err: any) {
-      onToast("Erro ao atualizar documento.", "error");
-    }
-  };
-
-  const updateMatAcadStatus = async (
-    id: string,
-    newStatus: string | boolean,
-  ) => {
-    try {
-      await updateDoc(doc(db, COLLECTIONS.GAP, id), { matAcad: newStatus });
-      onToast("Status de matr√≠cula atualizado!");
-    } catch (err: any) {
-      onToast("Erro ao atualizar matr√≠cula.", "error");
-    }
-  };
-
-  const handleDeleteGap = async (id: string) => {
-    if (window.confirm("Deseja excluir este registro do GAP?")) {
-      try {
-        await deleteDoc(doc(db, COLLECTIONS.GAP, id));
-        onToast("Registro removido.");
-      } catch (err: any) {
-        onToast("Erro ao excluir registro.", "error");
-      }
-    }
-  };
-
-  const getGapWhatsAppMessage = (entry: GapEntry) => {
-    const docs = entry.documentos || {};
-    const missingDocs = Object.entries(docLabels)
-      .filter(([key]) => !(docs as any)[key])
-      .map(([_, label]) => label);
-
-    const applyReplacements = (text: string) => {
-      return replaceMessageVariables(text, { ...entry, missingDocs });
-    };
-
-    // se ok e tiver matricula
-    const isOk =
-      entry.matAcad === true ||
-      entry.matAcad === "Matr√≠cula Gerada" ||
-      entry.matAcad === "OK";
-    if (isOk && entry.numeroMatricula) {
-      const msgOk = whatsappMessages.find((m) => m.tipo === "gap_1");
-      if (msgOk) {
-        return applyReplacements(msgOk.texto);
-      }
-      return applyReplacements(`PARAB√âNS [nome] üéä Agora voc√™ √© aluno Est√°cio üíé  
- 
-√â com grande orgulho e muita determina√ß√£o que esse novo ciclo em sua vida se inicia! ü§ì   
-
-üìù Anote sua matr√≠cula ser√° importante em toda a sua jornada na Est√°cio. [matricula] 
- 
-Acesse seu portal usando os dados abaixo:
-
-Seu e-mail de estudante: [matricula]@alunos.estacio.br 
-
-Senha de primeiro acesso para usar com o e-mail: os seis primeiros d√≠gitos do seu CPF + @ + a primeira letra do seu nome mai√∫scula + a segunda letra do seu nome min√∫scula 
-
-Aplicativo de celular: Minha Est√°cio 
-
-Pela internet: https://sia.estacio.br/sianet/Logon`);
-    } else if (isOk) {
-      const msgOk = whatsappMessages.find((m) => m.tipo === "gap_1");
-      if (msgOk) return applyReplacements(msgOk.texto);
-      return `Ol√° ${entry.nome}, vimos que sua matr√≠cula acad√™mica est√° ok! Parab√©ns!`;
-    }
-
-    // Add logic to include registration number automatically if it exists
-    let message = "";
-    const customMsg = whatsappMessages.find(
-      (m) => m.tipo === "gap" || m.tipo === "gap_0",
-    );
-    if (customMsg) {
-      message = applyReplacements(customMsg.texto);
-    } else if (missingDocs.length > 0) {
-      message = `Ol√° ${entry.nome}, tudo bem? Sou da equipe de capta√ß√£o e meu contato √© referente √† sua matr√≠cula no curso de ${entry.curso}. Identificamos que sua matr√≠cula ainda n√£o foi finalizada devido √† pend√™ncia dos seguintes documentos: ${missingDocs.join(", ")}. √â fundamental regularizar essa situa√ß√£o o quanto antes para garantir sua vaga e evitar o cancelamento do processo.`;
-    }
-
-    if (entry.numeroMatricula && !message.includes(entry.numeroMatricula)) {
-      message += `\n\nN¬∫ Matr√≠cula: ${entry.numeroMatricula}`;
-    }
-
-    if (!docs.contrato || !docs.carta) {
-      message += `\n\nACEITE DO CONTRATO, para isso vou lhe enviar o passo a passo aqui a baixo: \n\n1¬∫ PASSO:ACESSAR O PORTAL DO CANDIDATO: https://candidatos.portal.estacio.br/acompanhe-sua-matricula \n\n2¬∞ COLOQUE SEU CPF E SENHA, CASO SEJA A 1¬∞ VEZ, COLOQUE ESQUECI MINHA SENHA. \n\n3¬∞ CLIQUE EM CONTRATO EDUCACIONAL E EM SEGUIDA EM ACEITAR E CONTINUAR`;
-    }
-
-    return message;
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const cleanCpf = formData.cpf ? formData.cpf.replace(/\D/g, "") : "";
-    const cleanTelefone = formData.telefone.replace(/\D/g, "");
-
-    const isDuplicate = gap.some(
-      (g) =>
-        g.id !== editingEntry?.id &&
-        ((cleanCpf && g.cpf === cleanCpf) ||
-          (!cleanCpf && cleanTelefone && g.telefone === cleanTelefone)),
-    );
-
-    if (isDuplicate) {
-      onToast(
-        "Candidato j√° cadastrado no GAP (verificado CPF/Telefone).",
-        "error",
-      );
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const prevAcaoId = editingEntry?.acaoId;
-      const newAcaoId = formData.acaoId;
-
-      if (editingEntry) {
-        await updateDoc(doc(db, COLLECTIONS.GAP, editingEntry.id), {
-          ...formData,
-          updatedAt: serverTimestamp(),
-        });
-        onToast("Candidato atualizado com sucesso!");
-      } else {
-        await addDoc(collection(db, COLLECTIONS.GAP), {
-          ...formData,
-          matAcad: false,
-          documentos: {},
-          unidade: profile.unidade || "",
-          createdAt: serverTimestamp(),
-        });
-        onToast("Candidato cadastrado no GAP!");
-      }
-
-      if (prevAcaoId && prevAcaoId !== "manual" && prevAcaoId !== newAcaoId) {
-        try {
-          const qGapOld = query(
-            collection(db, COLLECTIONS.GAP),
-            where("acaoId", "==", prevAcaoId),
-          );
-          const snapOld = await getDocs(qGapOld);
-          await updateDoc(doc(db, COLLECTIONS.CALENDARIO_ACOES, prevAcaoId), {
-            boletosFeitos: snapOld.size,
-          });
-        } catch (err) {
-          console.error(err);
-        }
-      }
-
-      if (newAcaoId && newAcaoId !== "manual") {
-        try {
-          const qGapNew = query(
-            collection(db, COLLECTIONS.GAP),
-            where("acaoId", "==", newAcaoId),
-          );
-          const snapNew = await getDocs(qGapNew);
-          await updateDoc(doc(db, COLLECTIONS.CALENDARIO_ACOES, newAcaoId), {
-            boletosFeitos: snapNew.size,
-          });
-        } catch (err) {
-          console.error(err);
-        }
-      }
-
-      setIsModalOpen(false);
-      setEditingEntry(null);
-      setFormData({
-        nome: "",
-        telefone: "",
-        cpf: "",
-        produto: "Gradua√ß√£o",
-        numeroOportunidade: "",
-        curso: "",
-        metodologia: "",
-        formaIngresso: "",
-        numeroMatricula: "",
-        periodo: "",
-        acao: "",
-        acaoId: "",
-      } as any);
-    } catch (err: any) {
-      onToast("Erro ao salvar.", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCheckDuplicates = () => {
-    if (showDuplicatesOnly) {
-      setShowDuplicatesOnly(false);
-      setDuplicateIds(new Set());
-      return;
-    }
-
-    const seenCpfs = new Set<string>();
-    const seenTels = new Set<string>();
-    const dups = new Set<string>();
-
-    const sortedGap = [...gap].sort((a, b) => {
-      const da = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
-      const dbTime = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
-      return dbTime - da;
-    });
-
-    for (const entry of sortedGap) {
-      const hasCpf = entry.cpf && entry.cpf.trim() !== "";
-      const hasTel = entry.telefone && entry.telefone.trim() !== "";
-      
-      let isDup = false;
-      if (hasCpf && seenCpfs.has(entry.cpf)) {
-        isDup = true;
-      }
-      if (hasTel && seenTels.has(entry.telefone)) {
-        isDup = true;
-      }
-
-      if (isDup) {
-        dups.add(entry.id);
-      } else {
-        if (hasCpf) seenCpfs.add(entry.cpf);
-        if (hasTel) seenTels.add(entry.telefone);
-      }
-    }
-    
-    if (dups.size === 0) {
-      onToast("Nenhuma duplicidade encontrada.", "success");
-      return;
-    }
-
-    setDuplicateIds(dups);
-    setShowDuplicatesOnly(true);
-    onToast(`Encontrados ${dups.size} registros mais antigos possivelmente duplicados.`, "success");
-  };
-
-  const handleExport = () => {
-    const data = filteredGap.map((g) => ({
-      Nome: g.nome,
-      Telefone: g.telefone,
-      CPF: g.cpf,
-      Produto: g.produto,
-      "N¬∫ Oportunidade": g.numeroOportunidade || "",
-      Curso: g.curso,
-      Semestre: g.semestre || "",
-      Metodologia: g.metodologia || "",
-      "Forma de Ingresso": g.formaIngresso || "",
-      Periodo: g.periodo || "",
-      Matricula: g.numeroMatricula || "",
-      MatAcad:
-        g.matAcad === true ||
-        g.matAcad === "Matr√≠cula Gerada" ||
-        g.matAcad === "OK"
-          ? "Sim"
-          : "N√£o",
-      Documentos: Object.entries(docLabels)
-        .map(
-          ([key, label]) =>
-            `${label}: ${(g.documentos as any)?.[key] ? "OK" : "Pendente"}`,
-        )
-        .join(", "),
-    }));
-    exportToExcel(data, "Gap_Academico");
-  };
-
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    importFromExcel(file, async (data) => {
-      try {
-        const getVal = (row: any, ...keys: string[]) => {
-          const rowKeys = Object.keys(row);
-          for (const key of keys) {
-            const foundKey = rowKeys.find(
-              (k) => k.toLowerCase() === key.toLowerCase(),
-            );
-            if (foundKey && row[foundKey] !== undefined) return row[foundKey];
-          }
-          return undefined;
-        };
-
-        const batch = data.map((item) => {
-          const matAcadRaw = String(
-            getVal(item, "MatAcad", "matAcad", "Mat. Acad.", "mat_acad") || "",
-          )
-            .trim()
-            .toLowerCase();
-          const isMatAcad =
-            matAcadRaw === "sim" ||
-            matAcadRaw === "ok" ||
-            matAcadRaw === "yes" ||
-            matAcadRaw === "true" ||
-            getVal(item, "matAcad") === true;
-
-          return {
-            nome: String(getVal(item, "Nome", "nome") || "").trim(),
-            cpf: String(getVal(item, "CPF", "cpf") || "").replace(/\D/g, ""),
-            telefone: String(
-              getVal(item, "Telefone", "telefone") || "",
-            ).replace(/\D/g, ""),
-            produto: String(getVal(item, "Produto", "produto") || "").trim(),
-            curso: String(getVal(item, "Curso", "curso") || "").trim(),
-            semestre: String(getVal(item, "Semestre", "semestre") || "").trim(),
-            metodologia: String(
-              getVal(item, "Metodologia", "metodologia") || "",
-            ).trim(),
-            formaIngresso: String(
-              getVal(item, "Forma de Ingresso", "formaIngresso", "ingresso") ||
-                "",
-            ).trim(),
-            numeroOportunidade: String(
-              getVal(
-                item,
-                "N¬∫ Oportunidade",
-                "numeroOportunidade",
-                "oportunidade",
-              ) || "",
-            ).trim(),
-            periodo: String(
-              getVal(item, "Periodo", "periodo", "per√≠odo") || "",
-            ).trim(),
-            numeroMatricula: String(
-              getVal(
-                item,
-                "Matricula",
-                "numeroMatricula",
-                "N¬∫ Matr√≠cula",
-                "Matr√≠cula",
-                "N¬∫ Matricula",
-                "matricula",
-              ) || "",
-            ).trim(),
-            matAcad: isMatAcad,
-            documentos: {},
-            createdAt: serverTimestamp(),
-          };
-        });
-
-        let imported = 0;
-        let skipped = 0;
-        const insertedCpfs = new Set();
-        const insertedTels = new Set();
-
-        for (const entry of batch) {
-          const isDupCpf =
-            entry.cpf &&
-            (gap.some((g) => g.cpf === entry.cpf) ||
-              insertedCpfs.has(entry.cpf));
-          const isDupTel =
-            entry.telefone &&
-            (gap.some((g) => g.telefone === entry.telefone) ||
-              insertedTels.has(entry.telefone));
-
-          if (!isDupCpf && !isDupTel) {
-            await addDoc(collection(db, COLLECTIONS.GAP), entry);
-            if (entry.cpf) insertedCpfs.add(entry.cpf);
-            if (entry.telefone) insertedTels.add(entry.telefone);
-            imported++;
-          } else {
-            skipped++;
-          }
-        }
-        onToast(
-          `${imported} registros importados! ${skipped > 0 ? `${skipped} ignorados por duplicidade.` : ""}`,
-        );
-      } catch (err: any) {
-        onToast("Erro ao importar dados.", "error");
-      }
-    });
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Tab Navigation */}
-      <div className="flex items-center gap-1 bg-white p-1 rounded-2xl shadow-sm border border-slate-100 w-fit">
-        <button
-          onClick={() => setGapSubTab("dashboard")}
-          className={cn(
-            "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
-            gapSubTab === "dashboard"
-              ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
-              : "text-slate-500 hover:bg-slate-50",
-          )}
-        >
-          <BarChart3 size={18} />
-          <span>Dashboard</span>
-        </button>
-        <button
-          onClick={() => setGapSubTab("lista")}
-          className={cn(
-            "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
-            gapSubTab === "lista"
-              ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
-              : "text-slate-500 hover:bg-slate-50",
-          )}
-        >
-          <List size={18} />
-          <span>Lista de Alunos</span>
-        </button>
-      </div>
-
-      {gapSubTab === "dashboard" && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard
-              title="Total Mat. Financeira"
-              value={stats.matFin}
-              icon={Users}
-              color="bg-blue-500"
-            />
-            <StatCard
-              title="Mat. Acad√™mica OK"
-              value={stats.matAcadOk}
-              icon={CheckCircle2}
-              color="bg-emerald-500"
-            />
-            <StatCard
-              title="Gap (Docs Pendentes)"
-              value={stats.pendingDocs}
-              icon={Clock}
-              color="bg-amber-500"
-            />
-            <StatCard
-              title="Taxa Conv. Acad"
-              value={`${stats.conversionRate}%`}
-              icon={TrendingUp}
-              color="bg-purple-500"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-              <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <Target size={18} className="text-blue-500" />
-                Distribui√ß√£o de Matr√≠cula Acad√™mica
-              </h3>
-              <div className="space-y-3">
-                {statsByStatus.map((s) => (
-                  <div key={s.name} className="space-y-1">
-                    <div className="flex justify-between text-xs font-semibold">
-                      <span className="text-slate-600 flex items-center gap-1.5">
-                        <span
-                          className={cn(
-                            "w-2 h-2 rounded-full",
-                            s.name === "OK" && "bg-emerald-400",
-                            s.name === "Pendente" && "bg-amber-400",
-                            s.name === "Aguardando" && "bg-blue-400",
-                            s.name === "Desistente" && "bg-rose-400",
-                          )}
-                        />
-                        {s.name}
-                      </span>
-                      <span className="text-slate-800 font-bold">
-                        {s.count}{" "}
-                        <span className="text-slate-400 font-normal">
-                          ({s.percentage}%)
-                        </span>
-                      </span>
-                    </div>
-                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                      <div
-                        className={cn(
-                          "h-full rounded-full transition-all",
-                          s.name === "OK" && "bg-emerald-400",
-                          s.name === "Pendente" && "bg-amber-400",
-                          s.name === "Aguardando" && "bg-blue-400",
-                          s.name === "Desistente" && "bg-rose-400",
-                        )}
-                        style={{ width: `${s.percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-              <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <GraduationCap size={18} className="text-blue-500" />
-                Distribui√ß√£o por Produto
-              </h3>
-              <div className="space-y-3">
-                {statsByProduct.map((p) => (
-                  <div key={p.name} className="space-y-1">
-                    <div className="flex justify-between text-xs font-semibold">
-                      <span className="text-slate-600">{p.name}</span>
-                      <span className="text-slate-800 font-bold">
-                        {p.count}{" "}
-                        <span className="text-slate-400 font-normal">
-                          ({p.percentage}%)
-                        </span>
-                      </span>
-                    </div>
-                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-blue-500 rounded-full transition-all"
-                        style={{ width: `${p.percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {gapSubTab === "lista" && (
-        <>
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-slate-800">GAP Acad√™mico</h2>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => {
-                  setEditingEntry(null);
-                  setFormData({
-                    nome: "",
-                    telefone: "",
-                    cpf: "",
-                    produto: "Gradua√ß√£o",
-                    numeroOportunidade: "",
-                    curso: "",
-                    metodologia: "",
-                    formaIngresso: "",
-                    numeroMatricula: "",
-                    periodo: "",
-                  } as any);
-                  setIsModalOpen(true);
-                }}
-                className="bg-blue-600 text-white px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
-              >
-                <Plus size={20} />
-                <span>Cadastrar</span>
-              </button>
-              <label className="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-blue-100 transition-all text-sm font-bold cursor-pointer">
-                <Upload size={18} />
-                <span>Importar</span>
-                <input
-                  type="file"
-                  accept=".xlsx, .xls"
-                  onChange={handleImport}
-                  className="hidden"
-                />
-              </label>
-              <button
-                onClick={handleCheckDuplicates}
-                disabled={loading}
-                className={cn("px-4 py-2 rounded-xl flex items-center space-x-2 transition-all text-sm font-bold disabled:opacity-50", showDuplicatesOnly ? "bg-purple-600 text-white" : "bg-purple-100 text-purple-600 hover:bg-purple-200")}
-              >
-                {showDuplicatesOnly ? <EyeOff size={18} /> : <Eye size={18} />}
-                <span className="hidden sm:inline">
-                  {showDuplicatesOnly ? "Limpar Filtro de Duplicados" : "Verificar Duplicidade"}
-                </span>
-              </button>
-              <button
-                onClick={handleExport}
-                className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-slate-200 transition-all text-sm font-bold"
-              >
-                <Download size={18} />
-                <span>Exportar</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <input
-              placeholder="Nome..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              placeholder="CPF..."
-              value={cpfFilter}
-              onChange={(e) => setCpfFilter(e.target.value)}
-              className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <select
-              value={produtoFilter}
-              onChange={(e) => setProdutoFilter(e.target.value)}
-              className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Produto</option>
-              <option value="Gradua√ß√£o">Gradua√ß√£o</option>
-              <option value="T√©cnico">T√©cnico</option>
-              <option value="P√≥s-gradua√ß√£o">P√≥s-gradua√ß√£o</option>
-            </select>
-            <input
-              placeholder="Curso..."
-              value={cursoFilter}
-              onChange={(e) => setCursoFilter(e.target.value)}
-              className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              placeholder="Per√≠odo..."
-              value={periodoFilter}
-              onChange={(e) => setPeriodoFilter(e.target.value)}
-              className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <select
-              value={matAcadFilter}
-              onChange={(e) => setMatAcadFilter(e.target.value)}
-              className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Mat. Acad√™mica</option>
-              <option value="Matr√≠cula Gerada">Matr√≠cula Gerada</option>
-              <option value="Aguardando N¬∞ de Matr√≠cula">
-                Aguardando N¬∞ de Matr√≠cula
-              </option>
-              <option value="Pendente">Pendente</option>
-              <option value="Desistente">Desistente</option>
-            </select>
-            <select
-              value={gapFilter}
-              onChange={(e) => setGapFilter(e.target.value)}
-              className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Gap (Docs)</option>
-              <option value="Sim">Com Pend√™ncia</option>
-              <option value="N√£o">Sem Pend√™ncia</option>
-            </select>
-          </div>
-
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
-                    <th className="px-6 py-4 w-12">
-                      <input
-                        type="checkbox"
-                        checked={
-                          selectedEntries.length === filteredGap.length &&
-                          filteredGap.length > 0
-                        }
-                        onChange={(e) => toggleSelectAll(e.target.checked)}
-                      />
-                    </th>
-                    <th className="px-6 py-4">Candidato</th>
-                    <th className="px-6 py-4">Curso / Produto</th>
-                    <th className="px-6 py-4">Documenta√ß√£o</th>
-                    <th className="px-6 py-4">Mat. Acad.</th>
-                    <th className="px-6 py-4 flex items-center gap-4">
-                      {selectedEntries.length > 0 && (
-                        <button
-                          onClick={handleBulkDelete}
-                          className="text-rose-600 font-bold hover:underline"
-                        >
-                          excluir selecionados
-                        </button>
-                      )}
-                      {selectedEntries.length > 0 && botConfig.url && (
-                        <button
-                          onClick={() => {
-                            const selectedObjs = gap.filter((g) =>
-                              selectedEntries.includes(g.id),
-                            );
-                            const payloads = selectedObjs.map((g) => ({
-                              telefone: g.telefone,
-                              message: getGapWhatsAppMessage(g),
-                              nome: g.nome,
-                            }));
-                            onMassSendBot(payloads);
-                            setSelectedEntries([]);
-                          }}
-                          className="text-blue-600 font-bold hover:underline py-1 px-2 bg-blue-50 rounded-lg flex items-center gap-1"
-                        >
-                          <Bot size={14} /> Em Massa
-                        </button>
-                      )}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredGap.map((entry) => (
-                    <tr
-                      key={entry.id}
-                      className="hover:bg-slate-50/50 transition-all"
-                    >
-                      <td className="px-6 py-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedEntries.includes(entry.id)}
-                          onChange={(e) =>
-                            toggleSelect(entry.id, e.target.checked)
-                          }
-                        />
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-slate-900">
-                            {entry.nome}
-                          </span>
-                          <span className="text-xs text-slate-500">
-                            {entry.cpf}
-                          </span>
-                          <span className="text-xs text-slate-500">
-                            {formatPhone(entry.telefone)}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium text-slate-700">
-                            {entry.curso}
-                          </span>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-[10px] text-slate-400">
-                              {entry.produto}
-                            </span>
-                            {entry.periodo && (
-                              <span className="text-[10px] text-slate-400">
-                                ‚Ä¢ {entry.periodo}
-                              </span>
-                            )}
-                          </div>
-                          {entry.numeroMatricula && (
-                            <span className="text-[10px] font-bold text-blue-600">
-                              Mat: {entry.numeroMatricula}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-wrap gap-1 max-w-[200px]">
-                          {Object.entries(docLabels).map(([key, label]) => (
-                            <button
-                              key={key}
-                              onClick={() =>
-                                toggleDoc(
-                                  entry.id,
-                                  key,
-                                  !!(entry.documentos as any)?.[key],
-                                )
-                              }
-                              className={cn(
-                                "px-2 py-0.5 rounded text-[9px] font-bold transition-all",
-                                (entry.documentos as any)?.[key]
-                                  ? "bg-emerald-100 text-emerald-600"
-                                  : "bg-slate-100 text-slate-400",
-                              )}
-                            >
-                              {label}
-                            </button>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <select
-                          value={String(entry.matAcad)}
-                          onChange={(e) => {
-                            let selectedValue: string | boolean =
-                              e.target.value;
-                            if (selectedValue === "false")
-                              selectedValue = false;
-                            if (selectedValue === "true") selectedValue = true;
-                            updateMatAcadStatus(entry.id, selectedValue);
-                          }}
-                          className={cn(
-                            "px-2 py-1 rounded-lg text-[10px] font-bold uppercase outline-none",
-                            entry.matAcad === true ||
-                              String(entry.matAcad) === "true" ||
-                              entry.matAcad === "Matr√≠cula Gerada" ||
-                              entry.matAcad === "OK"
-                              ? "bg-emerald-100 text-emerald-600"
-                              : entry.matAcad === "Aguardando N¬∞ de Matr√≠cula"
-                                ? "bg-blue-100 text-blue-600"
-                                : entry.matAcad === "Desistente"
-                                  ? "bg-rose-100 text-rose-600"
-                                  : "bg-amber-100 text-amber-600",
-                          )}
-                        >
-                          <option value="false">Pendente</option>
-                          <option value="Matr√≠cula Gerada">
-                            Matr√≠cula Gerada
-                          </option>
-                          <option value="Aguardando N¬∞ de Matr√≠cula">
-                            Aguardando N¬∞ de Matr√≠cula
-                          </option>
-                          <option value="Desistente">Desistente</option>
-                        </select>
-                      </td>
-                      <td className="px-6 py-4 flex items-center space-x-2">
-                        <button
-                          onClick={() => {
-                            setSelectedEntryForWhatsapp(entry);
-                            setIsSelectorOpen(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-700 font-bold text-sm bg-blue-50 p-2 rounded-lg flex items-center gap-1.5 transition-all hover:bg-blue-100"
-                          title="Op√ß√µes de WhatsApp"
-                        >
-                          <Bot size={16} />
-                          <span>WhatsApp</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            setEditingEntry(entry);
-                            setFormData({
-                              nome: entry.nome || "",
-                              telefone: entry.telefone || "",
-                              cpf: entry.cpf || "",
-                              produto: entry.produto || "Gradua√ß√£o",
-                              numeroOportunidade:
-                                entry.numeroOportunidade || "",
-                              curso: entry.curso || "",
-                              semestre: entry.semestre || "",
-                              metodologia: entry.metodologia || "",
-                              formaIngresso: entry.formaIngresso || "",
-                              numeroMatricula: entry.numeroMatricula || "",
-                              periodo: entry.periodo || "",
-                              acao: entry.acao || "",
-                              acaoId: entry.acaoId || "",
-                            });
-                            setIsModalOpen(true);
-                          }}
-                          className="text-blue-400 hover:text-blue-600 p-2 hover:bg-blue-50 rounded-lg transition-all"
-                          title="Editar"
-                        >
-                          <Edit2 size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteGap(entry.id)}
-                          className="text-rose-400 hover:text-rose-600 p-2 hover:bg-rose-50 rounded-lg transition-all"
-                          title="Excluir"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {filteredGap.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan={5}
-                        className="px-6 py-12 text-center text-slate-400 italic"
-                      >
-                        Nenhum registro no GAP.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <AnimatePresence>
-            {isModalOpen && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-white rounded-3xl shadow-xl w-full max-w-2xl overflow-hidden"
-                >
-                  <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                    <h3 className="text-xl font-bold text-slate-900">
-                      {editingEntry ? "Editar Candidato" : "Cadastrar no GAP"}
-                    </h3>
-                    <button
-                      onClick={() => setIsModalOpen(false)}
-                      className="text-slate-400 hover:text-slate-600"
-                    >
-                      <X size={24} />
-                    </button>
-                  </div>
-                  <form
-                    onSubmit={handleRegister}
-                    className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4"
-                  >
-                    <div className="md:col-span-2">
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        Nome Completo
-                      </label>
-                      <input
-                        required
-                        value={formData.nome}
-                        onChange={(e) =>
-                          setFormData({ ...formData, nome: e.target.value })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        CPF
-                      </label>
-                      <input
-                        required
-                        value={formData.cpf}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            cpf: formatCPF(e.target.value),
-                          })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        Telefone
-                      </label>
-                      <input
-                        required
-                        value={formData.telefone}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            telefone: formatPhone(e.target.value),
-                          })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        Produto
-                      </label>
-                      <select
-                        value={formData.produto}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            produto: e.target.value as any,
-                          })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      >
-                        <option value="Gradua√ß√£o">Gradua√ß√£o</option>
-                        <option value="T√©cnico">T√©cnico</option>
-                        <option value="P√≥s-gradua√ß√£o">P√≥s-gradua√ß√£o</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        N¬∞ Oportunidade
-                      </label>
-                      <input
-                        value={formData.numeroOportunidade}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            numeroOportunidade: e.target.value,
-                          })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        Curso
-                      </label>
-                      <input
-                        required
-                        value={formData.curso}
-                        onChange={(e) =>
-                          setFormData({ ...formData, curso: e.target.value })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        Per√≠odo
-                      </label>
-                      <input
-                        value={formData.periodo}
-                        onChange={(e) =>
-                          setFormData({ ...formData, periodo: e.target.value })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                        placeholder="Ex: 2024.1"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        Semestre
-                      </label>
-                      <input
-                        value={formData.semestre}
-                        onChange={(e) =>
-                          setFormData({ ...formData, semestre: e.target.value })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        Metodologia
-                      </label>
-                      <input
-                        value={formData.metodologia}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            metodologia: e.target.value,
-                          })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        Forma de Ingresso
-                      </label>
-                      <input
-                        value={formData.formaIngresso}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            formaIngresso: e.target.value,
-                          })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        N¬∫ Matr√≠cula
-                      </label>
-                      <input
-                        value={formData.numeroMatricula}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            numeroMatricula: e.target.value,
-                          })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      />
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        A√ß√£o Vinculada (Opcional)
-                      </label>
-                      {calendarioAcoes && calendarioAcoes.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <span className="block text-[10px] font-semibold text-slate-400 mb-1">
-                              Selecionar do Calend√°rio
-                            </span>
-                            <select
-                              value={formData.acaoId || ""}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                if (val === "manual") {
-                                  setFormData({
-                                    ...formData,
-                                    acaoId: "manual",
-                                    acao: "",
-                                  });
-                                } else {
-                                  const matched = calendarioAcoes.find(
-                                    (a) => a.id === val,
-                                  );
-                                  setFormData({
-                                    ...formData,
-                                    acaoId: val,
-                                    acao: matched ? matched.nome : "",
-                                  });
-                                }
-                              }}
-                              className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm bg-white"
-                            >
-                              <option value="">Nenhuma a√ß√£o vinculada</option>
-                              {calendarioAcoes.map((act) => (
-                                <option key={act.id} value={act.id}>
-                                  {act.nome} ({act.dataInicio})
-                                </option>
-                              ))}
-                              <option value="manual">
-                                Outro (Digitar manualmente)
-                              </option>
-                            </select>
-                          </div>
-                          {(formData.acaoId === "manual" ||
-                            !formData.acaoId) && (
-                            <div>
-                              <span className="block text-[10px] font-semibold text-slate-400 mb-1">
-                                Digitar Nome da A√ß√£o/Origem
-                              </span>
-                              <input
-                                type="text"
-                                required={formData.acaoId === "manual"}
-                                value={formData.acao}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    acao: e.target.value,
-                                  })
-                                }
-                                className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                                placeholder="Ex: Facebook, Panfletagem, etc."
-                              />
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <input
-                          value={formData.acao}
-                          onChange={(e) =>
-                            setFormData({ ...formData, acao: e.target.value })
-                          }
-                          className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                          placeholder="Ex: Evento Junino, Facebook, etc."
-                        />
-                      )}
-                    </div>
-                    <div className="md:col-span-2">
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all disabled:opacity-50"
-                      >
-                        {loading
-                          ? "Salvando..."
-                          : editingEntry
-                            ? "Salvar Altera√ß√µes"
-                            : "Cadastrar Candidato"}
-                      </button>
-                    </div>
-                  </form>
-                </motion.div>
-              </div>
-            )}
-          </AnimatePresence>
-        </>
-      )}
-
-      {isSelectorOpen && selectedEntryForWhatsapp && (
-        <WhatsAppMessageSelector
-          isOpen={isSelectorOpen}
-          onClose={() => {
-            setIsSelectorOpen(false);
-            setSelectedEntryForWhatsapp(null);
-          }}
-          messages={gapSpecificMessages}
-          onSelect={(msg) => {
-            const url = getWhatsAppUrl(selectedEntryForWhatsapp.telefone, msg);
-            window.open(url, "_blank");
-          }}
-          leadName={selectedEntryForWhatsapp.nome}
-          leadCurso={selectedEntryForWhatsapp.curso}
-          leadMatricula={selectedEntryForWhatsapp.numeroMatricula}
-          botConfig={botConfig}
-          onSendBot={(msg, contactName) => {
-            if (typeof msg === "string") {
-              onSendBot(
-                selectedEntryForWhatsapp.telefone,
-                msg,
-                contactName || selectedEntryForWhatsapp.nome,
-              );
-            }
-          }}
-        />
-      )}
-    </div>
-  );
-}
-
-function CalendarioAcoesView({
-  data,
-  onToast,
-  profile,
-  initialData,
-  onClearInitialData,
-  users,
-  empresasParceiras = [],
-  callBotApi,
-  leads = [],
-  gap = [],
-  onSendWhatsApp,
-}: {
-  data: CalendarioAcao[];
-  onToast: (m: string, t?: "success" | "error") => void;
-  profile: UserProfile;
-  initialData?: Partial<CalendarioAcao> | null;
-  onClearInitialData?: () => void;
-  users: UserProfile[];
-  empresasParceiras?: EmpresaParceira[];
-  callBotApi?: (
-    path: string,
-    options?: { method?: "GET" | "POST"; body?: any },
-  ) => Promise<any>;
-  leads?: Lead[];
-  gap?: GapEntry[];
-  onSendWhatsApp?: (phone: string, message: string) => Promise<void>;
-}) {
-  const [searchTerm, setSearchTerm] = useState("");
-
-  // Helper functions for automatic WhatsApp notifications
-  const getLocalDateString = (d: Date = new Date()) => {
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
-
-  const addDays = (dateStr: string, days: number): string => {
-    const parts = dateStr.split("-");
-    if (parts.length !== 3) return "";
-    const date = new Date(
-      Number(parts[0]),
-      Number(parts[1]) - 1,
-      Number(parts[2]),
-    );
-    date.setDate(date.getDate() + days);
-    return getLocalDateString(date);
-  };
-
-  const formatBrazilianDate = (dateStr?: string): string => {
-    if (!dateStr) return "";
-    const parts = dateStr.split("-");
-    if (parts.length !== 3) return dateStr;
-    return `${parts[2]}/${parts[1]}/${parts[0]}`;
-  };
-
-  function formatToWhatsAppPhone(phone?: string): string {
-    if (!phone) return "";
-    let cleaned = phone.replace(/\D/g, "");
-    if (cleaned.startsWith("0")) cleaned = cleaned.substring(1);
-    if (cleaned.length === 10 || cleaned.length === 11) {
-      cleaned = `55${cleaned}`;
-    }
-    return cleaned;
-  }
-
-  async function sendActionWhatsApp(recipientPhone: string, message: string) {
-    if (onSendWhatsApp) {
-      await onSendWhatsApp(recipientPhone, message);
-    }
-  }
-
-  const triggerImmediateNotifications = async (action: {
-    id: string;
-    nome: string;
-    local: string;
-    dataInicio: string;
-    horario: string;
-    observacao?: string;
-    colaboradorId?: string;
-    colaboradoresIds?: string[];
-    promotoresSelecionados?: string[];
-  }) => {
-    const info = `\n\n*A√ß√£o:* ${action.nome}\n*Local:* ${action.local}\n*Data:* ${formatBrazilianDate(action.dataInicio)}\n*Hor√°rio:* ${action.horario || "N√£o informado"}\n*Objetivo:* ${action.observacao || "N√£o informado"}`;
-
-    // 1. Send to FDVs Comerciais linked to action
-    const ids = action.colaboradoresIds?.length
-      ? action.colaboradoresIds
-      : action.colaboradorId
-        ? [action.colaboradorId]
-        : [];
-
-    for (const id of ids) {
-      const fdvUser = (users || []).find((u) => u.uid === id);
-      if (fdvUser && fdvUser.phone) {
-        const msg = `*Aviso de Nova Atividade Criada*\n\nOl√°, *${fdvUser.name}*!\nUma nova a√ß√£o foi criada no sistema e vinculada a voc√™:${info}\n\nPor favor, acompanhe os detalhes no sistema.`;
-        await sendActionWhatsApp(fdvUser.phone, msg);
-
-        // 1.1 Send to Gestor Unidade linked to the FDV's unit
-        if (fdvUser.unidade) {
-          const unitManagers = (users || []).filter(
-            (u) =>
-              u.role === ROLES.GESTOR_UNIDADE && u.unidade === fdvUser.unidade,
-          );
-          for (const manager of unitManagers) {
-            if (manager.phone) {
-              const mMsg = `*Aviso de Nova Atividade Criada (Sua Unidade)*\n\nOl√°, *${manager.name}*!\nUma nova a√ß√£o foi criada pelo FDV *${fdvUser.name}* da sua unidade:${info}`;
-              await sendActionWhatsApp(manager.phone, mMsg);
-            }
-          }
-        }
-      }
-    }
-
-    // 2. Send to Promotores (if any selected)
-    if (
-      action.promotoresSelecionados &&
-      action.promotoresSelecionados.length > 0
-    ) {
-      for (const promoterId of action.promotoresSelecionados) {
-        const promoterUser = (users || []).find((u) => u.uid === promoterId);
-        if (promoterUser && promoterUser.phone) {
-          const msg = `*Aviso de Nova Atividade Criada*\n\nOl√°, *${promoterUser.name}*!\nUma nova a√ß√£o foi criada com a sua participa√ß√£o:${info}\n\nPor favor, fique atento ao cronograma!`;
-          await sendActionWhatsApp(promoterUser.phone, msg);
-        }
-      }
-    }
-
-    // 3. Send to Gerentes Comerciais and Gestores Comerciais
-    const managers = (users || []).filter(
-      (u) =>
-        u.role === ROLES.GESTOR_COMERCIAL_COMERCIAL ||
-        u.role === ROLES.GESTOR_COMERCIAL,
-    );
-    if (managers.length > 0) {
-      const fdvUser = action.colaboradorId
-        ? (users || []).find((u) => u.uid === action.colaboradorId)
-        : null;
-      const fdvInfo = fdvUser ? `\n*FDV Respons√°vel:* ${fdvUser.name}` : "";
-
-      for (const manager of managers) {
-        if (manager.phone) {
-          const msg = `*Aviso de Nova Atividade Criada (Gest√£o)*\n\nOl√°, *${manager.name}*!\nUma nova a√ß√£o foi criada no sistema:${fdvInfo}${info}\n\nPor favor, acompanhe no sistema.`;
-          await sendActionWhatsApp(manager.phone, msg);
-        }
-      }
-    }
-  };
-
-  // Background check for 1-day reminders and 1-day post-action requests
-  useEffect(() => {
-    if (!data || data.length === 0 || !users || users.length === 0) return;
-
-    const checkRemindersAndRequests = async () => {
-      const lastRun = sessionStorage.getItem("last_action_notification_check");
-      const nowTime = Date.now();
-      if (lastRun && nowTime - Number(lastRun) < 300000) {
-        return;
-      }
-      sessionStorage.setItem("last_action_notification_check", String(nowTime));
-
-      const todayStr = getLocalDateString();
-
-      for (const action of data) {
-        // --- 1. Reminder 1 day before action start date ---
-        const oneDayBeforeStart = addDays(action.dataInicio, -1);
-        if (
-          oneDayBeforeStart &&
-          todayStr === oneDayBeforeStart &&
-          !action.concluida &&
-          !(action as any).whatsappLembreteSent
-        ) {
-          try {
-            await updateDoc(doc(db, COLLECTIONS.CALENDARIO_ACOES, action.id), {
-              whatsappLembreteSent: true,
-            });
-
-            const info = `\n\n*A√ß√£o:* ${action.nome}\n*Local:* ${action.local}\n*Data:* ${formatBrazilianDate(action.dataInicio)}\n*Hor√°rio:* ${action.horario || "N√£o informado"}\n*Objetivo:* ${action.observacao || "N√£o informado"}`;
-
-            // Send to FDV
-            if (action.colaboradorId) {
-              const fdvUser = users.find((u) => u.uid === action.colaboradorId);
-              if (fdvUser && fdvUser.phone) {
-                const msg = `*Lembrete de A√ß√£o Amanh√£*\n\nOl√°, *${fdvUser.name}*!\nLembrando que amanh√£ temos a seguinte a√ß√£o programada:${info}\n\nAt√© l√°!`;
-                await sendActionWhatsApp(fdvUser.phone, msg);
-
-                // Send to Gestor Unidade of the FDV
-                if (fdvUser.unidade) {
-                  const unitManagers = users.filter(
-                    (u) =>
-                      u.role === ROLES.GESTOR_UNIDADE &&
-                      u.unidade === fdvUser.unidade,
-                  );
-                  for (const manager of unitManagers) {
-                    if (manager.phone) {
-                      const mMsg = `*Lembrete de A√ß√£o Amanh√£ (Sua Unidade)*\n\nOl√°, *${manager.name}*!\nLembrando que amanh√£ o FDV *${fdvUser.name}* tem uma a√ß√£o programada:${info}`;
-                      await sendActionWhatsApp(manager.phone, mMsg);
-                    }
-                  }
-                }
-              }
-            }
-
-            // Send to selected promoters
-            if (
-              action.promotoresSelecionados &&
-              action.promotoresSelecionados.length > 0
-            ) {
-              for (const promoterId of action.promotoresSelecionados) {
-                const promoterUser = users.find((u) => u.uid === promoterId);
-                if (promoterUser && promoterUser.phone) {
-                  const msg = `*Lembrete de A√ß√£o Amanh√£*\n\nOl√°, *${promoterUser.name}*!\nLembrando que amanh√£ temos a seguinte a√ß√£o programada:${info}\n\nAt√© l√°!`;
-                  await sendActionWhatsApp(promoterUser.phone, msg);
-                }
-              }
-            }
-
-            // Send to Managers/Gestores
-            const managers = users.filter(
-              (u) =>
-                u.role === ROLES.GESTOR_COMERCIAL_COMERCIAL ||
-                u.role === ROLES.GESTOR_COMERCIAL,
-            );
-            for (const manager of managers) {
-              if (manager.phone) {
-                const msg = `*Lembrete de A√ß√£o Amanh√£ (Gest√£o)*\n\nOl√°, *${manager.name}*!\nAmanh√£ haver√° a seguinte a√ß√£o:${info}`;
-                await sendActionWhatsApp(manager.phone, msg);
-              }
-            }
-          } catch (err) {
-            console.error(
-              "Failed to send 1-day-before reminder",
-              action.id,
-              err,
-            );
-          }
-        }
-
-        // --- 2. Closure Request 1 day after action end date ---
-        const oneDayAfterEnd = addDays(action.dataFim, 1);
-        if (
-          oneDayAfterEnd &&
-          todayStr === oneDayAfterEnd &&
-          !action.concluida &&
-          !(action as any).whatsappFechamentoSent
-        ) {
-          try {
-            await updateDoc(doc(db, COLLECTIONS.CALENDARIO_ACOES, action.id), {
-              whatsappFechamentoSent: true,
-            });
-
-            const info = `\n\n*A√ß√£o:* ${action.nome}\n*Local:* ${action.local}\n*Data:* ${formatBrazilianDate(action.dataInicio)}\n*Hor√°rio:* ${action.horario || "N√£o informado"}\n*Objetivo:* ${action.observacao || "N√£o informado"}`;
-
-            // Send to FDV
-            if (action.colaboradorId) {
-              const fdvUser = users.find((u) => u.uid === action.colaboradorId);
-              if (fdvUser && fdvUser.phone) {
-                const msg = `*Lembrete de Fechar A√ß√£o*\n\nOl√°, *${fdvUser.name}*!\nA a√ß√£o *${action.nome}* finalizou ontem (${formatBrazilianDate(action.dataFim)}).${info}\n\nPor favor, acesse o sistema para realizar o fechamento formal, registrar fotos e confirmar as presen√ßas dos promotores.`;
-                await sendActionWhatsApp(fdvUser.phone, msg);
-              }
-            }
-
-            // Send to Managers/Gestores
-            const managers = users.filter(
-              (u) =>
-                u.role === ROLES.GESTOR_COMERCIAL_COMERCIAL ||
-                u.role === ROLES.GESTOR_COMERCIAL,
-            );
-            for (const manager of managers) {
-              if (manager.phone) {
-                const msg = `*Lembrete de Fechar A√ß√£o (Gest√£o)*\n\nOl√°, *${manager.name}*!\nA a√ß√£o do colaborador abaixo finalizou ontem e ainda n√£o foi fechada:${info}`;
-                await sendActionWhatsApp(manager.phone, msg);
-              }
-            }
-          } catch (err) {
-            console.error("Failed to send closure request", action.id, err);
-          }
-        }
-      }
-    };
-
-    const timer = setTimeout(checkRemindersAndRequests, 3000);
-    return () => clearTimeout(timer);
-  }, [data, users]);
-
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | "N√£o iniciada" | "Em andamento" | "Conclu√≠do" | "Cancelado"
-  >("all");
-  const [colaboradorFilter, setColaboradorFilter] = useState("all");
-  const [unidadeFilter, setUnidadeFilter] = useState("all");
-  const [startDateFilter, setStartDateFilter] = useState("");
-  const [endDateFilter, setEndDateFilter] = useState("");
-  const [isAdding, setIsAdding] = useState(false);
-  const [editingAction, setEditingAction] = useState<CalendarioAcao | null>(
-    null,
-  );
-  const [acoesSubTab, setAcoesSubTab] = useState<"dashboard" | "lista">(
-    "dashboard",
-  );
-  const [viewFormat, setViewFormat] = useState<"card" | "list">("card");
-
-  const autoLeadsCount = editingAction
-    ? (leads || []).filter((l) => l.acaoId === editingAction.id).length
-    : 0;
-  const autoBoletosCount = editingAction
-    ? (gap || []).filter((g) => g.acaoId === editingAction.id).length
-    : 0;
-
-  const [newAction, setNewAction] = useState({
-    nome: "",
-    dataInicio: "",
-    dataFim: "",
-    local: "",
-    observacao: "",
-    status: "N√£o iniciada",
-    concluida: false,
-    fotos: ["", "", ""],
-    metaBoletos: "" as number | "",
-    metaInscritos: "" as number | "",
-    precisaPromotor: false,
-    promotoresSelecionados: [] as string[],
-    valorPromotor: "" as number | "",
-    valorOrcado: "" as number | "",
-    colaboradorId: "",
-    colaboradorNome: "",
-    colaboradoresIds: [] as string[],
-    colaboradoresNomes: [] as string[],
-    tipoAtividade: "A√ß√£o" as "A√ß√£o" | "Visita",
-    empresaParceiraId: "",
-    empresaParceiraNome: "",
-    leadsFeitos: "" as number | "",
-    boletosFeitos: "" as number | "",
-    horario: "",
-  });
-
-  const promotoresDisponiveis = (users || []).filter((u) => {
-    const isPromotor =
-      u.role === ROLES.PROMOTOR || u.role === ROLES.PROMOTOR_RUA;
-    if (!isPromotor) return false;
-
-    if (
-      profile.role !== ROLES.ADMIN_MASTER && profile.role !== ROLES.FINANCEIRO &&
-      profile.role !== ROLES.GESTOR_COMERCIAL &&
-      profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL
-    ) {
-      if (profile.unidade && u.unidade !== profile.unidade) {
-        return false;
-      }
-    }
-    return true;
-  });
-  const colaboradoresDisponiveis = (users || []).filter((u) => {
-    const isTargetRole =
-      u.role === ROLES.FDV_COMERCIAL ||
-      u.role === ROLES.GESTOR_COMERCIAL_COMERCIAL;
-    if (!isTargetRole) return false;
-
-    if (
-      profile.role !== ROLES.ADMIN_MASTER && profile.role !== ROLES.FINANCEIRO &&
-      profile.role !== ROLES.GESTOR_COMERCIAL &&
-      profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL
-    ) {
-      if (profile.unidade && u.unidade !== profile.unidade) {
-        return false;
-      }
-    }
-    return true;
-  });
-
-  useEffect(() => {
-    if (initialData) {
-      setNewAction({
-        nome: initialData.nome || "",
-        dataInicio: initialData.dataInicio || "",
-        dataFim: initialData.dataFim || "",
-        local: initialData.local || "",
-        observacao: initialData.observacao || "",
-        status: "N√£o iniciada",
-        concluida: false,
-        fotos: ["", "", ""],
-        metaBoletos:
-          (initialData as any).metaBoletos !== undefined
-            ? (initialData as any).metaBoletos
-            : "",
-        metaInscritos:
-          (initialData as any).metaInscritos !== undefined
-            ? (initialData as any).metaInscritos
-            : "",
-        leadsFeitos:
-          (initialData as any).leadsFeitos !== undefined
-            ? (initialData as any).leadsFeitos
-            : "",
-        boletosFeitos:
-          (initialData as any).boletosFeitos !== undefined
-            ? (initialData as any).boletosFeitos
-            : "",
-        precisaPromotor: !!(initialData as any).precisaPromotor,
-        promotoresSelecionados:
-          (initialData as any).promotoresSelecionados || [],
-        valorPromotor:
-          (initialData as any).valorPromotor !== undefined
-            ? (initialData as any).valorPromotor
-            : "",
-        valorOrcado:
-          (initialData as any).valorOrcado !== undefined
-            ? (initialData as any).valorOrcado
-            : "",
-        colaboradorId: (initialData as any).colaboradorId || "",
-        colaboradorNome: (initialData as any).colaboradorNome || "",
-        colaboradoresIds: (initialData as any).colaboradoresIds || [],
-        colaboradoresNomes: (initialData as any).colaboradoresNomes || [],
-        tipoAtividade: (initialData as any).tipoAtividade || "A√ß√£o",
-        empresaParceiraId: (initialData as any).empresaParceiraId || "",
-        empresaParceiraNome: (initialData as any).empresaParceiraNome || "",
-        horario: (initialData as any).horario || "",
-      });
-      setIsAdding(true);
-      if (onClearInitialData) onClearInitialData();
-    }
-  }, [initialData]);
-
-  const filteredData = data.filter((item) => {
-    // Restrict visibility to actions from the same unit, unless admin/gestor
-    if (
-      profile.role !== ROLES.ADMIN_MASTER && profile.role !== ROLES.FINANCEIRO &&
-      profile.role !== ROLES.GESTOR_COMERCIAL &&
-      profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL
-    ) {
-      if (profile.unidade && item.unidade !== profile.unidade) {
-        return false;
-      }
-    }
-
-    const matchesSearch =
-      item.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.local.toLowerCase().includes(searchTerm.toLowerCase());
-    const itemStatus =
-      item.status || (item.concluida ? "Conclu√≠do" : "N√£o iniciada");
-
-    const matchesStatus =
-      statusFilter === "all" ? true : statusFilter === itemStatus;
-
-    const matchesColaborador =
-      colaboradorFilter === "all" ||
-      item.colaboradorId === colaboradorFilter ||
-      (item.colaboradoresIds &&
-        item.colaboradoresIds.includes(colaboradorFilter));
-
-    const matchesUnidade =
-      unidadeFilter === "all" || item.unidade === unidadeFilter;
-
-    let matchesDate = true;
-    if (startDateFilter && endDateFilter) {
-      matchesDate =
-        item.dataInicio <= endDateFilter && item.dataFim >= startDateFilter;
-    } else if (startDateFilter) {
-      matchesDate = item.dataFim >= startDateFilter;
-    } else if (endDateFilter) {
-      matchesDate = item.dataInicio <= endDateFilter;
-    }
-    return (
-      matchesSearch &&
-      matchesStatus &&
-      matchesDate &&
-      matchesColaborador &&
-      matchesUnidade
-    );
-  });
-
-  const stats = useMemo(() => {
-    const total = filteredData.length;
-    const completed = filteredData.filter((a) => a.concluida).length;
-    const pending = total - completed;
-    const totalLeads = leads.length;
-    const totalLeadsFeitos = filteredData.reduce(
-      (acc, a) => acc + (Number(a.leadsFeitos) || 0),
-      0,
-    );
-    const totalBoletosFeitos = filteredData.reduce(
-      (acc, a) => acc + (Number(a.boletosFeitos) || 0),
-      0,
-    );
-    const completionRate =
-      total > 0 ? ((completed / total) * 100).toFixed(1) : "0";
-
-    const byType: Record<string, number> = {};
-    filteredData.forEach((a) => {
-      const t = a.tipoAtividade || "A√ß√£o";
-      byType[t] = (byType[t] || 0) + 1;
-    });
-
-    const byStatus = [
-      { name: "Conclu√≠das", count: completed, color: "bg-emerald-400" },
-      { name: "Pendentes", count: pending, color: "bg-amber-400" },
-    ];
-
-    return {
-      total,
-      completed,
-      pending,
-      totalLeads,
-      totalLeadsFeitos,
-      totalBoletosFeitos,
-      completionRate,
-      byType: Object.entries(byType)
-        .map(([name, count]) => ({
-          name,
-          count,
-          percentage: total > 0 ? ((count / total) * 100).toFixed(1) : "0",
-        }))
-        .sort((a, b) => b.count - a.count),
-      byStatus: byStatus.map((s) => ({
-        ...s,
-        percentage: total > 0 ? ((s.count / total) * 100).toFixed(1) : "0",
-      })),
-    };
-  }, [filteredData, leads]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const payload = {
-        ...newAction,
-        metaBoletos:
-          newAction.metaBoletos === "" ? 0 : Number(newAction.metaBoletos),
-        metaInscritos:
-          newAction.metaInscritos === "" ? 0 : Number(newAction.metaInscritos),
-        valorPromotor:
-          newAction.valorPromotor === "" ? 0 : Number(newAction.valorPromotor),
-        valorOrcado:
-          newAction.valorOrcado === "" ? 0 : Number(newAction.valorOrcado),
-        leadsFeitos:
-          newAction.leadsFeitos === "" ? "" : Number(newAction.leadsFeitos),
-        boletosFeitos:
-          newAction.boletosFeitos === "" ? "" : Number(newAction.boletosFeitos),
-        fotos: newAction.fotos.filter((f) => f.trim() !== ""),
-        horario: newAction.horario || "",
-        updatedAt: serverTimestamp(),
-      };
-
-      const isDuplicate = data.some(
-        (action) =>
-          action.nome.toLowerCase() === payload.nome.toLowerCase() &&
-          action.dataInicio === payload.dataInicio &&
-          action.id !== editingAction?.id,
-      );
-      if (isDuplicate) {
-        onToast("J√° existe uma a√ß√£o com este nome e data.", "error");
-        return;
-      }
-
-      if (editingAction) {
-        await updateDoc(
-          doc(db, COLLECTIONS.CALENDARIO_ACOES, editingAction.id),
-          payload,
-        );
-        onToast("A√ß√£o updated com sucesso!");
-      } else {
-        // Automatically set the unit based on the collaborator (FDV) or the creator
-        let targetUnidade = "";
-        if (payload.colaboradorId) {
-          const collab = (users || []).find(
-            (u) => u.uid === payload.colaboradorId,
-          );
-          if (collab?.unidade) targetUnidade = collab.unidade;
-        }
-        if (!targetUnidade && profile.unidade) {
-          targetUnidade = profile.unidade;
-        }
-
-        const docRef = await addDoc(
-          collection(db, COLLECTIONS.CALENDARIO_ACOES),
-          {
-            ...payload,
-            unidade: targetUnidade,
-            creatorId: profile.uid,
-            creatorRole: profile.role,
-            createdAt: serverTimestamp(),
-            whatsappMomentoSent: true,
-          },
-        );
-        onToast("A√ß√£o agendada com sucesso!");
-
-        // Send automatic WhatsApp notifications at creation time
-        triggerImmediateNotifications({
-          id: docRef.id,
-          nome: payload.nome,
-          local: payload.local,
-          dataInicio: payload.dataInicio,
-          horario: payload.horario,
-          observacao: payload.observacao,
-          colaboradorId: payload.colaboradorId,
-          promotoresSelecionados: payload.promotoresSelecionados,
-        });
-      }
-      setIsAdding(false);
-      setEditingAction(null);
-      setNewAction({
-        nome: "",
-        dataInicio: "",
-        dataFim: "",
-        local: "",
-        observacao: "",
-        status: "N√£o iniciada",
-        concluida: false,
-        fotos: ["", "", ""],
-        metaBoletos: "",
-        metaInscritos: "",
-        precisaPromotor: false,
-        promotoresSelecionados: [],
-        valorPromotor: "",
-        valorOrcado: "",
-        colaboradorId: "",
-        colaboradorNome: "",
-        colaboradoresIds: [],
-        colaboradoresNomes: [],
-        tipoAtividade: "A√ß√£o",
-        empresaParceiraId: "",
-        empresaParceiraNome: "",
-        leadsFeitos: "",
-        boletosFeitos: "",
-        horario: "",
-      });
-    } catch (err: any) {
-      handleFirestoreError(
-        err,
-        OperationType.WRITE,
-        COLLECTIONS.CALENDARIO_ACOES,
-      );
-      onToast("Erro ao salvar a√ß√£o.", "error");
-    }
-  };
-
-  const togglePromoterAttendance = async (
-    action: CalendarioAcao,
-    promoterUid: string,
-  ) => {
-    try {
-      const currentAttendance = action.presencaPromotores || {};
-      const nextVal = !currentAttendance[promoterUid];
-      const updatedAttendance = {
-        ...currentAttendance,
-        [promoterUid]: nextVal,
-      };
-
-      const payload: any = {
-        presencaPromotores: updatedAttendance,
-      };
-
-      if (nextVal) {
-        const currentDetails = action.dadosPresencaPromotores || {};
-        if (!currentDetails[promoterUid]) {
-          payload.dadosPresencaPromotores = {
-            ...currentDetails,
-            [promoterUid]: {
-              empresa: "GR15",
-              horas: 4,
-            },
-          };
-        }
-      }
-
-      await updateDoc(
-        doc(db, COLLECTIONS.CALENDARIO_ACOES, action.id),
-        payload,
-      );
-      onToast(
-        nextVal
-          ? "Formul√°rio de presen√ßa aberto e registrado!"
-          : "Presen√ßa do promotor removida!",
-      );
-    } catch (err: any) {
-      onToast("Erro ao atualizar presen√ßa do promotor.", "error");
-    }
-  };
-
-  const updatePromoterPresenceDetails = async (
-    action: CalendarioAcao,
-    promoterUid: string,
-    empresa?: "GR15" | "RP7",
-    horas?: number,
-  ) => {
-    try {
-      const currentDetails = action.dadosPresencaPromotores || {};
-      const promoterDetails = currentDetails[promoterUid] || {};
-      const updatedDetails = {
-        ...currentDetails,
-        [promoterUid]: {
-          ...promoterDetails,
-          ...(empresa !== undefined ? { empresa } : {}),
-          ...(horas !== undefined ? { horas } : {}),
-        },
-      };
-      await updateDoc(doc(db, COLLECTIONS.CALENDARIO_ACOES, action.id), {
-        dadosPresencaPromotores: updatedDetails,
-      });
-      onToast("Dados de pagamento atualizados!");
-    } catch (err: any) {
-      onToast("Erro ao atualizar dados de pagamento.", "error");
-    }
-  };
-
-  const updateActionStatus = async (
-    action: CalendarioAcao,
-    newStatus: string,
-  ) => {
-    try {
-      await updateDoc(doc(db, COLLECTIONS.CALENDARIO_ACOES, action.id), {
-        status: newStatus,
-        concluida: newStatus === "Conclu√≠do",
-      });
-      onToast(`Status atualizado para: ${newStatus}`);
-    } catch (err: any) {
-      onToast("Erro ao atualizar status.", "error");
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Deseja excluir esta a√ß√£o?")) {
-      try {
-        await deleteDoc(doc(db, COLLECTIONS.CALENDARIO_ACOES, id));
-        onToast("A√ß√£o removida.");
-      } catch (err: any) {
-        onToast("Erro ao excluir a√ß√£o.", "error");
-      }
-    }
-  };
-
-  const handleExport = () => {
-    const exportData = filteredData.map((item) => ({
-      Nome: item.nome,
-      "Data In√≠cio": item.dataInicio,
-      "Data Fim": item.dataFim,
-      Local: item.local,
-      Observa√ß√£o: item.observacao,
-      Status: item.status || (item.concluida ? "Conclu√≠da" : "N√£o iniciada"),
-    }));
-    exportToExcel(exportData, "Calendario_Acoes");
-  };
-
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    importFromExcel(file, async (importData) => {
-      try {
-        const getVal = (row: any, ...keys: string[]) => {
-          const rowKeys = Object.keys(row);
-          for (const key of keys) {
-            const foundKey = rowKeys.find(
-              (k) => k.toLowerCase() === key.toLowerCase(),
-            );
-            if (foundKey && row[foundKey] !== undefined) return row[foundKey];
-          }
-          return undefined;
-        };
-
-        const batch = importData.map((item) => {
-          const rawStatusOriginal = String(
-            getVal(item, "Status", "status") || "",
-          ).trim();
-          const rawStatus = rawStatusOriginal.toLowerCase();
-          const isConcluida =
-            ["conclu√≠da", "concluida", "sim", "true", "ok"].includes(
-              rawStatus,
-            ) || getVal(item, "concluida") === true;
-
-          let parsedStatus = "N√£o iniciada";
-          if (isConcluida || rawStatus === "conclu√≠do")
-            parsedStatus = "Conclu√≠do";
-          else if (rawStatus === "em andamento") parsedStatus = "Em andamento";
-          else if (rawStatus === "cancelado" || rawStatus === "cancelada")
-            parsedStatus = "Cancelado";
-
-          return {
-            nome: String(getVal(item, "Nome", "nome") || "").trim(),
-            dataInicio: String(
-              getVal(item, "Data In√≠cio", "dataInicio", "data_inicio") || "",
-            ).trim(),
-            dataFim: String(
-              getVal(item, "Data Fim", "dataFim", "data_fim") || "",
-            ).trim(),
-            local: String(getVal(item, "Local", "local") || "").trim(),
-            observacao: String(
-              getVal(item, "Observa√ß√£o", "observacao", "observa√ß√£o") || "",
-            ).trim(),
-            status: parsedStatus,
-            concluida: isConcluida,
-            fotos: [],
-            creatorId: profile.uid,
-            creatorRole: profile.role,
-            createdAt: serverTimestamp(),
-          };
-        });
-
-        let imported = 0;
-        let skipped = 0;
-        const inserted = new Set();
-        for (const entry of batch) {
-          const isDup =
-            data.some(
-              (a) => a.nome === entry.nome && a.dataInicio === entry.dataInicio,
-            ) || inserted.has(`${entry.nome}-${entry.dataInicio}`);
-          if (!isDup) {
-            await addDoc(collection(db, COLLECTIONS.CALENDARIO_ACOES), entry);
-            inserted.add(`${entry.nome}-${entry.dataInicio}`);
-            imported++;
-          } else {
-            skipped++;
-          }
-        }
-        onToast(
-          `${imported} a√ß√µes importadas! ${skipped > 0 ? `${skipped} ignoradas.` : ""}`,
-        );
-      } catch (err: any) {
-        onToast("Erro ao importar a√ß√µes.", "error");
-      }
-    });
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Tab Navigation */}
-      <div className="flex items-center gap-1 bg-white p-1 rounded-2xl shadow-sm border border-slate-100 w-fit">
-        <button
-          onClick={() => setAcoesSubTab("dashboard")}
-          className={cn(
-            "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
-            acoesSubTab === "dashboard"
-              ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
-              : "text-slate-500 hover:bg-slate-50",
-          )}
-        >
-          <BarChart3 size={18} />
-          <span>Dashboard</span>
-        </button>
-        <button
-          onClick={() => setAcoesSubTab("lista")}
-          className={cn(
-            "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
-            acoesSubTab === "lista"
-              ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
-              : "text-slate-500 hover:bg-slate-50",
-          )}
-        >
-          <List size={18} />
-          <span>Lista de A√ß√µes</span>
-        </button>
-      </div>
-
-      {acoesSubTab === "dashboard" && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-            <StatCard
-              title="Total de A√ß√µes"
-              value={stats.total}
-              icon={Calendar}
-              color="bg-blue-500"
-            />
-            <StatCard
-              title="Conclu√≠das"
-              value={stats.completed}
-              icon={CheckCircle2}
-              color="bg-emerald-500"
-            />
-            <StatCard
-              title="Pendentes"
-              value={stats.pending}
-              icon={Clock}
-              color="bg-amber-500"
-            />
-            <StatCard
-              title="Total Leads"
-              value={stats.totalLeads}
-              icon={Users}
-              color="bg-purple-500"
-            />
-            <StatCard
-              title="Leads Gerados"
-              value={stats.totalLeadsFeitos}
-              icon={UserPlus}
-              color="bg-indigo-500"
-            />
-            <StatCard
-              title="Boletos Gerados"
-              value={stats.totalBoletosFeitos}
-              icon={FileText}
-              color="bg-rose-500"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-              <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <Target size={18} className="text-blue-500" />
-                Status das A√ß√µes
-              </h3>
-              <div className="space-y-3">
-                {stats.byStatus.map((s) => (
-                  <div key={s.name} className="space-y-1">
-                    <div className="flex justify-between text-xs font-semibold">
-                      <span className="text-slate-600 flex items-center gap-1.5">
-                        <span className={cn("w-2 h-2 rounded-full", s.color)} />
-                        {s.name}
-                      </span>
-                      <span className="text-slate-800 font-bold">
-                        {s.count}{" "}
-                        <span className="text-slate-400 font-normal">
-                          ({s.percentage}%)
-                        </span>
-                      </span>
-                    </div>
-                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                      <div
-                        className={cn(
-                          "h-full rounded-full transition-all",
-                          s.color,
-                        )}
-                        style={{ width: `${s.percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-              <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <LayoutDashboard size={18} className="text-blue-500" />
-                Tipos de A√ß√£o (Top 5)
-              </h3>
-              <div className="space-y-3">
-                {stats.byType.slice(0, 5).map((t) => (
-                  <div key={t.name} className="space-y-1">
-                    <div className="flex justify-between text-xs font-semibold">
-                      <span className="text-slate-600">{t.name}</span>
-                      <span className="text-slate-800 font-bold">
-                        {t.count}{" "}
-                        <span className="text-slate-400 font-normal">
-                          ({t.percentage}%)
-                        </span>
-                      </span>
-                    </div>
-                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-blue-500 rounded-full transition-all"
-                        style={{ width: `${t.percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {acoesSubTab === "lista" && (
-        <>
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-3 bg-blue-600 text-white rounded-2xl shadow-lg shadow-blue-200">
-                <Calendar size={24} />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900">
-                  Plano de A√ß√£o
-                </h2>
-                <p className="text-slate-500 text-sm">
-                  Gerencie as a√ß√µes e eventos da equipe
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center bg-slate-100 p-1 rounded-xl mr-2">
-                <button
-                  onClick={() => setViewFormat("card")}
-                  className={cn(
-                    "p-2 rounded-lg transition-all",
-                    viewFormat === "card"
-                      ? "bg-white shadow-sm text-blue-600"
-                      : "text-slate-400 hover:text-slate-600",
-                  )}
-                  title="Formato de Cards"
-                >
-                  <LayoutGrid size={18} />
-                </button>
-                <button
-                  onClick={() => setViewFormat("list")}
-                  className={cn(
-                    "p-2 rounded-lg transition-all",
-                    viewFormat === "list"
-                      ? "bg-white shadow-sm text-blue-600"
-                      : "text-slate-400 hover:text-slate-600",
-                  )}
-                  title="Formato de Lista"
-                >
-                  <List size={18} />
-                </button>
-              </div>
-              <button
-                onClick={() => setIsAdding(true)}
-                className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center space-x-2"
-              >
-                <Plus size={20} />
-                <span>Nova A√ß√£o</span>
-              </button>
-              <label className="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-blue-100 transition-all text-sm font-bold cursor-pointer">
-                <Upload size={18} />
-                <span>Importar</span>
-                <input
-                  type="file"
-                  accept=".xlsx, .xls"
-                  onChange={handleImport}
-                  className="hidden"
-                />
-              </label>
-              <button
-                onClick={handleExport}
-                className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-slate-200 transition-all text-sm font-bold"
-              >
-                <Download size={18} />
-                <span>Exportar</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">
-                Pesquisar
-              </label>
-              <div className="relative">
-                <Search
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                  size={18}
-                />
-                <input
-                  type="text"
-                  placeholder="Nome ou local..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 transition-all"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">
-                FDV Comercial
-              </label>
-              <select
-                value={colaboradorFilter}
-                onChange={(e) => setColaboradorFilter(e.target.value)}
-                className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 transition-all"
-              >
-                <option value="all">Todos os FDVs</option>
-                {colaboradoresDisponiveis.map((u) => (
-                  <option key={u.uid} value={u.uid}>
-                    {u.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">
-                Unidade
-              </label>
-              <select
-                value={unidadeFilter}
-                onChange={(e) => setUnidadeFilter(e.target.value)}
-                className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 transition-all"
-              >
-                <option value="all">Todas as Unidades</option>
-                {Array.from(
-                  new Set((users || []).map((u) => u.unidade).filter(Boolean)),
-                )
-                  .sort()
-                  .map((u) => (
-                    <option key={u} value={u}>
-                      {u}
-                    </option>
-                  ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">
-                Status
-              </label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 transition-all"
-              >
-                <option value="all">Todos os Status</option>
-                <option value="N√£o iniciada">N√£o iniciadas</option>
-                <option value="Em andamento">Em andamento</option>
-                <option value="Conclu√≠do">Conclu√≠das</option>
-                <option value="Cancelado">Canceladas</option>
-              </select>
-            </div>
-            <div>
-              <div className="flex justify-between items-center mb-1 ml-1">
-                <label className="block text-[10px] font-bold text-slate-400 uppercase">
-                  Data In√≠cio
-                </label>
-                {(startDateFilter || endDateFilter) && (
-                  <button
-                    onClick={() => {
-                      setStartDateFilter("");
-                      setEndDateFilter("");
-                    }}
-                    className="text-[10px] text-red-500 font-bold hover:underline"
-                  >
-                    Limpar
-                  </button>
-                )}
-              </div>
-              <input
-                type="date"
-                value={startDateFilter}
-                onChange={(e) => setStartDateFilter(e.target.value)}
-                className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 transition-all"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">
-                Data Fim
-              </label>
-              <input
-                type="date"
-                value={endDateFilter}
-                onChange={(e) => setEndDateFilter(e.target.value)}
-                className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 transition-all"
-              />
-            </div>
-          </div>
-
-          {viewFormat === "card" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredData.map((action) => (
-                <motion.div
-                  layout
-                  key={action.id}
-                  className={cn(
-                    "bg-white p-6 rounded-3xl shadow-sm border transition-all",
-                    (action.status ||
-                      (action.concluida ? "Conclu√≠do" : "N√£o iniciada")) ===
-                      "Conclu√≠do"
-                      ? "border-emerald-100 bg-emerald-50/10"
-                      : action.status === "Em andamento"
-                        ? "border-amber-100 bg-amber-50/10"
-                        : action.status === "Cancelado"
-                          ? "border-rose-100 bg-rose-50/10"
-                          : "border-slate-100",
-                  )}
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <div
-                      className={cn(
-                        "p-2 rounded-xl",
-                        (action.status ||
-                          (action.concluida ? "Conclu√≠do" : "N√£o iniciada")) ===
-                          "Conclu√≠do"
-                          ? "bg-emerald-100 text-emerald-600"
-                          : action.status === "Em andamento"
-                            ? "bg-amber-100 text-amber-600"
-                            : action.status === "Cancelado"
-                              ? "bg-rose-100 text-rose-600"
-                              : "bg-blue-100 text-blue-600",
-                      )}
-                    >
-                      <Calendar size={20} />
-                    </div>
-                    <div className="flex space-x-1">
-                      <button
-                        onClick={() => {
-                          setEditingAction(action);
-                          setNewAction({
-                            nome: action.nome,
-                            dataInicio: action.dataInicio,
-                            dataFim: action.dataFim,
-                            local: action.local,
-                            observacao: action.observacao,
-                            status:
-                              action.status ||
-                              (action.concluida ? "Conclu√≠do" : "N√£o iniciada"),
-                            concluida: action.concluida,
-                            fotos: [...(action.fotos || []), "", "", ""].slice(
-                              0,
-                              3,
-                            ),
-                            metaBoletos:
-                              action.metaBoletos !== undefined
-                                ? action.metaBoletos
-                                : "",
-                            metaInscritos:
-                              action.metaInscritos !== undefined
-                                ? action.metaInscritos
-                                : "",
-                            precisaPromotor: !!action.precisaPromotor,
-                            promotoresSelecionados:
-                              action.promotoresSelecionados || [],
-                            valorPromotor:
-                              action.valorPromotor !== undefined
-                                ? action.valorPromotor
-                                : "",
-                            valorOrcado:
-                              action.valorOrcado !== undefined
-                                ? action.valorOrcado
-                                : "",
-                            colaboradorId: action.colaboradorId || "",
-                            colaboradorNome: action.colaboradorNome || "",
-                            colaboradoresIds: action.colaboradoresIds || [],
-                            colaboradoresNomes: action.colaboradoresNomes || [],
-                            tipoAtividade: action.tipoAtividade || "A√ß√£o",
-                            empresaParceiraId: action.empresaParceiraId || "",
-                            empresaParceiraNome:
-                              action.empresaParceiraNome || "",
-                            leadsFeitos:
-                              action.leadsFeitos !== undefined
-                                ? action.leadsFeitos
-                                : "",
-                            boletosFeitos:
-                              action.boletosFeitos !== undefined
-                                ? action.boletosFeitos
-                                : "",
-                            horario: action.horario || "",
-                          });
-                          setIsAdding(true);
-                        }}
-                        className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-all"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(action.id)}
-                        className="p-2 text-rose-400 hover:bg-rose-50 rounded-lg transition-all"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-1.5 mb-2 shrink-0">
-                    <span
-                      className={cn(
-                        "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border",
-                        action.tipoAtividade === "Visita"
-                          ? "bg-amber-50 text-amber-600 border-amber-200/60"
-                          : "bg-indigo-50 text-indigo-600 border-indigo-200/60",
-                      )}
-                    >
-                      {action.tipoAtividade || "A√ß√£o"}
-                    </span>
-                    {action.empresaParceiraNome && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider bg-rose-50 text-rose-600 border border-rose-200/60 flex items-center gap-1">
-                        <Building2 size={10} />
-                        {action.empresaParceiraNome}
-                      </span>
-                    )}
-                  </div>
-
-                  <h3 className="text-lg font-bold text-slate-900 mb-1">
-                    {action.nome}
-                  </h3>
-                  {(action.colaboradoresNomes?.length
-                    ? action.colaboradoresNomes
-                    : action.colaboradorNome
-                      ? [action.colaboradorNome]
-                      : []
-                  ).length > 0 && (
-                    <div className="flex flex-col gap-1 text-slate-600 text-xs mb-2">
-                      <span className="font-bold text-blue-700">
-                        Colaboradores:
-                      </span>
-                      <div className="flex flex-wrap gap-1">
-                        {(action.colaboradoresNomes?.length
-                          ? action.colaboradoresNomes
-                          : action.colaboradorNome
-                            ? [action.colaboradorNome]
-                            : []
-                        ).map((nome, idx) => (
-                          <span
-                            key={idx}
-                            className="bg-blue-50 text-blue-800 p-1 px-2 rounded-lg inline-flex items-center"
-                          >
-                            {nome}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  <div className="flex items-center space-x-2 text-slate-500 text-xs mb-4">
-                    <MapPin size={14} />
-                    <span>{action.local}</span>
-                  </div>
-
-                  <div className="bg-slate-50 p-3 rounded-2xl mb-4">
-                    <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase mb-1">
-                      <span>Per√≠odo</span>
-                    </div>
-                    <p className="text-xs font-bold text-slate-700">
-                      {formatLocalDateString(action.dataInicio)}{" "}
-                      {action.dataFim !== action.dataInicio &&
-                        `- ${formatLocalDateString(action.dataFim)}`}
-                    </p>
-                  </div>
-
-                  {/* Metas da A√ß√£o */}
-                  {((action.metaBoletos !== undefined &&
-                    action.metaBoletos > 0) ||
-                    (action.metaInscritos !== undefined &&
-                      action.metaInscritos > 0)) && (
-                    <div className="grid grid-cols-2 gap-2 mb-4 bg-slate-50 p-3 rounded-2xl">
-                      <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase block">
-                          Meta Boletos
-                        </span>
-                        <span className="text-xs font-bold text-slate-700">
-                          {action.metaBoletos || 0}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase block">
-                          Meta Inscritos
-                        </span>
-                        <span className="text-xs font-bold text-slate-700">
-                          {action.metaInscritos || 0}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Resultados da A√ß√£o */}
-                  <div className="grid grid-cols-2 gap-2 mb-4 bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100/50">
-                    <div>
-                      <span className="text-[10px] font-bold text-emerald-600 uppercase block">
-                        Leads Feitos
-                      </span>
-                      <span className="text-xs font-bold text-emerald-800">
-                        {typeof action.leadsFeitos === "number"
-                          ? action.leadsFeitos
-                          : (leads || []).filter((l) => l.acaoId === action.id)
-                              .length}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-emerald-600 uppercase block">
-                        Boletos Feitos
-                      </span>
-                      <span className="text-xs font-bold text-emerald-800">
-                        {typeof action.boletosFeitos === "number"
-                          ? action.boletosFeitos
-                          : (gap || []).filter((g) => g.acaoId === action.id)
-                              .length}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Promotores e Presen√ßas */}
-                  {action.precisaPromotor && (
-                    <div className="bg-slate-50 p-3 rounded-2xl mb-4 border border-slate-100">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase block mb-2">
-                        Promotores Escala
-                      </span>
-                      {!action.promotoresSelecionados ||
-                      action.promotoresSelecionados.length === 0 ? (
-                        <span className="text-xs text-slate-400 italic">
-                          Nenhum promotor escalado
-                        </span>
-                      ) : (
-                        <div className="space-y-2">
-                          {action.promotoresSelecionados.map((pUid) => {
-                            const promoterObj = (users || []).find(
-                              (u) => u.uid === pUid,
-                            );
-                            const isPresent =
-                              !!action.presencaPromotores?.[pUid];
-                            const details = action.dadosPresencaPromotores?.[
-                              pUid
-                            ] || { empresa: "GR15", horas: 4 };
-
-                            return (
-                              <div
-                                key={pUid}
-                                className="p-2.5 rounded-xl border border-slate-100 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] space-y-2"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center space-x-2 overflow-hidden mr-1">
-                                    <div
-                                      className={cn(
-                                        "w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0",
-                                        isPresent
-                                          ? "bg-emerald-100 text-emerald-800"
-                                          : "bg-slate-100 text-slate-500",
-                                      )}
-                                    >
-                                      {promoterObj
-                                        ? promoterObj.name
-                                            .charAt(0)
-                                            .toUpperCase()
-                                        : "?"}
-                                    </div>
-                                    <div className="flex flex-col overflow-hidden">
-                                      <span className="text-xs font-bold text-slate-700 truncate">
-                                        {promoterObj
-                                          ? promoterObj.name
-                                          : "Promotor Removido"}
-                                      </span>
-                                      <span className="text-[9px] text-slate-400 font-medium truncate">
-                                        {promoterObj ? promoterObj.role : ""}
-                                      </span>
-                                    </div>
-                                  </div>
-
-                                  <button
-                                    onClick={() =>
-                                      togglePromoterAttendance(action, pUid)
-                                    }
-                                    className={cn(
-                                      "text-[10px] px-2.5 py-1.5 rounded-lg font-bold flex items-center space-x-1.5 shrink-0 transition-colors cursor-pointer",
-                                      isPresent
-                                        ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-                                        : "bg-slate-100 text-slate-500 hover:bg-slate-200",
-                                    )}
-                                  >
-                                    {isPresent ? (
-                                      <CheckSquare size={13} />
-                                    ) : (
-                                      <Square size={13} />
-                                    )}
-                                    <span>
-                                      {isPresent ? "Participou" : "Ausente"}
-                                    </span>
-                                  </button>
-                                </div>
-
-                                {isPresent && (
-                                  <div className="mt-2 text-[11px] pt-2 border-t border-dashed border-slate-100 space-y-2">
-                                    {/* Empresa Selector */}
-                                    <div className="flex items-center justify-between">
-                                      <span className="font-semibold text-slate-500">
-                                        Pagas por:
-                                      </span>
-                                      <div className="flex space-x-1">
-                                        {(["GR15", "RP7"] as const).map(
-                                          (emp) => (
-                                            <button
-                                              type="button"
-                                              key={emp}
-                                              onClick={() =>
-                                                updatePromoterPresenceDetails(
-                                                  action,
-                                                  pUid,
-                                                  emp,
-                                                  details.horas,
-                                                )
-                                              }
-                                              className={cn(
-                                                "px-2 py-0.5 rounded-md font-bold transition-all text-[10px] cursor-pointer",
-                                                details.empresa === emp
-                                                  ? "bg-blue-600 text-white shadow-sm"
-                                                  : "bg-slate-100 text-slate-600 hover:bg-slate-200",
-                                              )}
-                                            >
-                                              {emp}
-                                            </button>
-                                          ),
-                                        )}
-                                      </div>
-                                    </div>
-
-                                    {/* Horas de Atua√ß√£o Selector */}
-                                    <div className="flex items-center justify-between">
-                                      <span className="font-semibold text-slate-500">
-                                        Horas de atua√ß√£o:
-                                      </span>
-                                      <div className="flex items-center space-x-1">
-                                        {([4, 6, 8, 10] as const).map((hr) => (
-                                          <button
-                                            type="button"
-                                            key={hr}
-                                            onClick={() =>
-                                              updatePromoterPresenceDetails(
-                                                action,
-                                                pUid,
-                                                details.empresa as
-                                                  "GR15" | "RP7",
-                                                hr,
-                                              )
-                                            }
-                                            className={cn(
-                                              "px-1.5 py-0.5 rounded-md font-bold transition-all text-[10px] cursor-pointer",
-                                              details.horas === hr
-                                                ? "bg-indigo-600 text-white shadow-sm"
-                                                : "bg-slate-100 text-slate-600 hover:bg-slate-200",
-                                            )}
-                                          >
-                                            {hr}h
-                                          </button>
-                                        ))}
-
-                                        <input
-                                          type="number"
-                                          min="1"
-                                          max="100"
-                                          value={details.horas || ""}
-                                          onChange={(e) => {
-                                            const val =
-                                              e.target.value === ""
-                                                ? 0
-                                                : Number(e.target.value);
-                                            updatePromoterPresenceDetails(
-                                              action,
-                                              pUid,
-                                              details.empresa as "GR15" | "RP7",
-                                              val,
-                                            );
-                                          }}
-                                          className="w-10 px-1 py-0.5 border border-slate-200 rounded-md text-[10px] text-center font-bold text-slate-700 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                          placeholder="Outro"
-                                        />
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {action.fotos && action.fotos.length > 0 && (
-                    <div className="grid grid-cols-3 gap-2 mb-4">
-                      {action.fotos.map((foto, idx) => (
-                        <div
-                          key={idx}
-                          className="aspect-square rounded-xl overflow-hidden bg-slate-100 border border-slate-200 relative group"
-                        >
-                          <img
-                            src={foto}
-                            alt={`Foto ${idx + 1}`}
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                          />
-                          <a
-                            href={foto}
-                            download={`foto_${idx + 1}.jpg`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
-                            title="Fazer Download"
-                          >
-                            <Download size={20} />
-                          </a>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {action.observacao && (
-                    <div className="mb-4">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">
-                        Observa√ß√µes
-                      </p>
-                      <p className="text-xs text-slate-600 leading-relaxed">
-                        {action.observacao}
-                      </p>
-                    </div>
-                  )}
-
-                  <select
-                    value={
-                      action.status ||
-                      (action.concluida ? "Conclu√≠do" : "N√£o iniciada")
-                    }
-                    onChange={(e) => updateActionStatus(action, e.target.value)}
-                    className={cn(
-                      "w-full py-3 px-4 rounded-xl font-bold text-sm text-center appearance-none cursor-pointer outline-none transition-all",
-                      action.status === "Conclu√≠do" ||
-                        (!action.status && action.concluida)
-                        ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                        : action.status === "Em andamento"
-                          ? "bg-amber-500 text-white hover:bg-amber-600"
-                          : action.status === "Cancelado"
-                            ? "bg-rose-500 text-white hover:bg-rose-600"
-                            : "bg-slate-100 text-slate-600 hover:bg-slate-200",
-                    )}
-                  >
-                    <option value="N√£o iniciada">N√£o iniciada</option>
-                    <option value="Em andamento">Em andamento</option>
-                    <option value="Conclu√≠do">Conclu√≠da</option>
-                    <option value="Cancelado">Cancelada</option>
-                  </select>
-                </motion.div>
-              ))}
-              {filteredData.length === 0 && (
-                <div className="col-span-full py-20 text-center">
-                  <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
-                    <Calendar size={40} />
-                  </div>
-                  <p className="text-slate-400 italic">
-                    Nenhuma a√ß√£o encontrada para os filtros aplicados.
-                  </p>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="overflow-x-auto bg-white rounded-3xl shadow-sm border border-slate-100">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-100 text-xs font-bold text-slate-500 uppercase">
-                    <th className="p-4 rounded-tl-3xl">A√ß√£o / Local</th>
-                    <th className="p-4">Colaboradores</th>
-                    <th className="p-4">Per√≠odo</th>
-                    <th className="p-4">Status</th>
-                    <th className="p-4 text-center rounded-tr-3xl">A√ß√µes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredData.map((action) => (
-                    <tr
-                      key={action.id}
-                      className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors"
-                    >
-                      <td className="p-4">
-                        <div className="font-bold text-slate-900 mb-1">
-                          {action.nome}
-                        </div>
-                        <div className="text-xs text-slate-500 flex items-center space-x-1">
-                          <MapPin size={12} />
-                          <span>{action.local}</span>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex flex-wrap gap-1">
-                          {(action.colaboradoresNomes?.length
-                            ? action.colaboradoresNomes
-                            : action.colaboradorNome
-                              ? [action.colaboradorNome]
-                              : []
-                          ).map((nome, idx) => (
-                            <span
-                              key={idx}
-                              className="bg-blue-50 text-blue-800 p-1 px-2 text-[10px] rounded-lg"
-                            >
-                              {nome}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="p-4 text-xs font-bold text-slate-700">
-                        {formatLocalDateString(action.dataInicio)}
-                        {action.dataFim !== action.dataInicio &&
-                          ` - ${formatLocalDateString(action.dataFim)}`}
-                      </td>
-                      <td className="p-4">
-                        <select
-                          value={
-                            action.status ||
-                            (action.concluida ? "Conclu√≠do" : "N√£o iniciada")
-                          }
-                          onChange={(e) =>
-                            updateActionStatus(action, e.target.value)
-                          }
-                          className={cn(
-                            "py-1.5 px-3 rounded-lg font-bold text-xs appearance-none cursor-pointer outline-none transition-all",
-                            action.status === "Conclu√≠do" ||
-                              (!action.status && action.concluida)
-                              ? "bg-emerald-100 text-emerald-800"
-                              : action.status === "Em andamento"
-                                ? "bg-amber-100 text-amber-800"
-                                : action.status === "Cancelado"
-                                  ? "bg-rose-100 text-rose-800"
-                                  : "bg-slate-100 text-slate-600",
-                          )}
-                        >
-                          <option value="N√£o iniciada">N√£o iniciada</option>
-                          <option value="Em andamento">Em andamento</option>
-                          <option value="Conclu√≠do">Conclu√≠da</option>
-                          <option value="Cancelado">Cancelada</option>
-                        </select>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center justify-center space-x-2">
-                          <button
-                            onClick={() => {
-                              setEditingAction(action);
-                              setNewAction({
-                                nome: action.nome,
-                                dataInicio: action.dataInicio,
-                                dataFim: action.dataFim,
-                                local: action.local,
-                                observacao: action.observacao,
-                                status:
-                                  action.status ||
-                                  (action.concluida
-                                    ? "Conclu√≠do"
-                                    : "N√£o iniciada"),
-                                concluida: action.concluida,
-                                fotos: [
-                                  ...(action.fotos || []),
-                                  "",
-                                  "",
-                                  "",
-                                ].slice(0, 3),
-                                metaBoletos:
-                                  action.metaBoletos !== undefined
-                                    ? action.metaBoletos
-                                    : "",
-                                metaInscritos:
-                                  action.metaInscritos !== undefined
-                                    ? action.metaInscritos
-                                    : "",
-                                precisaPromotor: !!action.precisaPromotor,
-                                promotoresSelecionados:
-                                  action.promotoresSelecionados || [],
-                                valorPromotor:
-                                  action.valorPromotor !== undefined
-                                    ? action.valorPromotor
-                                    : "",
-                                valorOrcado:
-                                  action.valorOrcado !== undefined
-                                    ? action.valorOrcado
-                                    : "",
-                                colaboradorId: action.colaboradorId || "",
-                                colaboradorNome: action.colaboradorNome || "",
-                                colaboradoresIds:
-                                  action.colaboradoresIds ||
-                                  (action.colaboradorId
-                                    ? [action.colaboradorId]
-                                    : []),
-                                colaboradoresNomes:
-                                  action.colaboradoresNomes ||
-                                  (action.colaboradorNome
-                                    ? [action.colaboradorNome]
-                                    : []),
-                                tipoAtividade: action.tipoAtividade || "A√ß√£o",
-                                empresaParceiraId:
-                                  action.empresaParceiraId || "",
-                                empresaParceiraNome:
-                                  action.empresaParceiraNome || "",
-                                leadsFeitos:
-                                  action.leadsFeitos !== undefined
-                                    ? action.leadsFeitos
-                                    : "",
-                                boletosFeitos:
-                                  action.boletosFeitos !== undefined
-                                    ? action.boletosFeitos
-                                    : "",
-                                horario: action.horario || "",
-                              });
-                              setIsAdding(true);
-                            }}
-                            className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
-                            title="Editar"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(action.id)}
-                            className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                            title="Excluir"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {filteredData.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="py-20 text-center">
-                        <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
-                          <Calendar size={40} />
-                        </div>
-                        <p className="text-slate-400 italic">
-                          Nenhuma a√ß√£o encontrada para os filtros aplicados.
-                        </p>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {isAdding && (
-            <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-white w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
-              >
-                <div className="p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
-                  <h3 className="text-xl font-bold text-slate-900">
-                    {editingAction ? "Editar A√ß√£o" : "Nova A√ß√£o"}
-                  </h3>
-                  <button
-                    onClick={() => {
-                      setIsAdding(false);
-                      setEditingAction(null);
-                    }}
-                    className="text-slate-400 hover:bg-slate-50 p-2 rounded-lg"
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
-                <form
-                  onSubmit={handleSubmit}
-                  className="p-6 space-y-4 overflow-y-auto flex-1"
-                >
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1">
-                      Nome da A√ß√£o / Visita *
-                    </label>
-                    <input
-                      required
-                      value={newAction.nome}
-                      onChange={(e) =>
-                        setNewAction({ ...newAction, nome: e.target.value })
-                      }
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      placeholder="Ex: Blitz no Centro ou Visita Institucional"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        Tipo de Atividade *
-                      </label>
-                      <select
-                        value={newAction.tipoAtividade}
-                        onChange={(e) =>
-                          setNewAction({
-                            ...newAction,
-                            tipoAtividade: e.target.value as "A√ß√£o" | "Visita",
-                          })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm bg-white font-semibold text-slate-700"
-                      >
-                        <option value="A√ß√£o">A√ß√£o</option>
-                        <option value="Visita">Visita</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        Empresa Vinculada (Opcional)
-                      </label>
-                      <select
-                        value={newAction.empresaParceiraId}
-                        onChange={(e) => {
-                          const selId = e.target.value;
-                          const selEmp = empresasParceiras.find(
-                            (emp) => emp.id === selId,
-                          );
-                          setNewAction({
-                            ...newAction,
-                            empresaParceiraId: selId,
-                            empresaParceiraNome: selEmp ? selEmp.nome : "",
-                            local: selEmp
-                              ? selEmp.endereco || newAction.local
-                              : newAction.local,
-                          });
-                        }}
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm bg-white text-slate-700 font-medium"
-                      >
-                        <option value="">Nenhuma (N√£o vincular)</option>
-                        {empresasParceiras
-                          .filter((emp) => {
-                            if (
-                              !newAction.colaboradoresIds ||
-                              newAction.colaboradoresIds.length === 0
-                            )
-                              return true;
-                            return newAction.colaboradoresIds.includes(
-                              emp.consultorId || "",
-                            );
-                          })
-                          .map((emp) => (
-                            <option key={emp.id} value={emp.id}>
-                              {emp.nome}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        Data In√≠cio *
-                      </label>
-                      <input
-                        type="date"
-                        required
-                        value={newAction.dataInicio}
-                        onChange={(e) =>
-                          setNewAction({
-                            ...newAction,
-                            dataInicio: e.target.value,
-                          })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        Data Fim *
-                      </label>
-                      <input
-                        type="date"
-                        required
-                        value={newAction.dataFim}
-                        onChange={(e) =>
-                          setNewAction({
-                            ...newAction,
-                            dataFim: e.target.value,
-                          })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        Hor√°rio
-                      </label>
-                      <input
-                        type="time"
-                        value={newAction.horario}
-                        onChange={(e) =>
-                          setNewAction({
-                            ...newAction,
-                            horario: e.target.value,
-                          })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1">
-                      Local *
-                    </label>
-                    <input
-                      required
-                      value={newAction.local}
-                      onChange={(e) =>
-                        setNewAction({ ...newAction, local: e.target.value })
-                      }
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      placeholder="Ex: Pra√ßa Central"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1">
-                      Observa√ß√µes
-                    </label>
-                    <textarea
-                      value={newAction.observacao}
-                      onChange={(e) =>
-                        setNewAction({
-                          ...newAction,
-                          observacao: e.target.value,
-                        })
-                      }
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm min-h-[100px]"
-                      placeholder="O que ser√° feito?"
-                    />
-                  </div>
-
-                  <div className="relative">
-                    <label className="block text-xs font-bold text-slate-500 mb-1">
-                      Colaboradores / FDVs Respons√°veis
-                    </label>
-                    <MultiSelect
-                      options={colaboradoresDisponiveis.map((u) => u.name)}
-                      selectedValues={
-                        newAction.colaboradoresNomes?.length
-                          ? newAction.colaboradoresNomes
-                          : newAction.colaboradorNome
-                            ? [newAction.colaboradorNome]
-                            : []
-                      }
-                      onChange={(selectedNames) => {
-                        const selectedUsers = colaboradoresDisponiveis.filter(
-                          (u) => selectedNames.includes(u.name),
-                        );
-                        const selectedIds = selectedUsers.map((u) => u.uid);
-
-                        const firstId =
-                          selectedIds.length > 0 ? selectedIds[0] : "";
-                        const firstName =
-                          selectedNames.length > 0 ? selectedNames[0] : "";
-
-                        let nextEmpresaId = newAction.empresaParceiraId;
-                        let nextEmpresaNome = newAction.empresaParceiraNome;
-
-                        if (nextEmpresaId) {
-                          const emp = empresasParceiras.find(
-                            (e) => e.id === nextEmpresaId,
-                          );
-                          if (
-                            emp &&
-                            !selectedIds.includes(emp.consultorId || "")
-                          ) {
-                            nextEmpresaId = "";
-                            nextEmpresaNome = "";
-                          }
-                        }
-
-                        setNewAction({
-                          ...newAction,
-                          colaboradorId: firstId,
-                          colaboradorNome: firstName,
-                          colaboradoresIds: selectedIds,
-                          colaboradoresNomes: selectedNames,
-                          empresaParceiraId: nextEmpresaId,
-                          empresaParceiraNome: nextEmpresaNome,
-                        });
-                      }}
-                      placeholder="Selecione os colaboradores..."
-                      allLabel="Todos os colaboradores"
-                      className="w-full bg-white"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        Meta de Boletos da A√ß√£o
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={newAction.metaBoletos}
-                        onChange={(e) =>
-                          setNewAction({
-                            ...newAction,
-                            metaBoletos:
-                              e.target.value === ""
-                                ? ""
-                                : Number(e.target.value),
-                          })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                        placeholder="Ex: 5"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        Meta de Inscritos da A√ß√£o
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={newAction.metaInscritos}
-                        onChange={(e) =>
-                          setNewAction({
-                            ...newAction,
-                            metaInscritos:
-                              e.target.value === ""
-                                ? ""
-                                : Number(e.target.value),
-                          })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                        placeholder="Ex: 20"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Valor Di√°ria Personalizado (R$){" "}
-                        <span className="font-normal text-[9px] text-slate-400 block mt-0.5">
-                          (Ser√° calculado auto p/ 4h, 6h, 8h ou 10h)
-                        </span>
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={newAction.valorPromotor}
-                        onChange={(e) =>
-                          setNewAction({
-                            ...newAction,
-                            valorPromotor:
-                              e.target.value === ""
-                                ? ""
-                                : Number(e.target.value),
-                          })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm bg-white"
-                        placeholder="Ex: 15.00"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Valor Or√ßado Total (R$)
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={newAction.valorOrcado}
-                        onChange={(e) =>
-                          setNewAction({
-                            ...newAction,
-                            valorOrcado:
-                              e.target.value === ""
-                                ? ""
-                                : Number(e.target.value),
-                          })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm bg-white"
-                        placeholder="Ex: R$ 500,00"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Se vai precisar de Promotor */}
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <label className="flex items-center space-x-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={newAction.precisaPromotor}
-                        onChange={(e) =>
-                          setNewAction({
-                            ...newAction,
-                            precisaPromotor: e.target.checked,
-                          })
-                        }
-                        className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
-                      />
-                      <div>
-                        <span className="text-sm font-bold text-slate-800">
-                          Precisa de Promotores?
-                        </span>
-                        <span className="text-xs text-slate-400 block">
-                          Ative para atribuir promotores na a√ß√£o
-                        </span>
-                      </div>
-                    </label>
-
-                    {newAction.precisaPromotor && (
-                      <div className="mt-4 border-t border-slate-200/60 pt-3 space-y-2">
-                        <span className="text-xs font-bold text-slate-500 block uppercase tracking-wider mb-2">
-                          Selecione os Promotores Escalados:
-                        </span>
-                        {promotoresDisponiveis.length === 0 ? (
-                          <span className="text-xs text-slate-400 italic block">
-                            Nenhum promotor cadastrado neste servidor comercial
-                            ou principal.
-                          </span>
-                        ) : (
-                          <div className="max-h-40 overflow-y-auto space-y-1 pr-1">
-                            {promotoresDisponiveis.map((promoter) => {
-                              const isSelected =
-                                newAction.promotoresSelecionados.includes(
-                                  promoter.uid,
-                                );
-                              return (
-                                <button
-                                  type="button"
-                                  key={promoter.uid}
-                                  onClick={() => {
-                                    const isSel =
-                                      newAction.promotoresSelecionados.includes(
-                                        promoter.uid,
-                                      );
-                                    const updated = isSel
-                                      ? newAction.promotoresSelecionados.filter(
-                                          (id) => id !== promoter.uid,
-                                        )
-                                      : [
-                                          ...newAction.promotoresSelecionados,
-                                          promoter.uid,
-                                        ];
-                                    setNewAction({
-                                      ...newAction,
-                                      promotoresSelecionados: updated,
-                                    });
-                                  }}
-                                  className={cn(
-                                    "w-full flex items-center justify-between p-2 rounded-lg text-xs font-semibold text-left transition-colors border",
-                                    isSelected
-                                      ? "bg-blue-50/80 border-blue-200 text-blue-700"
-                                      : "bg-white border-slate-100 hover:bg-slate-50 text-slate-600",
-                                  )}
-                                >
-                                  <div className="flex items-center space-x-2">
-                                    <div
-                                      className={cn(
-                                        "w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px]",
-                                        isSelected
-                                          ? "bg-blue-600 text-white"
-                                          : "bg-slate-100 text-slate-500",
-                                      )}
-                                    >
-                                      {promoter.name.charAt(0).toUpperCase()}
-                                    </div>
-                                    <span>{promoter.name}</span>
-                                  </div>
-                                  <span className="text-[10px] text-slate-400 italic font-medium">
-                                    {promoter.role}
-                                  </span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Optional outcome statistics after completed */}
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-4">
-                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                      Resultados da A√ß√£o (Opcional)
-                    </h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-500 mb-1">
-                          Leads Feitos
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={newAction.leadsFeitos}
-                          onChange={(e) =>
-                            setNewAction({
-                              ...newAction,
-                              leadsFeitos:
-                                e.target.value === ""
-                                  ? ""
-                                  : Number(e.target.value),
-                            })
-                          }
-                          className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm bg-white"
-                          placeholder={
-                            editingAction
-                              ? `Autom√°tico: ${autoLeadsCount}`
-                              : "Ex: 10"
-                          }
-                        />
-                        {editingAction && (
-                          <span className="text-[10px] text-slate-400 block mt-1">
-                            Total vinculados no sistema: {autoLeadsCount}
-                          </span>
-                        )}
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-slate-500 mb-1">
-                          Boletos Feitos
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={newAction.boletosFeitos}
-                          onChange={(e) =>
-                            setNewAction({
-                              ...newAction,
-                              boletosFeitos:
-                                e.target.value === ""
-                                  ? ""
-                                  : Number(e.target.value),
-                            })
-                          }
-                          className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm bg-white"
-                          placeholder={
-                            editingAction
-                              ? `Autom√°tico: ${autoBoletosCount}`
-                              : "Ex: 5"
-                          }
-                        />
-                        {editingAction && (
-                          <span className="text-[10px] text-slate-400 block mt-1">
-                            Total vinculados no sistema: {autoBoletosCount}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-2">
-                      Fotos (at√© 3 URLs)
-                    </label>
-                    <div className="space-y-2">
-                      {newAction.fotos.map((foto, idx) => (
-                        <input
-                          key={idx}
-                          placeholder={`URL da Foto ${idx + 1}`}
-                          value={foto}
-                          onChange={(e) => {
-                            const next = [...newAction.fotos];
-                            next[idx] = e.target.value;
-                            setNewAction({ ...newAction, fotos: next });
-                          }}
-                          className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  <button
-                    type="submit"
-                    className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
-                  >
-                    {editingAction ? "Salvar Altera√ß√µes" : "Agendar A√ß√£o"}
-                  </button>
-                </form>
-              </motion.div>
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
-}
-
-function EmpresasParceirasView({
-  data,
-  leads = [],
-  acoes = [],
-  onToast,
-  onGenerateAction,
-  cursos = [],
-  users = [],
-  onSendWhatsApp,
-  botConfig,
-  uniqueUnidades = [],
-  profile,
-}: {
-  data: EmpresaParceira[];
-  leads?: Lead[];
-  acoes?: CalendarioAcao[];
-  onToast: (m: string, t?: "success" | "error") => void;
-  onGenerateAction: (empresa: EmpresaParceira) => void;
-  cursos?: CursoDisponivel[];
-  users?: UserProfile[];
-  onSendWhatsApp?: (phone: string, message: string) => Promise<void>;
-  botConfig?: BotConfig;
-  uniqueUnidades?: string[];
-  profile?: UserProfile;
-}) {
-  const sendTelegramNotification = async (
-    telegramHandleOrId: string,
-    message: string,
-  ) => {
-    if (!telegramHandleOrId) return;
-    const targetUrl = botConfig?.telegramBotUrl || "";
-    const apiKey = botConfig?.telegramApiKey || "";
-    if (!targetUrl) {
-      console.log("Telegram Bot URL not configured in botConfig.");
-      return;
-    }
-    try {
-      const chatId = telegramHandleOrId.trim();
-      const response = await fetch("/api/bot-proxy", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          targetUrl,
-          method: "POST",
-          headers: {
-            "x-api-key": apiKey,
-          },
-          body: {
-            chatId,
-            mensagem: message,
-          },
-        }),
-      });
-      const resData = await response.json();
-      if (!response.ok || !resData.success) {
-        console.error(
-          "Failed to send Telegram message:",
-          resData.error || "Unknown error",
-        );
-      } else {
-        console.log(`Telegram message sent to ${chatId}`);
-      }
-    } catch (err) {
-      console.error("Error calling Telegram bot-proxy:", err);
-    }
-  };
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("Todas");
-  const [unidadeFilter, setUnidadeFilter] = useState<string>("Todas");
-  const [seguimentoFilter, setSeguimentoFilter] = useState<string>("Todos");
-  const [classificacaoFilter, setClassificacaoFilter] =
-    useState<string>("Todas");
-  const [fdvFilter, setFdvFilter] = useState<string>("Todos");
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingEmpresa, setEditingEmpresa] = useState<EmpresaParceira | null>(
-    null,
-  );
-  const [selectedUnidades, setSelectedUnidades] = useState<string[]>([]);
-  const [selectedConsultorId, setSelectedConsultorId] = useState<string>("");
-
-  // Mass deletion states
-  const [selectedEmpresaIds, setSelectedEmpresaIds] = useState<string[]>([]);
-  const [selectedMapEmpresaId, setSelectedMapEmpresaId] = useState<
-    string | null
-  >(null);
-
-  // Active Tab: list vs tratativas report vs map
-  const [activeTab, setActiveTab] = useState<"lista" | "tratativas" | "mapa" | "oportunidades">(
-    "lista",
-  );
-  const [viewFormat, setViewFormat] = useState<"card" | "list">("card");
-
-  const uniqueSeguimentos = useMemo(() => {
-    return Array.from(
-      new Set(data.map((d) => d.seguimento).filter(Boolean) as string[]),
-    ).sort();
-  }, [data]);
-
-  // Filter commercial/FDV users
-  const listForSelection = useMemo(() => {
-    const consultores = (users || []).filter((u) => {
-      const roleLower = (u.role || "").toLowerCase();
-      const isComercialServer = u.servidor === "comercial";
-      return (
-        roleLower.includes("fdv") ||
-        roleLower.includes("comercial") ||
-        roleLower.includes("promotor") ||
-        isComercialServer
-      );
-    });
-    return consultores.length > 0 ? consultores : users || [];
-  }, [users]);
-
-  useEffect(() => {
-    if (editingEmpresa) {
-      setSelectedUnidades(editingEmpresa.unidadesVinculadas || []);
-      setSelectedConsultorId(editingEmpresa.consultorId || "");
-    } else {
-      setSelectedUnidades([]);
-      setSelectedConsultorId("");
-    }
-  }, [editingEmpresa, isModalOpen]);
-
-  // Date and age helpers for reminders
-  const getTratativaDays = (emp: EmpresaParceira) => {
-    if (!emp.createdAt) return 0;
-    const createdDate = emp.createdAt.seconds
-      ? new Date(emp.createdAt.seconds * 1000)
-      : new Date(emp.createdAt);
-    const diffTime = new Date().getTime() - createdDate.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays < 0 ? 0 : diffDays;
-  };
-
-  const getTratativaAlert = (emp: EmpresaParceira) => {
-    if (emp.statusEmpresa !== "Em tratativa") return null;
-    const days = getTratativaDays(emp);
-    if (days >= 15) {
-      return {
-        level: "Emerg√™ncia",
-        days,
-        label: "Retorno de Emerg√™ncia",
-        color: "red",
-        bg: "bg-rose-50 border-rose-200 text-rose-800",
-        iconColor: "text-rose-600",
-      };
-    }
-    if (days >= 7) {
-      return {
-        level: "Aten√ß√£o",
-        days,
-        label: "Aten√ß√£o",
-        color: "orange",
-        bg: "bg-orange-50 border-orange-200 text-orange-800",
-        iconColor: "text-orange-600",
-      };
-    }
-    if (days >= 3) {
-      return {
-        level: "Retorno",
-        days,
-        label: "Retorno",
-        color: "yellow",
-        bg: "bg-amber-50 border-amber-200 text-amber-800",
-        iconColor: "text-amber-600",
-      };
-    }
-    return {
-      level: "Recente",
-      days,
-      label: "Recente",
-      color: "blue",
-      bg: "bg-blue-50 border-blue-100 text-blue-800",
-      iconColor: "text-blue-500",
-    };
-  };
-
-  // Helper for direct status update from the report
-  const handleUpdateStatus = async (id: string, newStatus: string) => {
-    try {
-      await updateDoc(doc(db, COLLECTIONS.EMPRESAS_PARCEIRAS, id), {
-        statusEmpresa: newStatus,
-        updatedAt: serverTimestamp(),
-      });
-      onToast("Status atualizado!");
-    } catch (err: any) {
-      onToast("Erro ao atualizar status.", "error");
-    }
-  };
-
-  const filteredData = data.filter((emp) => {
-    const term = searchTerm.toLowerCase();
-    const matchBusca =
-      emp.nome.toLowerCase().includes(term) ||
-      (emp.cnpj || "").toLowerCase().includes(term);
-    const matchStatus =
-      statusFilter === "Todas" || emp.statusEmpresa === statusFilter;
-    const matchUnidade =
-      unidadeFilter === "Todas" ||
-      (emp.unidadesVinculadas || []).includes(unidadeFilter);
-    const matchSeguimento =
-      seguimentoFilter === "Todos" || emp.seguimento === seguimentoFilter;
-    const matchClassificacao =
-      classificacaoFilter === "Todas" ||
-      emp.classificacao === classificacaoFilter;
-    const matchFdv = fdvFilter === "Todos" || emp.consultorId === fdvFilter;
-
-    return (
-      matchBusca &&
-      matchStatus &&
-      matchUnidade &&
-      matchSeguimento &&
-      matchClassificacao &&
-      matchFdv
-    );
-  });
-
-  // Calculate Dashboard metrics based on filtered output
-  const kpiTotais = filteredData.length;
-  const statConveniada = filteredData.filter(
-    (e) => e.statusEmpresa === "Conveniada",
-  ).length;
-  const statEmTratativa = filteredData.filter(
-    (e) => e.statusEmpresa === "Em tratativa",
-  ).length;
-  const statCancelada = filteredData.filter(
-    (e) => e.statusEmpresa === "Cancelada",
-  ).length;
-  const statNaoVisitada = filteredData.filter(
-    (e) => e.statusEmpresa === "N√£o visitada",
-  ).length;
-  const classOuro = filteredData.filter(
-    (e) => e.classificacao === "Ouro",
-  ).length;
-  const classPrata = filteredData.filter(
-    (e) => e.classificacao === "Prata",
-  ).length;
-  const classBronze = filteredData.filter(
-    (e) => e.classificacao === "Bronze",
-  ).length;
-
-  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const matchedUser = (users || []).find(
-      (u) => u.uid === selectedConsultorId,
-    );
-    const consultorNome = matchedUser ? matchedUser.name : "";
-
-    const payload: any = {
-      nome: formData.get("nome") as string,
-      responsavel: formData.get("responsavel") as string,
-      telefone: formData.get("telefone") as string,
-      telefoneResponsavel: formData.get("telefoneResponsavel") as string,
-      email: formData.get("email") as string,
-      endereco: formData.get("endereco") as string,
-      bairro: formData.get("bairro") as string,
-      cidade: formData.get("cidade") as string,
-      linkMaps: formData.get("linkMaps") as string,
-      classificacao: formData.get("classificacao") as string,
-      seguimento: formData.get("seguimento") as string,
-      cnpj: formData.get("cnpj") as string,
-      statusEmpresa: formData.get("statusEmpresa") as string,
-      linkSales: formData.get("linkSales") as string,
-      unidadesVinculadas: selectedUnidades,
-      consultorId: selectedConsultorId,
-      consultorNome: consultorNome,
-      updatedAt: serverTimestamp(),
-    };
-
-    if (!editingEmpresa) {
-      payload.creatorId = auth.currentUser?.uid;
-    }
-
-    const isDuplicate = data.some(
-      (emp) =>
-        emp.nome.toLowerCase() === payload.nome.toLowerCase() &&
-        emp.id !== editingEmpresa?.id,
-    );
-    if (isDuplicate) {
-      onToast("J√° existe uma empresa cadastrada com este nome.", "error");
-      return;
-    }
-
-    const isNowInTratativa =
-      payload.statusEmpresa === "Em tratativa" &&
-      (!editingEmpresa || editingEmpresa.statusEmpresa !== "Em tratativa");
-
-    try {
-      if (editingEmpresa) {
-        await updateDoc(
-          doc(db, COLLECTIONS.EMPRESAS_PARCEIRAS, editingEmpresa.id),
-          payload,
-        );
-        if (isNowInTratativa) {
-          onToast(
-            `O processo foi iniciado acompanhe a tratativa com a empresa ${payload.nome} para iniciar as campanhas de trade.`,
-            "success",
-          );
-          if (matchedUser && matchedUser.phone && onSendWhatsApp) {
-            const msg = `O processo foi iniciado acompanhe a tratativa com a empresa ${payload.nome} para iniciar as campanhas de trade.`;
-            await onSendWhatsApp(matchedUser.phone, msg);
-          }
-          if (matchedUser && matchedUser.telegram) {
-            const telMsg = `O processo foi iniciado. Acompanhe a tratativa com a empresa <b>${payload.nome}</b> para iniciar as campanhas de trade.`;
-            await sendTelegramNotification(matchedUser.telegram, telMsg);
-          }
-
-          // Notificar Gerente Comercial
-          const managers = (users || []).filter(
-            (u) =>
-              u.role === ROLES.GESTOR_COMERCIAL_COMERCIAL ||
-              u.role === ROLES.GESTOR_COMERCIAL,
-          );
-          for (const manager of managers) {
-            if (manager.phone && onSendWhatsApp) {
-              const fdvInfo = matchedUser
-                ? `\n*FDV Respons√°vel:* ${matchedUser.name}`
-                : "";
-              const msg = `*Aviso de Nova Tratativa (Gest√£o)*\n\nOl√°, *${manager.name}*!\nUma nova tratativa foi iniciada com a empresa ${payload.nome}.${fdvInfo}\n\nPor favor, acompanhe no sistema.`;
-              await onSendWhatsApp(manager.phone, msg);
-            }
-            if (manager.telegram) {
-              const fdvInfo = matchedUser
-                ? `\n<b>FDV Respons√°vel:</b> ${matchedUser.name}`
-                : "";
-              const telMsg = `<b>Aviso de Nova Tratativa (Gest√£o)</b>\n\nOl√°, <b>${manager.name}</b>!\nUma nova tratativa foi iniciada com a empresa <b>${payload.nome}</b>.${fdvInfo}\n\nPor favor, acompanhe no sistema.`;
-              await sendTelegramNotification(manager.telegram, telMsg);
-            }
-          }
-        } else {
-          onToast("Empresa atualizada!");
-        }
-      } else {
-        await addDoc(collection(db, COLLECTIONS.EMPRESAS_PARCEIRAS), {
-          ...payload,
-          createdAt: serverTimestamp(),
-        });
-        if (isNowInTratativa) {
-          onToast(
-            `O processo foi iniciado acompanhe a tratativa com a empresa ${payload.nome} para iniciar as campanhas de trade.`,
-            "success",
-          );
-          if (matchedUser && matchedUser.phone && onSendWhatsApp) {
-            const msg = `O processo foi iniciado acompanhe a tratativa com a empresa ${payload.nome} para iniciar as campanhas de trade.`;
-            await onSendWhatsApp(matchedUser.phone, msg);
-          }
-          if (matchedUser && matchedUser.telegram) {
-            const telMsg = `O processo foi iniciado. Acompanhe a tratativa com a empresa <b>${payload.nome}</b> para iniciar as campanhas de trade.`;
-            await sendTelegramNotification(matchedUser.telegram, telMsg);
-          }
-
-          // Notificar Gerente Comercial
-          const managers = (users || []).filter(
-            (u) =>
-              u.role === ROLES.GESTOR_COMERCIAL_COMERCIAL ||
-              u.role === ROLES.GESTOR_COMERCIAL,
-          );
-          for (const manager of managers) {
-            if (manager.phone && onSendWhatsApp) {
-              const fdvInfo = matchedUser
-                ? `\n*FDV Respons√°vel:* ${matchedUser.name}`
-                : "";
-              const msg = `*Aviso de Nova Tratativa (Gest√£o)*\n\nOl√°, *${manager.name}*!\nUma nova tratativa foi iniciada com a empresa ${payload.nome}.${fdvInfo}\n\nPor favor, acompanhe no sistema.`;
-              await onSendWhatsApp(manager.phone, msg);
-            }
-            if (manager.telegram) {
-              const fdvInfo = matchedUser
-                ? `\n<b>FDV Respons√°vel:</b> ${matchedUser.name}`
-                : "";
-              const telMsg = `<b>Aviso de Nova Tratativa (Gest√£o)</b>\n\nOl√°, <b>${manager.name}</b>!\nUma nova tratativa foi iniciada com a empresa <b>${payload.nome}</b>.${fdvInfo}\n\nPor favor, acompanhe no sistema.`;
-              await sendTelegramNotification(manager.telegram, telMsg);
-            }
-          }
-        } else {
-          onToast("Empresa cadastrada!");
-        }
-      }
-      setIsModalOpen(false);
-      setEditingEmpresa(null);
-    } catch (err: any) {
-      handleFirestoreError(
-        err,
-        OperationType.WRITE,
-        COLLECTIONS.EMPRESAS_PARCEIRAS,
-      );
-      onToast("Erro ao salvar empresa.", "error");
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Deseja excluir esta empresa?")) {
-      try {
-        await deleteDoc(doc(db, COLLECTIONS.EMPRESAS_PARCEIRAS, id));
-        onToast("Empresa removida.");
-        setSelectedEmpresaIds((prev) => prev.filter((item) => item !== id));
-      } catch (err: any) {
-        onToast("Erro ao excluir empresa.", "error");
-      }
-    }
-  };
-
-  // Mass deletion handler
-  const handleBulkDelete = async () => {
-    if (selectedEmpresaIds.length === 0) return;
-    if (
-      window.confirm(
-        `Aten√ß√£o! Deseja realmente excluir permanentemente as ${selectedEmpresaIds.length} empresas selecionadas?`,
-      )
-    ) {
-      try {
-        let deletedCount = 0;
-        for (const id of selectedEmpresaIds) {
-          await deleteDoc(doc(db, COLLECTIONS.EMPRESAS_PARCEIRAS, id));
-          deletedCount++;
-        }
-        onToast(`${deletedCount} empresas exclu√≠das com sucesso!`);
-        setSelectedEmpresaIds([]);
-      } catch (err: any) {
-        onToast("Erro na exclus√£o em massa das empresas.", "error");
-      }
-    }
-  };
-
-  const handleExport = () => {
-    const exportData = filteredData.map((emp) => ({
-      Nome: emp.nome,
-      CNPJ: emp.cnpj || "",
-      Respons√°vel: emp.responsavel,
-      Telefone: emp.telefone,
-      "Telefone Respons√°vel": emp.telefoneResponsavel || "",
-      Email: emp.email,
-      Endere√ßo: emp.endereco,
-      Bairro: emp.bairro || "",
-      Cidade: emp.cidade || "",
-      Seguimento: emp.seguimento || "",
-      Classifica√ß√£o: emp.classificacao || "",
-      Status: emp.statusEmpresa || "",
-      "Link Maps": emp.linkMaps || "",
-      "Link Sales": emp.linkSales || "",
-      "Consultor Vinculado": emp.consultorNome || "",
-      "Unidades Vinculadas": (emp.unidadesVinculadas || []).join(", "),
-    }));
-    exportToExcel(exportData, "Empresas_Parceiras");
-  };
-
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    importFromExcel(file, async (importData) => {
-      try {
-        const getVal = (row: any, ...keys: string[]) => {
-          const rowKeys = Object.keys(row);
-          for (const key of keys) {
-            const foundKey = rowKeys.find(
-              (k) => k.toLowerCase() === key.toLowerCase(),
-            );
-            if (foundKey && row[foundKey] !== undefined) return row[foundKey];
-          }
-          return undefined;
-        };
-
-        const normalizeStatusEmpresa = (val: string) => {
-          if (!val) return "N√£o visitada";
-          const lower = val.trim().toLowerCase();
-          if (lower === "conveniada") return "Conveniada";
-          if (lower === "em tratativa" || lower.includes("tratativa"))
-            return "Em tratativa";
-          if (lower === "cancelada") return "Cancelada";
-          if (
-            lower === "nao visitada" ||
-            lower === "n√£o visitada" ||
-            lower.includes("visitada")
-          )
-            return "N√£o visitada";
-          return val;
-        };
-
-        const batch = importData.map((item) => {
-          const importedConsultorNome = String(
-            getVal(
-              item,
-              "Consultor",
-              "consultor",
-              "consultorNome",
-              "consultor_vinculado",
-              "Consultor Vinculado",
-            ) || "",
-          ).trim();
-          const matchedImportedUser = (users || []).find(
-            (u) =>
-              u.name.trim().toLowerCase() ===
-              importedConsultorNome.toLowerCase(),
-          );
-          const consultorId = matchedImportedUser
-            ? matchedImportedUser.uid
-            : "";
-
-          const importedUnidadesRaw = String(
-            getVal(
-              item,
-              "Unidades",
-              "unidade",
-              "unidadesVinculadas",
-              "unidade_vinculada",
-              "unidades_vinculadas",
-              "Unidades Vinculadas",
-            ) || "",
-          ).trim();
-          const unidadesVinculadas = importedUnidadesRaw
-            ? importedUnidadesRaw
-                .split(",")
-                .map((x) => x.trim())
-                .filter(Boolean)
-            : [];
-
-          return {
-            nome: String(getVal(item, "Nome", "nome") || "").trim(),
-            cnpj: String(getVal(item, "CNPJ", "cnpj") || "").trim(),
-            responsavel: String(
-              getVal(item, "Respons√°vel", "responsavel", "respons√°vel") || "",
-            ).trim(),
-            telefone: String(
-              getVal(item, "Telefone", "telefone") || "",
-            ).replace(/\D/g, ""),
-            telefoneResponsavel: String(
-              getVal(item, "Telefone Respons√°vel", "telefoneResponsavel") || "",
-            ).replace(/\D/g, ""),
-            email: String(getVal(item, "Email", "email") || "").trim(),
-            endereco: String(
-              getVal(item, "Endere√ßo", "endereco", "endere√ßo") || "",
-            ).trim(),
-            bairro: String(getVal(item, "Bairro", "bairro") || "").trim(),
-            cidade: String(getVal(item, "Cidade", "cidade") || "").trim(),
-            seguimento: String(
-              getVal(item, "Seguimento", "seguimento") || "",
-            ).trim(),
-            classificacao: String(
-              getVal(item, "Classifica√ß√£o", "classificacao", "classifica√ß√£o") ||
-                "",
-            ).trim(),
-            statusEmpresa: normalizeStatusEmpresa(
-              String(getVal(item, "Status", "statusEmpresa", "status") || ""),
-            ),
-            linkMaps: String(
-              getVal(item, "Link Maps", "linkMaps") || "",
-            ).trim(),
-            linkSales: String(
-              getVal(item, "Link Sales", "linkSales") || "",
-            ).trim(),
-            consultorId,
-            consultorNome:
-              importedConsultorNome ||
-              (matchedImportedUser ? matchedImportedUser.name : ""),
-            unidadesVinculadas,
-            createdAt: serverTimestamp(),
-          };
-        });
-
-        let imported = 0;
-        let skipped = 0;
-        const inserted = new Set();
-        for (const entry of batch) {
-          const isDup =
-            data.some((e) => e.nome === entry.nome) || inserted.has(entry.nome);
-          if (!isDup) {
-            await addDoc(collection(db, COLLECTIONS.EMPRESAS_PARCEIRAS), entry);
-            inserted.add(entry.nome);
-            imported++;
-          } else {
-            skipped++;
-          }
-        }
-        onToast(
-          `${imported} empresas importadas! ${skipped > 0 ? `${skipped} ignoradas.` : ""}`,
-        );
-      } catch (err: any) {
-        onToast("Erro ao importar empresas.", "error");
-      }
-    });
-  };
-
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-3">
-          <div className="p-3 bg-blue-600 text-white rounded-2xl shadow-lg shadow-blue-200">
-            <Building2 size={24} />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900">
-              Empresas Parceiras
-            </h2>
-            <p className="text-slate-500 text-sm">
-              Gest√£o de parcerias e conv√™nios
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl mr-2">
-            <button
-              onClick={() => setViewFormat("card")}
-              className={cn(
-                "p-2 rounded-lg transition-all",
-                viewFormat === "card"
-                  ? "bg-white shadow-sm text-blue-600"
-                  : "text-slate-400 hover:text-slate-600",
-              )}
-              title="Formato de Cards"
-            >
-              <LayoutGrid size={18} />
-            </button>
-            <button
-              onClick={() => setViewFormat("list")}
-              className={cn(
-                "p-2 rounded-lg transition-all",
-                viewFormat === "list"
-                  ? "bg-white shadow-sm text-blue-600"
-                  : "text-slate-400 hover:text-slate-600",
-              )}
-              title="Formato de Lista"
-            >
-              <List size={18} />
-            </button>
-          </div>
-          <button
-            onClick={() => {
-              setEditingEmpresa(null);
-              setIsModalOpen(true);
-            }}
-            className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center space-x-2"
-          >
-            <Plus size={20} />
-            <span>Nova Empresa</span>
-          </button>
-          <label className="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-blue-100 transition-all text-sm font-bold cursor-pointer">
-            <Upload size={18} />
-            <span>Importar</span>
-            <input
-              type="file"
-              accept=".xlsx, .xls"
-              onChange={handleImport}
-              className="hidden"
-            />
-          </label>
-          <button
-            onClick={handleExport}
-            className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-slate-200 transition-all text-sm font-bold"
-          >
-            <Download size={18} />
-            <span>Exportar</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Tab Switcher */}
-      <div className="flex border-b border-slate-200">
-        <button
-          type="button"
-          onClick={() => setActiveTab("lista")}
-          className={cn(
-            "pb-3 px-6 font-bold text-sm transition-all border-b-2",
-            activeTab === "lista"
-              ? "border-blue-600 text-blue-600"
-              : "border-transparent text-slate-500 hover:text-slate-700",
-          )}
-        >
-          üìã Lista de Empresas
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("mapa")}
-          className={cn(
-            "pb-3 px-6 font-bold text-sm transition-all border-b-2 flex items-center space-x-2",
-            activeTab === "mapa"
-              ? "border-blue-600 text-blue-600"
-              : "border-transparent text-slate-500 hover:text-slate-700",
-          )}
-        >
-          üó∫Ô∏è Mapa das Empresas
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("tratativas")}
-          className={cn(
-            "pb-3 px-6 font-bold text-sm transition-all border-b-2 flex items-center space-x-2",
-            activeTab === "tratativas"
-              ? "border-blue-600 text-blue-600"
-              : "border-transparent text-slate-500 hover:text-slate-700",
-          )}
-        >
-          <span>‚è∞ Acompanhamento de Tratativas (Alertas)</span>
-          {statEmTratativa > 0 && (
-            <span className="bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
-              {statEmTratativa}
-            </span>
-          )}
-        </button>
-        {profile?.role === "Admin Master" && (
-          <button
-            type="button"
-            onClick={() => setActiveTab("oportunidades")}
-            className={cn(
-              "pb-3 px-6 font-bold text-sm transition-all border-b-2 flex items-center space-x-2",
-              activeTab === "oportunidades"
-                ? "border-indigo-600 text-indigo-600"
-                : "border-transparent text-slate-500 hover:text-slate-700",
-            )}
-          >
-            <Search size={16} />
-            <span>Novas Oportunidades</span>
-          </button>
-        )}
-      </div>
-
-      {(activeTab === "lista" || activeTab === "mapa") && (
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 space-y-4 my-6">
-          <div className="relative">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-              size={18}
-            />
-            <input
-              type="text"
-              placeholder="Buscar por nome da empresa ou CNPJ..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                Status
-              </label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none"
-              >
-                <option value="Todas">Todos</option>
-                <option value="Conveniada">Conveniada</option>
-                <option value="Em tratativa">Em Tratativa</option>
-                <option value="Cancelada">Cancelada</option>
-                <option value="N√£o visitada">N√£o Visitada</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                Classifica√ß√£o
-              </label>
-              <select
-                value={classificacaoFilter}
-                onChange={(e) => setClassificacaoFilter(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none"
-              >
-                <option value="Todas">Todas</option>
-                <option value="Ouro">Ouro</option>
-                <option value="Prata">Prata</option>
-                <option value="Bronze">Bronze</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                Unidade Vinculada
-              </label>
-              <select
-                value={unidadeFilter}
-                onChange={(e) => setUnidadeFilter(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none"
-              >
-                <option value="Todas">Todas</option>
-                {uniqueUnidades.map((u) => (
-                  <option key={u} value={u}>
-                    {u}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                Seguimento
-              </label>
-              <select
-                value={seguimentoFilter}
-                onChange={(e) => setSeguimentoFilter(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none"
-              >
-                <option value="Todos">Todos</option>
-                {uniqueSeguimentos.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                FDV
-              </label>
-              <select
-                value={fdvFilter}
-                onChange={(e) => setFdvFilter(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none"
-              >
-                <option value="Todos">Todos</option>
-                {listForSelection.map((u) => (
-                  <option key={u.uid} value={u.uid}>
-                    {u.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === "lista" && (
-        <>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 col-span-2 flex items-center space-x-4">
-              <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-                <Building2 size={24} />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500 font-medium">
-                  Total Empresas
-                </p>
-                <p className="text-2xl font-black text-slate-900">
-                  {kpiTotais}
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 col-span-2 lg:col-span-3 space-y-2">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                Por Status
-              </p>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="text-emerald-600 font-medium text-xs">
-                    Conveniada
-                  </span>
-                  <span className="font-bold text-slate-700">
-                    {statConveniada}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-amber-600 font-medium text-xs">
-                    Em Tratativa
-                  </span>
-                  <span className="font-bold text-slate-700">
-                    {statEmTratativa}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-rose-600 font-medium text-xs">
-                    Cancelada
-                  </span>
-                  <span className="font-bold text-slate-700">
-                    {statCancelada}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500 font-medium text-xs">
-                    N√£o Visitada
-                  </span>
-                  <span className="font-bold text-slate-700">
-                    {statNaoVisitada}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 col-span-2 lg:col-span-3 space-y-2">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                Por Classifica√ß√£o
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
-                <div className="bg-amber-100/50 p-2 rounded-lg flex flex-col items-center">
-                  <span className="text-amber-700 font-bold text-xs uppercase">
-                    Ouro
-                  </span>
-                  <span className="text-lg font-black text-amber-900">
-                    {classOuro}
-                  </span>
-                </div>
-                <div className="bg-slate-100/80 p-2 rounded-lg flex flex-col items-center">
-                  <span className="text-slate-600 font-bold text-xs uppercase">
-                    Prata
-                  </span>
-                  <span className="text-lg font-black text-slate-800">
-                    {classPrata}
-                  </span>
-                </div>
-                <div className="bg-orange-100/50 p-2 rounded-lg flex flex-col items-center">
-                  <span className="text-orange-800 font-bold text-xs uppercase">
-                    Bronze
-                  </span>
-                  <span className="text-lg font-black text-orange-900">
-                    {classBronze}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Bulk Action Panel */}
-          {selectedEmpresaIds.length > 0 && (
-            <div className="bg-rose-50 border border-rose-200 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-3 animate-fadeIn">
-              <span className="text-sm text-rose-800 font-medium">
-                Selecionadas: <strong>{selectedEmpresaIds.length}</strong>{" "}
-                empresa(s) para exclus√£o em massa.
-              </span>
-              <div className="flex space-x-2 w-full sm:w-auto justify-end">
-                <button
-                  type="button"
-                  onClick={() => setSelectedEmpresaIds([])}
-                  className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-lg transition-all"
-                >
-                  Desmarcar Todas
-                </button>
-                <button
-                  type="button"
-                  onClick={handleBulkDelete}
-                  className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all flex items-center space-x-1.5"
-                >
-                  <Trash2 size={14} />
-                  <span>Excluir Selecionadas</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Quick select toggle */}
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400 font-medium font-mono">
-              Mostrando {filteredData.length} de {data.length} empresas
-            </span>
-            <div className="flex space-x-2">
-              <button
-                type="button"
-                onClick={() => {
-                  const allFilteredIds = filteredData.map((emp) => emp.id);
-                  const areAllSelected = allFilteredIds.every((id) =>
-                    selectedEmpresaIds.includes(id),
-                  );
-                  if (areAllSelected) {
-                    setSelectedEmpresaIds((prev) =>
-                      prev.filter((id) => !allFilteredIds.includes(id)),
-                    );
-                  } else {
-                    setSelectedEmpresaIds((prev) =>
-                      Array.from(new Set([...prev, ...allFilteredIds])),
-                    );
-                  }
-                }}
-                className="text-xs text-blue-600 hover:text-blue-800 font-bold"
-              >
-                {filteredData.length > 0 &&
-                filteredData.every((emp) => selectedEmpresaIds.includes(emp.id))
-                  ? "Desmarcar Todas do Filtro"
-                  : `Selecionar Todas do Filtro (${filteredData.length})`}
-              </button>
-            </div>
-          </div>
-
-          {viewFormat === "card" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredData.map((emp) => {
-                const isSelected = selectedEmpresaIds.includes(emp.id);
-                const alertInfo = getTratativaAlert(emp);
-                return (
-                  <div
-                    key={emp.id}
-                    className={cn(
-                      "bg-white p-6 pl-12 rounded-3xl shadow-sm border flex flex-col justify-between hover:border-blue-200 transition-all group relative",
-                      isSelected
-                        ? "border-blue-400 bg-blue-50/20"
-                        : "border-slate-100",
-                    )}
-                  >
-                    {/* Absolute checkbox for mass deletion */}
-                    <div className="absolute top-5 left-4 z-10">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => {
-                          if (isSelected) {
-                            setSelectedEmpresaIds(
-                              selectedEmpresaIds.filter((id) => id !== emp.id),
-                            );
-                          } else {
-                            setSelectedEmpresaIds([
-                              ...selectedEmpresaIds,
-                              emp.id,
-                            ]);
-                          }
-                        }}
-                        className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
-                      />
-                    </div>
-
-                    {emp.classificacao && (
-                      <div
-                        className={cn(
-                          "absolute -top-3 -right-3 text-[10px] font-black uppercase tracking-wider py-1 px-3 rounded-full shadow-sm border",
-                          emp.classificacao === "Ouro"
-                            ? "bg-amber-100 text-amber-800 border-amber-200"
-                            : emp.classificacao === "Prata"
-                              ? "bg-slate-100 text-slate-700 border-slate-300"
-                              : "bg-orange-100 text-orange-800 border-orange-200",
-                        )}
-                      >
-                        {emp.classificacao}
-                      </div>
-                    )}
-
-                    <div>
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors pr-8">
-                          {emp.nome}
-                        </h3>
-                        <div className="flex space-x-1 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingEmpresa(emp);
-                              setIsModalOpen(true);
-                            }}
-                            className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-all"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(emp.id)}
-                            className="p-2 text-rose-400 hover:bg-rose-50 rounded-lg transition-all"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-1.5 mb-4">
-                        <span
-                          className={cn(
-                            "text-[10px] font-bold px-2 py-0.5 rounded-full border",
-                            emp.statusEmpresa === "Conveniada" &&
-                              "bg-emerald-50 text-emerald-700 border-emerald-200",
-                            emp.statusEmpresa === "Em tratativa" &&
-                              "bg-amber-50 text-amber-700 border-amber-200",
-                            emp.statusEmpresa === "Cancelada" &&
-                              "bg-rose-50 text-rose-700 border-rose-200",
-                            (emp.statusEmpresa === "N√£o visitada" ||
-                              !emp.statusEmpresa) &&
-                              "bg-slate-50 text-slate-600 border-slate-200",
-                          )}
-                        >
-                          {emp.statusEmpresa || "N√£o visitada"}
-                        </span>
-                        {emp.seguimento && (
-                          <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">
-                            {emp.seguimento}
-                          </span>
-                        )}
-                        {alertInfo && (
-                          <span
-                            className={cn(
-                              "text-[9px] font-bold px-2 py-0.5 rounded-full border flex items-center space-x-1",
-                              alertInfo.bg,
-                            )}
-                          >
-                            <Clock size={10} className={alertInfo.iconColor} />
-                            <span>
-                              {alertInfo.label} ({getTratativaDays(emp)}d)
-                            </span>
-                          </span>
-                        )}
-                      </div>
-
-                      {emp.statusEmpresa === "Em tratativa" && (
-                        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start space-x-2 shadow-sm">
-                          <span className="text-amber-500 shrink-0 font-bold">
-                            ‚ö†Ô∏è
-                          </span>
-                          <div className="leading-relaxed">
-                            O processo foi iniciado acompanhe a tratativa com a
-                            empresa{" "}
-                            <span className="font-bold text-slate-900">
-                              {emp.nome}
-                            </span>{" "}
-                            para iniciar as campanhas de trade.
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="space-y-3 mb-6 text-sm text-slate-600">
-                        {emp.cnpj && (
-                          <div className="flex items-center space-x-3">
-                            <Briefcase size={16} className="text-slate-400" />
-                            <span className="font-mono text-xs">
-                              {emp.cnpj}
-                            </span>
-                          </div>
-                        )}
-                        <div className="flex flex-col space-y-1">
-                          <div className="flex items-center justify-between pr-1">
-                            <div className="flex items-center space-x-3">
-                              <Phone size={16} className="text-slate-400" />
-                              <span>{formatPhone(emp.telefone)}</span>
-                            </div>
-                            <span className="text-[9px] font-bold text-slate-400 uppercase">
-                              Empresa
-                            </span>
-                          </div>
-                          {emp.telefoneResponsavel && (
-                            <div className="flex items-center justify-between pr-1">
-                              <div className="flex items-center space-x-3">
-                                <Phone
-                                  size={16}
-                                  className="text-slate-400 opacity-50"
-                                />
-                                <span>
-                                  {formatPhone(emp.telefoneResponsavel)}
-                                </span>
-                              </div>
-                              <span className="text-[9px] font-bold text-slate-400 uppercase">
-                                Resp.
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex items-center space-x-3">
-                          <Users size={16} className="text-slate-400" />
-                          <span>{emp.responsavel}</span>
-                        </div>
-
-                        {emp.consultorNome && (
-                          <div className="flex items-center space-x-3 text-blue-700 font-medium">
-                            <UserIcon size={16} className="text-blue-500" />
-                            <span>Comercial: {emp.consultorNome}</span>
-                          </div>
-                        )}
-
-                        <div className="flex items-center space-x-3">
-                          <Mail size={16} className="text-slate-400" />
-                          <span className="truncate">{emp.email}</span>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          <MapPin size={16} className="text-slate-400" />
-                          <span className="truncate">{emp.endereco}</span>
-                        </div>
-                        {emp.bairro && (
-                          <div className="flex items-center space-x-3">
-                            <MapPin
-                              size={16}
-                              className="text-slate-400 opacity-50"
-                            />
-                            <span className="truncate">
-                              Bairro: {emp.bairro}
-                            </span>
-                          </div>
-                        )}
-                        {emp.cidade && (
-                          <div className="flex items-center space-x-3">
-                            <MapPin
-                              size={16}
-                              className="text-slate-400 opacity-50"
-                            />
-                            <span className="truncate">
-                              Cidade: {emp.cidade}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {emp.unidadesVinculadas &&
-                        emp.unidadesVinculadas.length > 0 && (
-                          <div className="mt-3 pt-3 border-t border-slate-100 mb-4">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 font-mono">
-                              Unidades Vinculadas
-                            </span>
-                            <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1">
-                              {emp.unidadesVinculadas.map((uni) => (
-                                <span
-                                  key={uni}
-                                  className="text-[9px] font-bold bg-indigo-50/60 text-indigo-600 border border-indigo-100/40 p-1 px-2 rounded-md truncate max-w-[150px]"
-                                  title={uni}
-                                >
-                                  {uni}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                    </div>
-
-                    <div className="flex flex-col space-y-2 mt-auto pt-3 border-t border-slate-100/60">
-                      <div className="grid grid-cols-2 gap-2">
-                        {emp.linkMaps && (
-                          <a
-                            href={emp.linkMaps}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center space-x-2 w-full py-2 bg-slate-50 text-slate-600 rounded-xl font-bold text-xs hover:bg-slate-100 transition-all border border-slate-200"
-                          >
-                            <Globe size={14} />
-                            <span>Maps</span>
-                          </a>
-                        )}
-                        {emp.linkSales && (
-                          <a
-                            href={emp.linkSales}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center space-x-2 w-full py-2 bg-blue-50 text-blue-600 rounded-xl font-bold text-xs hover:bg-blue-100 transition-all border border-blue-200"
-                          >
-                            <ExternalLink size={14} />
-                            <span>Sales</span>
-                          </a>
-                        )}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => onGenerateAction(emp)}
-                        className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center justify-center space-x-2"
-                      >
-                        <Calendar size={18} />
-                        <span>Gerar A√ß√£o</span>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/30">
-                    <th className="p-4 pl-12">
-                      <div className="flex items-center space-x-2">
-                        <span>Empresa</span>
-                      </div>
-                    </th>
-                    <th className="p-4">Status / Seguimento</th>
-                    <th className="p-4">Respons√°vel / Contato</th>
-                    <th className="p-4">Consultor</th>
-                    <th className="p-4">Localiza√ß√£o</th>
-                    <th className="p-4 pr-6 text-right">A√ß√µes</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-sm">
-                  {filteredData.map((emp) => {
-                    const isSelected = selectedEmpresaIds.includes(emp.id);
-                    const alertInfo = getTratativaAlert(emp);
-                    return (
-                      <tr
-                        key={emp.id}
-                        className={cn(
-                          "hover:bg-slate-50/50 transition-colors relative",
-                          isSelected && "bg-blue-50/30",
-                        )}
-                      >
-                        <td className="p-4 pl-12 relative">
-                          <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => {
-                                if (isSelected) {
-                                  setSelectedEmpresaIds(
-                                    selectedEmpresaIds.filter(
-                                      (id) => id !== emp.id,
-                                    ),
-                                  );
-                                } else {
-                                  setSelectedEmpresaIds([
-                                    ...selectedEmpresaIds,
-                                    emp.id,
-                                  ]);
-                                }
-                              }}
-                              className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
-                            />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="font-bold text-slate-900 leading-none mb-1">
-                              {emp.nome}
-                            </span>
-                            {emp.cnpj && (
-                              <span className="text-[10px] font-mono text-slate-400">
-                                {emp.cnpj}
-                              </span>
-                            )}
-                            {emp.classificacao && (
-                              <span
-                                className={cn(
-                                  "inline-flex w-fit mt-1 text-[8px] font-black uppercase px-1.5 py-0.5 rounded border",
-                                  emp.classificacao === "Ouro"
-                                    ? "bg-amber-50 text-amber-700 border-amber-200"
-                                    : emp.classificacao === "Prata"
-                                      ? "bg-slate-50 text-slate-600 border-slate-200"
-                                      : "bg-orange-50 text-orange-700 border-orange-200",
-                                )}
-                              >
-                                {emp.classificacao}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex flex-col space-y-1">
-                            <span
-                              className={cn(
-                                "text-[10px] font-bold px-2 py-0.5 rounded-full border w-fit",
-                                emp.statusEmpresa === "Conveniada" &&
-                                  "bg-emerald-50 text-emerald-700 border-emerald-200",
-                                emp.statusEmpresa === "Em tratativa" &&
-                                  "bg-amber-50 text-amber-700 border-amber-200",
-                                emp.statusEmpresa === "Cancelada" &&
-                                  "bg-rose-50 text-rose-700 border-rose-200",
-                                (emp.statusEmpresa === "N√£o visitada" ||
-                                  !emp.statusEmpresa) &&
-                                  "bg-slate-50 text-slate-600 border-slate-200",
-                              )}
-                            >
-                              {emp.statusEmpresa || "N√£o visitada"}
-                            </span>
-                            {emp.seguimento && (
-                              <span className="text-[10px] font-medium text-slate-500">
-                                {emp.seguimento}
-                              </span>
-                            )}
-                            {alertInfo && (
-                              <span
-                                className={cn(
-                                  "text-[9px] font-bold px-2 py-0.5 rounded-full border flex items-center space-x-1 w-fit",
-                                  alertInfo.bg,
-                                )}
-                              >
-                                <Clock
-                                  size={10}
-                                  className={alertInfo.iconColor}
-                                />
-                                <span>
-                                  {alertInfo.label} ({getTratativaDays(emp)}d)
-                                </span>
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex flex-col text-xs">
-                            <div className="flex items-center space-x-1 mb-0.5">
-                              <Users size={12} className="text-slate-400" />
-                              <span className="font-medium text-slate-700">
-                                {emp.responsavel}
-                              </span>
-                            </div>
-                            <div className="flex items-center space-x-1 text-slate-500">
-                              <Phone size={12} className="text-slate-400" />
-                              <span>{formatPhone(emp.telefone)}</span>
-                            </div>
-                            {emp.email && (
-                              <div className="flex items-center space-x-1 text-slate-500">
-                                <Mail size={12} className="text-slate-400" />
-                                <span className="truncate max-w-[150px]">
-                                  {emp.email}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          {emp.consultorNome ? (
-                            <div className="flex items-center space-x-1.5 text-blue-700 font-medium text-xs">
-                              <UserIcon size={14} className="text-blue-500" />
-                              <span>{emp.consultorNome}</span>
-                            </div>
-                          ) : (
-                            <span className="text-slate-400 text-xs">-</span>
-                          )}
-                        </td>
-                        <td className="p-4">
-                          <div className="flex flex-col text-[11px] text-slate-600 max-w-[200px]">
-                            <span className="truncate">{emp.endereco}</span>
-                            <span className="text-slate-400 truncate">
-                              {emp.bairro && `${emp.bairro}, `}
-                              {emp.cidade}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="p-4 pr-6 text-right">
-                          <div className="flex justify-end items-center space-x-1">
-                            <button
-                              type="button"
-                              onClick={() => onGenerateAction(emp)}
-                              className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
-                              title="Gerar A√ß√£o"
-                            >
-                              <Calendar size={14} />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingEmpresa(emp);
-                                setIsModalOpen(true);
-                              }}
-                              className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-lg transition-all"
-                            >
-                              <Edit2 size={14} />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDelete(emp.id)}
-                              className="p-1.5 text-rose-400 hover:bg-rose-50 rounded-lg transition-all"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Mapa das Empresas View */}
-      {activeTab === "mapa" && (
-        <Mapa3D
-          empresas={filteredData}
-          leads={leads}
-          acoes={acoes}
-          selectedId={selectedMapEmpresaId}
-          onSelect={setSelectedMapEmpresaId}
-          onGenerateAction={onGenerateAction}
-          formatPhone={formatPhone}
-        />
-      )}
-
-      {/* Tratativas (Alertas) Report View */}
-      {activeTab === "tratativas" && (
-        <div className="space-y-6">
-          {/* Alerts Guide Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-start space-x-3">
-              <div className="p-2 bg-amber-100 text-amber-700 rounded-xl shrink-0">
-                <Clock size={20} />
-              </div>
-              <div>
-                <h4 className="font-bold text-amber-900 text-sm">
-                  Lembrete de Retorno
-                </h4>
-                <p className="text-xs text-amber-700 mt-1">
-                  Ativado ap√≥s <strong>3 dias</strong> do cadastro. Requer
-                  contato inicial para retorno sobre o fechamento da a√ß√£o.
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-orange-50 border border-orange-200 p-4 rounded-2xl flex items-start space-x-3">
-              <div className="p-2 bg-orange-100 text-orange-700 rounded-xl shrink-0">
-                <AlertCircle size={20} />
-              </div>
-              <div>
-                <h4 className="font-bold text-orange-900 text-sm">
-                  Alerta de Aten√ß√£o
-                </h4>
-                <p className="text-xs text-orange-700 mt-1">
-                  Ativado ap√≥s <strong>7 dias</strong> do cadastro. Aten√ß√£o
-                  necess√°ria para a negocia√ß√£o em andamento.
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-rose-50 border border-rose-200 p-4 rounded-2xl flex items-start space-x-3">
-              <div className="p-2 bg-rose-100 text-rose-700 rounded-xl shrink-0">
-                <AlertCircle size={20} />
-              </div>
-              <div>
-                <h4 className="font-bold text-rose-900 text-sm">
-                  Retorno de Emerg√™ncia
-                </h4>
-                <p className="text-xs text-rose-700 mt-1">
-                  Ativado ap√≥s <strong>15 dias</strong> ou mais. Tratativa
-                  cr√≠tica necessitando retorno imediato de emerg√™ncia.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* List of companies in tratativa */}
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <h3 className="font-bold text-slate-800 text-base">
-                Relat√≥rio de Acompanhamento de Tratativas
-              </h3>
-              <span className="text-xs text-slate-500 font-medium">
-                Total de Tratativas Ativas:{" "}
-                <strong>
-                  {
-                    data.filter((e) => e.statusEmpresa === "Em tratativa")
-                      .length
-                  }
-                </strong>
-              </span>
-            </div>
-
-            {data.filter((e) => e.statusEmpresa === "Em tratativa").length ===
-            0 ? (
-              <div className="p-12 text-center text-slate-400 italic">
-                Nenhuma empresa com status "Em tratativa" cadastrada.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/30">
-                      <th className="p-4 pl-6">Empresa</th>
-                      <th className="p-4">Consultor Vinculado (FDV)</th>
-                      <th className="p-4">Unidade(s)</th>
-                      <th className="p-4">Data Cadastro</th>
-                      <th className="p-4">Dias Decorridos</th>
-                      <th className="p-4">Lembrete / Status</th>
-                      <th className="p-4 pr-6 text-right">
-                        A√ß√µes para Mudar Status
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-sm">
-                    {data
-                      .filter((e) => e.statusEmpresa === "Em tratativa")
-                      .map((emp) => {
-                        const alertInfo = getTratativaAlert(emp);
-                        const days = getTratativaDays(emp);
-
-                        const formatDate = (dateVal: any) => {
-                          if (!dateVal) return "-";
-                          let dateObj: Date;
-                          if (dateVal.seconds) {
-                            dateObj = new Date(dateVal.seconds * 1000);
-                          } else {
-                            dateObj = new Date(dateVal);
-                          }
-                          if (isNaN(dateObj.getTime())) return "-";
-                          return dateObj.toLocaleDateString("pt-BR");
-                        };
-
-                        return (
-                          <tr
-                            key={emp.id}
-                            className="hover:bg-slate-50/50 transition-colors"
-                          >
-                            <td className="p-4 pl-6">
-                              <div className="font-bold text-slate-800">
-                                {emp.nome}
-                              </div>
-                              {emp.cnpj && (
-                                <div className="text-[10px] text-slate-400 font-mono">
-                                  CNPJ: {emp.cnpj}
-                                </div>
-                              )}
-                              <div className="mt-1.5 text-xs text-amber-700 max-w-sm leading-relaxed bg-amber-50/60 p-2 rounded-lg border border-amber-100/50">
-                                O processo foi iniciado acompanhe a tratativa
-                                com a empresa <strong>{emp.nome}</strong> para
-                                iniciar as campanhas de trade.
-                              </div>
-                            </td>
-                            <td className="p-4">
-                              {emp.consultorNome ? (
-                                <div className="flex items-center space-x-2 text-slate-700">
-                                  <UserIcon
-                                    size={14}
-                                    className="text-blue-500 shrink-0"
-                                  />
-                                  <span className="font-medium">
-                                    {emp.consultorNome}
-                                  </span>
-                                </div>
-                              ) : (
-                                <span className="text-slate-400 italic text-xs">
-                                  Sem consultor vinculado
-                                </span>
-                              )}
-                            </td>
-                            <td className="p-4">
-                              {emp.unidadesVinculadas &&
-                              emp.unidadesVinculadas.length > 0 ? (
-                                <div className="flex flex-wrap gap-1 max-w-[200px]">
-                                  {emp.unidadesVinculadas.map((un) => (
-                                    <span
-                                      key={un}
-                                      className="text-[9px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded font-bold border border-indigo-100/30"
-                                    >
-                                      {un}
-                                    </span>
-                                  ))}
-                                </div>
-                              ) : (
-                                <span className="text-slate-400 text-xs">
-                                  -
-                                </span>
-                              )}
-                            </td>
-                            <td className="p-4 text-slate-600 text-xs">
-                              {formatDate(emp.createdAt)}
-                            </td>
-                            <td className="p-4">
-                              <span className="font-bold text-slate-700 font-mono">
-                                {days}
-                              </span>
-                              <span className="text-slate-400 text-xs ml-1">
-                                dia(s)
-                              </span>
-                            </td>
-                            <td className="p-4">
-                              {alertInfo && (
-                                <span
-                                  className={cn(
-                                    "text-[10px] font-bold px-2.5 py-1 rounded-full border flex items-center space-x-1.5 w-fit",
-                                    alertInfo.bg,
-                                  )}
-                                >
-                                  <Clock
-                                    size={10}
-                                    className={alertInfo.iconColor}
-                                  />
-                                  <span>
-                                    {alertInfo.label} ({days}d)
-                                  </span>
-                                </span>
-                              )}
-                            </td>
-                            <td className="p-4 pr-6 text-right">
-                              <div className="flex items-center justify-end space-x-1.5">
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleUpdateStatus(emp.id, "Conveniada")
-                                  }
-                                  className="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-xs font-bold transition-all animate-none"
-                                  title="Mudar para Conveniada"
-                                >
-                                  ü§ù Conveniar
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleUpdateStatus(emp.id, "Cancelada")
-                                  }
-                                  className="px-2.5 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-lg text-xs font-bold transition-all animate-none"
-                                  title="Mudar para Cancelada"
-                                >
-                                  ‚úï Cancelar
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleUpdateStatus(emp.id, "N√£o visitada")
-                                  }
-                                  className="px-2.5 py-1 bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 rounded-lg text-xs font-bold transition-all animate-none"
-                                  title="Mudar para N√£o Visitada"
-                                >
-                                  Ignorar
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setEditingEmpresa(emp);
-                                    setIsModalOpen(true);
-                                  }}
-                                  className="p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-lg transition-all"
-                                  title="Editar Completo"
-                                >
-                                  <Edit2 size={14} />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Novas Oportunidades View */}
-      {activeTab === "oportunidades" && profile?.role === "Admin Master" && (
-        <NovasOportunidadesView 
-          data={data}
-          botConfig={botConfig}
-          onToast={onToast}
-          onAdicionarOportunidade={(nova) => {
-            setEditingEmpresa(nova as EmpresaParceira);
-            setIsModalOpen(true);
-          }}
-        />
-      )}
-
-      <AnimatePresence>
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col"
-            >
-              <div className="p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
-                <h3 className="text-xl font-bold text-slate-900">
-                  {editingEmpresa ? "Editar Empresa" : "Nova Empresa Parceira"}
-                </h3>
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="text-slate-400 hover:text-slate-600"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-
-              <div className="overflow-y-auto flex-1">
-                <form
-                  id="empresaForm"
-                  onSubmit={handleSave}
-                  className="p-6 space-y-5"
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-1">
-                        Nome da Empresa
-                      </label>
-                      <input
-                        name="nome"
-                        defaultValue={editingEmpresa?.nome}
-                        required
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-1">
-                        CNPJ
-                      </label>
-                      <input
-                        name="cnpj"
-                        defaultValue={editingEmpresa?.cnpj}
-                        placeholder="00.000.000/0000-00"
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-1">
-                        Status
-                      </label>
-                      <select
-                        name="statusEmpresa"
-                        defaultValue={editingEmpresa?.statusEmpresa || ""}
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
-                      >
-                        <option value="">Selecione...</option>
-                        <option value="Conveniada">Conveniada</option>
-                        <option value="Em tratativa">Em Tratativa</option>
-                        <option value="Cancelada">Cancelada</option>
-                        <option value="N√£o visitada">N√£o Visitada</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-1">
-                        Classifica√ß√£o
-                      </label>
-                      <select
-                        name="classificacao"
-                        defaultValue={editingEmpresa?.classificacao || ""}
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
-                      >
-                        <option value="">Nenhuma</option>
-                        <option value="Ouro">Ouro</option>
-                        <option value="Prata">Prata</option>
-                        <option value="Bronze">Bronze</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-1">
-                        Seguimento
-                      </label>
-                      <input
-                        name="seguimento"
-                        defaultValue={editingEmpresa?.seguimento}
-                        placeholder="Ex: Educa√ß√£o, Varejo"
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-1">
-                        Respons√°vel pela Parceria
-                      </label>
-                      <input
-                        name="responsavel"
-                        defaultValue={editingEmpresa?.responsavel}
-                        required
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-1">
-                        Email
-                      </label>
-                      <input
-                        name="email"
-                        type="email"
-                        defaultValue={editingEmpresa?.email}
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-1">
-                        Telefone Principal (Empresa)
-                      </label>
-                      <input
-                        name="telefone"
-                        defaultValue={editingEmpresa?.telefone}
-                        onChange={(e) => {
-                          e.target.value = formatPhone(e.target.value);
-                        }}
-                        required
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-1">
-                        Telefone do Respons√°vel
-                      </label>
-                      <input
-                        name="telefoneResponsavel"
-                        defaultValue={editingEmpresa?.telefoneResponsavel}
-                        onChange={(e) => {
-                          e.target.value = formatPhone(e.target.value);
-                        }}
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-1">
-                        Endere√ßo
-                      </label>
-                      <input
-                        name="endereco"
-                        defaultValue={editingEmpresa?.endereco}
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-1">
-                        Bairro
-                      </label>
-                      <input
-                        name="bairro"
-                        defaultValue={editingEmpresa?.bairro}
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-1">
-                        Cidade
-                      </label>
-                      <input
-                        name="cidade"
-                        defaultValue={editingEmpresa?.cidade}
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-1">
-                        Link no Maps
-                      </label>
-                      <input
-                        name="linkMaps"
-                        defaultValue={editingEmpresa?.linkMaps}
-                        placeholder="https://goo.gl/maps/..."
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-1">
-                        Link do Sales de V√≠nculo
-                      </label>
-                      <input
-                        name="linkSales"
-                        defaultValue={editingEmpresa?.linkSales}
-                        placeholder="https://sales..."
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">
-                      Vincular a Consultor Comercial / FDV
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={selectedConsultorId}
-                        onChange={(e) => setSelectedConsultorId(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm cursor-pointer"
-                      >
-                        <option value="">
-                          Nenhum consultor selecionado (Sem v√≠nculo)
-                        </option>
-                        {listForSelection.map((u) => (
-                          <option key={u.uid} value={u.uid}>
-                            {u.name} (
-                            {(
-                              u.role ||
-                              u.servidor ||
-                              "Comercial"
-                            ).toUpperCase()}
-                            )
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                        <UserIcon size={18} />
-                      </div>
-                    </div>
-                    <p className="text-[10px] text-slate-400 mt-1">
-                      Selecione um comercial/FDV cadastrado no sistema para
-                      vincular a esta empresa parceira.
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">
-                      Unidades Vinculadas
-                    </label>
-                    {uniqueUnidades.length === 0 ? (
-                      <span className="text-xs text-slate-400 italic block">
-                        Nenhuma unidade cadastrada em Cursos Dispon√≠veis.
-                      </span>
-                    ) : (
-                      <div className="space-y-1.5 max-h-36 overflow-y-auto border border-slate-200 rounded-xl p-3 bg-slate-50">
-                        <label className="flex items-center space-x-2 pb-1.5 mb-1.5 border-b border-slate-200 cursor-pointer text-xs font-bold text-blue-600">
-                          <input
-                            type="checkbox"
-                            checked={
-                              selectedUnidades.length === uniqueUnidades.length
-                            }
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedUnidades(uniqueUnidades);
-                              } else {
-                                setSelectedUnidades([]);
-                              }
-                            }}
-                            className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
-                          />
-                          <span>
-                            Selecionar Todas ({uniqueUnidades.length})
-                          </span>
-                        </label>
-                        {uniqueUnidades.map((unidade) => {
-                          const isChecked = selectedUnidades.includes(unidade);
-                          return (
-                            <label
-                              key={unidade}
-                              className="flex items-center space-x-2 text-xs font-medium text-slate-700 cursor-pointer py-0.5 hover:text-slate-900"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={isChecked}
-                                onChange={() => {
-                                  const next = isChecked
-                                    ? selectedUnidades.filter(
-                                        (u) => u !== unidade,
-                                      )
-                                    : [...selectedUnidades, unidade];
-                                  setSelectedUnidades(next);
-                                }}
-                                className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
-                              />
-                              <span>{unidade}</span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </form>
-              </div>
-
-              <div className="p-6 border-t border-slate-100 shrink-0 bg-slate-50">
-                <button
-                  type="submit"
-                  form="empresaForm"
-                  className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
-                >
-                  {editingEmpresa ? "Salvar Altera√ß√µes" : "Cadastrar Empresa"}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function CalculoRemuneracaoView() {
-  const [salario, setSalario] = useState<string>("");
-  const [multiplo, setMultiplo] = useState<string>("");
-
-  const resultado = useMemo(() => {
-    const vSalario = parseFloat(salario.replace(",", ".")) || 0;
-    const vMultiplo = parseFloat(multiplo.replace(",", ".")) || 0;
-
-    // Formula: Sal√°rio Base * M√∫ltiplo da RV
-    return vSalario * vMultiplo;
-  }, [salario, multiplo]);
-
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(val);
-  };
-
-  return (
-    <div className="max-w-2xl mx-auto space-y-8">
-      <div className="text-center space-y-2">
-        <h2 className="text-3xl font-bold text-slate-900">
-          C√°lculo de Remunera√ß√£o
-        </h2>
-        <p className="text-slate-500">
-          Preencha os campos abaixo para calcular a remunera√ß√£o total
-        </p>
-      </div>
-
-      <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-        <div className="p-8 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="block text-sm font-bold text-slate-700">
-                Sal√°rio Base
-              </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">
-                  R$
-                </span>
-                <input
-                  type="text"
-                  value={salario}
-                  onChange={(e) => setSalario(e.target.value)}
-                  placeholder="0,00"
-                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-bold text-slate-700">
-                M√∫ltiplo da RV
-              </label>
-              <input
-                type="text"
-                value={multiplo}
-                onChange={(e) => setMultiplo(e.target.value)}
-                placeholder="Ex: 1.5"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
-              />
-            </div>
-          </div>
-
-          <div className="pt-8 border-t border-slate-100">
-            <div className="bg-blue-600 rounded-3xl p-8 text-white text-center space-y-2 shadow-lg shadow-blue-200">
-              <span className="text-blue-100 text-sm font-bold uppercase tracking-wider">
-                Remunera√ß√£o Total Estimada
-              </span>
-              <div className="text-4xl md:text-5xl font-black">
-                {formatCurrency(resultado)}
-              </div>
-              <p className="text-blue-100/80 text-xs pt-2">
-                F√≥rmula: Sal√°rio Base √ó M√∫ltiplo da RV
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-start space-x-3">
-        <AlertCircle className="text-amber-500 shrink-0" size={20} />
-        <p className="text-xs text-amber-700 leading-relaxed">
-          Este c√°lculo √© uma estimativa baseada nos valores informados. Consulte
-          as regras vigentes de sua unidade para confirma√ß√£o dos valores finais.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function AdminView({
-  profile,
-  users,
-  links,
-  onToast,
-  leads,
-  bases,
-  gap,
-  planner,
-  campanhas,
-  bomDia,
-  forecast,
-  periodos,
-  whatsappMessages,
-  activeWhatsappTemplates,
-  setActiveWhatsappTemplates,
-  empresasParceiras,
-  botConfig,
-  botStatuses,
-  setBotStatuses,
-  callBotApi,
-  metaDia,
-  metaSM,
-  metaCursos,
-  qgLigacoes,
-  cursos,
-  uniqueUnidades = [],
-  analysisSchemes,
-  onSaveAnalysisScheme,
-  onDeleteAnalysisScheme,
-  setShowInjectModal,
-}: {
-  profile: UserProfile | null;
-  users: UserProfile[];
-  links: LinkUtil[];
-  onToast: (m: string, t?: "success" | "error") => void;
-  leads: Lead[];
-  bases: BaseEntry[];
-  gap: GapEntry[];
-  planner: PlannerTask[];
-  campanhas: Campanha[];
-  bomDia: BomDiaCaptacao[];
-  forecast: ForecastCaptacao[];
-  periodos: PeriodoCaptacao[];
-  whatsappMessages: WhatsAppMessage[];
-  activeWhatsappTemplates: Record<string, string>;
-  setActiveWhatsappTemplates: React.Dispatch<
-    React.SetStateAction<Record<string, string>>
-  >;
-  empresasParceiras: EmpresaParceira[];
-  botConfig: BotConfig;
-  uniqueUnidades?: string[];
-  botStatuses: Record<
-    string,
-    {
-      status: string;
-      pairingCode?: string;
-      qrCode?: string;
-      qrUrl?: string;
-      active?: boolean;
-    }
-  >;
-  setBotStatuses: React.Dispatch<
-    React.SetStateAction<
-      Record<
-        string,
-        {
-          status: string;
-          pairingCode?: string;
-          qrCode?: string;
-          qrUrl?: string;
-          active?: boolean;
-        }
-      >
-    >
-  >;
-  callBotApi: (
-    path: string,
-    options?: { method?: "GET" | "POST"; body?: any },
-  ) => Promise<any>;
-  metaDia: MetaDia[];
-  metaSM: MetaSM[];
-  metaCursos: MetaCurso[];
-  qgLigacoes: QgLigacao[];
-  cursos: CursoDisponivel[];
-  analysisSchemes: AnalysisScheme[];
-  onSaveAnalysisScheme: (scheme: Partial<AnalysisScheme>) => Promise<void>;
-  onDeleteAnalysisScheme: (id: string) => Promise<void>;
-  setShowInjectModal: React.Dispatch<React.SetStateAction<boolean>>;
-}) {
-  const [activeWhatsappTab, setActiveWhatsappTab] = useState<
-    "historico" | "bases" | "gap" | "fiesProuni" | "bases_renovacao"
-  >("historico");
-  const [activeTab, setActiveTab] = useState<
-    | "usuarios"
-    | "bomDia"
-    | "forecast"
-    | "planner"
-    | "periodo"
-    | "links"
-    | "whatsapp"
-    | "backup"
-    | "treinamento"
-    | "metaDia"
-    | "qgLigacoes"
-    | "folgas"
-    | "logo"
-    | "funcionarios"
-    | "crescimentoAnual"
-    | "formularios"
-    | "metaSM"
-    | "metaCursos"
-  >(profile?.role === "Gestor Unidade" ? "forecast" : "usuarios");
-  const [adminRequests, setAdminRequests] = useState<SolicitacaoFolga[]>([]);
-  const [loadingAdminRequests, setLoadingAdminRequests] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<
-    "Todos" | "Pendente" | "Aprovado" | "Recusado"
-  >("Todos");
-
-  // Subscribe to all folga requests in AdminView
-  useEffect(() => {
-    if (activeTab !== "folgas") return;
-
-    setLoadingAdminRequests(true);
-    const q = collection(db, COLLECTIONS.SOLICITACAO_FOLGA);
-
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const list = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as SolicitacaoFolga[];
-
-        // Sort descending by createdAt
-        list.sort((a, b) => {
-          const timeA = a.createdAt?.seconds || 0;
-          const timeB = b.createdAt?.seconds || 0;
-          return timeB - timeA;
-        });
-
-        setAdminRequests(list);
-        setLoadingAdminRequests(false);
-      },
-      (error) => {
-        console.error("Error loading admin folgas:", error);
-        setLoadingAdminRequests(false);
-      },
-    );
-
-    return () => unsubscribe();
-  }, [activeTab]);
-
-  const handleDecideRequest = async (
-    request: SolicitacaoFolga,
-    status: "Aprovado" | "Recusado",
-  ) => {
-    try {
-      if (!auth.currentUser) return;
-      const currentUserUid = auth.currentUser.uid;
-      const decider = users.find((u) => u.uid === currentUserUid);
-      const deciderName = decider
-        ? decider.name
-        : auth.currentUser.email || "Admin";
-
-      const requestRef = doc(db, COLLECTIONS.SOLICITACAO_FOLGA, request.id);
-      await updateDoc(requestRef, {
-        status,
-        aprovadoPorId: currentUserUid,
-        aprovadoPorNome: deciderName,
-        updatedAt: serverTimestamp(),
-      });
-
-      onToast(
-        `Solicita√ß√£o de ${request.solicitanteNome} foi ${status === "Aprovado" ? "aprovada" : "recusada"}.`,
-        "success",
-      );
-    } catch (err: any) {
-      console.error("Error deciding request:", err);
-      onToast("Erro ao processar decis√£o.", "error");
-    }
-  };
-
-  const [isProcessingPdf, setIsProcessingPdf] = useState(false);
-  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
-
-  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.type !== "application/pdf") {
-      onToast("Por favor, selecione um arquivo PDF.", "error");
-      return;
-    }
-
-    setIsProcessingPdf(true);
-    try {
-      const pdfjsLib = await import("pdfjs-dist");
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
-
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      let text = "";
-
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        const pageText = content.items.map((item: any) => item.str).join(" ");
-        text += `\n--- P√°gina ${i} ---\n` + pageText + "\n";
-      }
-
-      const currentContext = botConfig.trainingContext || "";
-      const newContext =
-        currentContext +
-        (currentContext ? "\n\n" : "") +
-        `=== Conte√∫do do Arquivo: ${file.name} ===\n` +
-        text;
-
-      await setDoc(
-        doc(db, COLLECTIONS.BOT_CONFIG, "main"),
-        {
-          trainingContext: newContext,
-          updatedAt: serverTimestamp(),
-        },
-        { merge: true },
-      );
-
-      onToast("PDF processado e adicionado ao contexto com sucesso!");
-    } catch (err: any) {
-      console.error(err);
-      onToast(`Erro ao processar PDF: ${err.message}`, "error");
-    } finally {
-      setIsProcessingPdf(false);
-      e.target.value = "";
-    }
-  };
-
-  const [logoPreview, setLogoPreview] = useState<string | null>(
-    botConfig?.loginLogo || null,
-  );
-  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
-
-  useEffect(() => {
-    if (botConfig?.loginLogo) {
-      setLogoPreview(botConfig.loginLogo);
-    } else {
-      setLogoPreview(null);
-    }
-  }, [botConfig?.loginLogo]);
-
-  const handleLogoUploadProcess = async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      onToast("Por favor, envie apenas arquivos de imagem.", "error");
-      return;
-    }
-
-    setIsUploadingLogo(true);
-    try {
-      const compressImage = (f: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(f);
-          reader.onload = (event) => {
-            const img = new Image();
-            img.onload = () => {
-              const canvas = document.createElement("canvas");
-              const MAX_WIDTH = 400;
-              const MAX_HEIGHT = 400;
-              let width = img.width;
-              let height = img.height;
-
-              if (width > height) {
-                if (width > MAX_WIDTH) {
-                  height *= MAX_WIDTH / width;
-                  width = MAX_WIDTH;
-                }
-              } else {
-                if (height > MAX_HEIGHT) {
-                  width *= MAX_HEIGHT / height;
-                  height = MAX_HEIGHT;
-                }
-              }
-              canvas.width = width;
-              canvas.height = height;
-              const ctx = canvas.getContext("2d");
-              if (ctx) {
-                ctx.drawImage(img, 0, 0, width, height);
-                const dataUrl = canvas.toDataURL("image/png", 0.85);
-                resolve(dataUrl);
-              } else {
-                resolve(event.target?.result as string);
-              }
-            };
-            img.onerror = (err) => reject(err);
-            img.src = event.target?.result as string;
-          };
-          reader.onerror = (err) => reject(err);
-        });
-      };
-
-      const base64Image = await compressImage(file);
-      setLogoPreview(base64Image);
-
-      await setDoc(
-        doc(db, COLLECTIONS.BOT_CONFIG, "main"),
-        {
-          loginLogo: base64Image,
-          updatedAt: serverTimestamp(),
-        },
-        { merge: true },
-      );
-
-      onToast("Logotipo atualizado com sucesso!");
-    } catch (err: any) {
-      console.error(err);
-      onToast(`Erro ao enviar logotipo: ${err.message}`, "error");
-    } finally {
-      setIsUploadingLogo(false);
-    }
-  };
-
-  const [newLink, setNewLink] = useState({ nome: "", url: "", local: "" });
-  const [editingLink, setEditingLink] = useState<LinkUtil | null>(null);
-  const [newPlanner, setNewPlanner] = useState({
-    atendenteName: "",
-    baseName: "",
-    dayOfWeek: "Segunda-feira",
-  });
-  const [newPeriodo, setNewPeriodo] = useState({
-    nome: "",
-    inicioInscricao: "",
-    fimInscricao: "",
-    inicioMatFin: "",
-    fimMatFin: "",
-    inicioMatAcad: "",
-    fimMatAcad: "",
-  });
-  const [newBomDia, setNewBomDia] = useState({
-    titulo: "",
-    metaFinal: { insc: 0, matFin: 0, matAcad: 0 },
-    metaDia: { insc: 0, matFin: 0, matAcad: 0 },
-    anoAnterior: { insc: 0, matFin: 0, matAcad: 0 },
-    real: { insc: 0, matFin: 0, matAcad: 0 },
-  });
-  const [newForecast, setNewForecast] = useState({
-    nome: "",
-    dataInicio: new Date().toISOString().split("T")[0],
-    dataFim: new Date().toISOString().split("T")[0],
-    metaDiaYTD: 0,
-    realizado: 0,
-    metaFechamento: 0,
-  });
-
-  const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
-  const [changingPasswordUser, setChangingPasswordUser] =
-    useState<UserProfile | null>(null);
-  const [newPasswordValue, setNewPasswordValue] = useState("");
-  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [editingBomDia, setEditingBomDia] = useState<BomDiaCaptacao | null>(
-    null,
-  );
-  const [editingForecast, setEditingForecast] =
-    useState<ForecastCaptacao | null>(null);
-  const [editingMetaDia, setEditingMetaDia] = useState<MetaDia | null>(null);
-  const [newMetaDia, setNewMetaDia] = useState({
-    data: new Date().toISOString().split("T")[0],
-    aaPresencial: 0,
-    ytdPresencial: 0,
-    realizadoPresencial: 0,
-    aaSemipresencial: 0,
-    ytdSemipresencial: 0,
-    realizadoSemipresencial: 0,
-    aaDigital: 0,
-    ytdDigital: 0,
-    realizadoDigital: 0,
-    aaTecnico: 0,
-    ytdTecnico: 0,
-    realizadoTecnico: 0,
-    aaPosGraduacao: 0,
-    ytdPosGraduacao: 0,
-    realizadoPosGraduacao: 0,
-  });
-
-  const [editingQgLigacao, setEditingQgLigacao] = useState<QgLigacao | null>(
-    null,
-  );
-  const [newQgLigacao, setNewQgLigacao] = useState<{
-    nome: string;
-    diaSemana: string[];
-    horario: string;
-  }>({
-    nome: "",
-    diaSemana: [],
-    horario: "",
-  });
-
-  const [isAddingUser, setIsAddingUser] = useState(false);
-
-  const handleAddMetaDia = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const payload = {
-        data: newMetaDia.data,
-        aaPresencial: Number(newMetaDia.aaPresencial),
-        ytdPresencial: Number(newMetaDia.ytdPresencial),
-        realizadoPresencial: Number(newMetaDia.realizadoPresencial),
-        aaSemipresencial: Number(newMetaDia.aaSemipresencial),
-        ytdSemipresencial: Number(newMetaDia.ytdSemipresencial),
-        realizadoSemipresencial: Number(newMetaDia.realizadoSemipresencial),
-        aaDigital: Number(newMetaDia.aaDigital),
-        ytdDigital: Number(newMetaDia.ytdDigital),
-        realizadoDigital: Number(newMetaDia.realizadoDigital),
-        aaTecnico: Number(newMetaDia.aaTecnico || 0),
-        ytdTecnico: Number(newMetaDia.ytdTecnico || 0),
-        realizadoTecnico: Number(newMetaDia.realizadoTecnico || 0),
-        aaPosGraduacao: Number(newMetaDia.aaPosGraduacao || 0),
-        ytdPosGraduacao: Number(newMetaDia.ytdPosGraduacao || 0),
-        realizadoPosGraduacao: Number(newMetaDia.realizadoPosGraduacao || 0),
-      };
-
-      if (editingMetaDia) {
-        await updateDoc(
-          doc(db, COLLECTIONS.META_DIA, editingMetaDia.id),
-          payload,
-        );
-        onToast("Meta Di√°ria atualizada com sucesso!");
-        setEditingMetaDia(null);
-      } else {
-        await addDoc(collection(db, COLLECTIONS.META_DIA), {
-          ...payload,
-          createdAt: serverTimestamp(),
-        });
-        onToast("Meta Di√°ria cadastrada com sucesso!");
-      }
-
-      setNewMetaDia({
-        data: new Date().toISOString().split("T")[0],
-        aaPresencial: 0,
-        ytdPresencial: 0,
-        realizadoPresencial: 0,
-        aaSemipresencial: 0,
-        ytdSemipresencial: 0,
-        realizadoSemipresencial: 0,
-        aaDigital: 0,
-        ytdDigital: 0,
-        realizadoDigital: 0,
-        aaTecnico: 0,
-        ytdTecnico: 0,
-        realizadoTecnico: 0,
-        aaPosGraduacao: 0,
-        ytdPosGraduacao: 0,
-        realizadoPosGraduacao: 0,
-      });
-    } catch (err: any) {
-      onToast(`Erro ao salvar Meta Di√°ria: ${err.message}`, "error");
-    }
-  };
-
-  const handleAddQgLigacao = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const payload = {
-        nome: newQgLigacao.nome,
-        diaSemana: newQgLigacao.diaSemana,
-        horario: newQgLigacao.horario,
-      };
-
-      if (editingQgLigacao) {
-        await updateDoc(
-          doc(db, COLLECTIONS.QG_LIGACOES, editingQgLigacao.id),
-          payload,
-        );
-        onToast("QG Liga√ß√µes atualizado com sucesso!");
-        setEditingQgLigacao(null);
-      } else {
-        await addDoc(collection(db, COLLECTIONS.QG_LIGACOES), {
-          ...payload,
-          createdAt: serverTimestamp(),
-        });
-        onToast("QG Liga√ß√µes cadastrado com sucesso!");
-      }
-
-      setNewQgLigacao({
-        nome: "",
-        diaSemana: [],
-        horario: "",
-      });
-    } catch (err: any) {
-      onToast(`Erro ao salvar QG Liga√ß√µes: ${err.message}`, "error");
-    }
-  };
-
-  const handleDeleteQgLigacao = async (id: string) => {
-    if (!window.confirm("Deseja apagar este registro do QG Liga√ß√µes?")) return;
-    try {
-      await deleteDoc(doc(db, COLLECTIONS.QG_LIGACOES, id));
-      onToast("Registro apagado com sucesso!");
-    } catch (err: any) {
-      onToast(`Erro ao apagar QG Liga√ß√µes: ${err.message}`, "error");
-    }
-  };
-
-  const handleUpdateUser = async (uid: string, data: Partial<UserProfile>) => {
-    try {
-      await updateDoc(doc(db, COLLECTIONS.USERS, uid), {
-        ...data,
-        updatedAt: serverTimestamp(),
-      });
-      onToast("Usu√°rio atualizado!");
-      setEditingUser(null);
-    } catch (err: any) {
-      onToast(err.message, "error");
-    }
-  };
-
-  const handleDeleteUser = async (uid: string) => {
-    if (
-      window.confirm(
-        "Deseja excluir permanentemente este usu√°rio? Esta a√ß√£o n√£o pode ser desfeita.",
-      )
-    ) {
-      try {
-        await deleteDoc(doc(db, COLLECTIONS.USERS, uid));
-        onToast("Usu√°rio exclu√≠do com sucesso.");
-      } catch (err: any) {
-        handleFirestoreError(
-          err,
-          OperationType.DELETE,
-          `${COLLECTIONS.USERS}/${uid}`,
-        );
-        onToast("Erro ao excluir usu√°rio.", "error");
-      }
-    }
-  };
-
-  const handleAddLink = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      if (editingLink) {
-        await updateDoc(doc(db, COLLECTIONS.LINKS, editingLink.id), newLink);
-        onToast("Link atualizado!");
-        setEditingLink(null);
-      } else {
-        await addDoc(collection(db, COLLECTIONS.LINKS), newLink);
-        onToast("Link adicionado!");
-      }
-      setNewLink({ nome: "", url: "", local: "" });
-    } catch (err: any) {
-      onToast(err.message, "error");
-    }
-  };
-
-  const handleAddBomDia = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      if (editingBomDia) {
-        await updateDoc(doc(db, COLLECTIONS.BOM_DIA, editingBomDia.id), {
-          ...newBomDia,
-          updatedAt: serverTimestamp(),
-        });
-        onToast("Bom Dia atualizado!");
-        setEditingBomDia(null);
-      } else {
-        await addDoc(collection(db, COLLECTIONS.BOM_DIA), {
-          ...newBomDia,
-          data: new Date().toISOString().split("T")[0],
-          createdAt: serverTimestamp(),
-        });
-        onToast("Bom Dia adicionado!");
-      }
-      setNewBomDia({
-        titulo: "",
-        metaFinal: { insc: 0, matFin: 0, matAcad: 0 },
-        metaDia: { insc: 0, matFin: 0, matAcad: 0 },
-        anoAnterior: { insc: 0, matFin: 0, matAcad: 0 },
-        real: { insc: 0, matFin: 0, matAcad: 0 },
-      });
-    } catch (err: any) {
-      onToast("Erro ao salvar Bom Dia.", "error");
-    }
-  };
-
-  const handleAddForecast = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      if (editingForecast) {
-        await updateDoc(doc(db, COLLECTIONS.FORECAST, editingForecast.id), {
-          ...newForecast,
-          updatedAt: serverTimestamp(),
-        });
-        onToast("Forecast atualizado!");
-        setEditingForecast(null);
-      } else {
-        await addDoc(collection(db, COLLECTIONS.FORECAST), {
-          ...newForecast,
-          createdAt: serverTimestamp(),
-        });
-        onToast("Forecast criado!");
-      }
-      setNewForecast({
-        nome: "",
-        dataInicio: new Date().toISOString().split("T")[0],
-        dataFim: new Date().toISOString().split("T")[0],
-        metaDiaYTD: 0,
-        realizado: 0,
-        metaFechamento: 0,
-      });
-    } catch (err: any) {
-      onToast("Erro ao salvar Forecast.", "error");
-    }
-  };
-
-  const handleAddPlanner = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await addDoc(collection(db, COLLECTIONS.PLANNER), {
-        ...newPlanner,
-        createdAt: serverTimestamp(),
-      });
-      onToast("Planner adicionado!");
-      setNewPlanner({
-        atendenteName: "",
-        baseName: "",
-        dayOfWeek: "Segunda-feira",
-      });
-    } catch (err: any) {
-      onToast("Erro ao salvar Planner.", "error");
-    }
-  };
-
-  const handleAddPeriodo = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await addDoc(collection(db, COLLECTIONS.PERIODO_CAPTACAO), {
-        ...newPeriodo,
-        createdAt: serverTimestamp(),
-      });
-      onToast("Per√≠odo adicionado!");
-      setNewPeriodo({
-        nome: "",
-        inicioInscricao: "",
-        fimInscricao: "",
-        inicioMatFin: "",
-        fimMatFin: "",
-        inicioMatAcad: "",
-        fimMatAcad: "",
-      });
-    } catch (err: any) {
-      onToast("Erro ao salvar Per√≠odo.", "error");
-    }
-  };
-
-  const handleBackup = () => {
-    const data = {
-      leads,
-      bases,
-      gap,
-      planner,
-      links,
-      users,
-      campanhas,
-      bomDia,
-      forecast,
-      periodos,
-      whatsappMessages,
-      empresasParceiras,
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `backup_angra_leads_${new Date().toISOString().split("T")[0]}.json`;
-    a.click();
-    onToast("Backup gerado com sucesso!");
-  };
-
-  return (
-    <div className="space-y-8 pb-12">
-      <div className="flex overflow-x-auto space-x-2 border-b border-slate-200 pb-4 mb-6 scrollbar-hide">
-        {[
-          { id: "usuarios", label: "Usu√°rios", roles: ["Admin Master", "L√≠der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
-          { id: "funcionarios", label: "Funcion√°rios (Insumos)", roles: ["Admin Master", "L√≠der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
-          { id: "folgas", label: "Folgas e F√©rias", roles: ["Admin Master", "L√≠der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)", "Gestor Unidade"] },
-          { id: "bomDia", label: "Bom Dia Capta√ß√£o", roles: ["Admin Master", "L√≠der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
-          { id: "forecast", label: "Forecast", roles: ["Admin Master", "L√≠der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)", "Gestor Unidade"] },
-          { id: "metaDia", label: "Meta Dia", roles: ["Admin Master", "L√≠der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
-          { id: "metaSM", label: "Meta SM", roles: ["Admin Master", "L√≠der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
-          { id: "metaCursos", label: "Meta Cursos", roles: ["Admin Master", "L√≠der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
-          { id: "qgLigacoes", label: "QG Liga√ß√µes", roles: ["Admin Master", "L√≠der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
-          { id: "planner", label: "Planner da Semana", roles: ["Admin Master", "L√≠der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
-          { id: "periodo", label: "Per√≠odo da Capta√ß√£o", roles: ["Admin Master", "L√≠der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
-          { id: "whatsapp", label: "Gest√£o WhatsApp", roles: ["Admin Master", "L√≠der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
-          { id: "treinamento", label: "Treinamento Bot", roles: ["Admin Master", "L√≠der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
-          { id: "links", label: "Links √öteis", roles: ["Admin Master", "L√≠der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)", "Gestor Unidade"] },
-          { id: "logo", label: "Logotipo do Login", roles: ["Admin Master", "L√≠der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
-          { id: "formularios", label: "Formul√°rios", roles: ["Admin Master", "L√≠der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)", "Gestor Unidade"] },
-          { id: "crescimentoAnual", label: "Crescimento Anual", roles: ["Admin Master", "L√≠der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)", "Gestor Unidade"] },
-          { id: "backup", label: "Backup e Seguran√ßa", roles: ["Admin Master"] },
-        ].filter(t => !t.roles || t.roles.includes(profile?.role || "")).map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
-            className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
-              activeTab === tab.id
-                ? "bg-blue-600 text-white shadow-md shadow-blue-200"
-                : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {activeTab === "usuarios" && (
-        <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-            <h3 className="text-xl font-bold text-slate-900">
-              Gerenciar Usu√°rios
-            </h3>
-            <button
-              onClick={() => setIsAddingUser(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center space-x-2 text-sm"
-            >
-              <UserPlus size={18} />
-              <span>Novo Usu√°rio</span>
-            </button>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider">
-                  <th className="px-6 py-4">Nome</th>
-                  <th className="px-6 py-4">Email</th>
-                  <th className="px-6 py-4">CPF</th>
-                  <th className="px-6 py-4">Telefone</th>
-                  <th className="px-6 py-4">Unidade</th>
-                  <th className="px-6 py-4">Cargo</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">A√ß√µes</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {users.map((u) => (
-                  <tr
-                    key={u.uid}
-                    className={cn(
-                      "hover:bg-slate-50 transition-colors",
-                      u.blocked && "bg-rose-50/50",
-                    )}
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs">
-                          {u.name.charAt(0)}
-                        </div>
-                        <span className="font-bold text-slate-900">
-                          {u.name}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-500">
-                      {u.email}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-500">
-                      {u.cpf || "-"}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-500">
-                      {u.phone || "-"}
-                    </td>
-                    <td className="px-6 py-4">
-                      <select
-                        value={u.unidade || ""}
-                        onChange={(e) =>
-                          handleUpdateUser(u.uid, {
-                            unidade: e.target.value,
-                          })
-                        }
-                        className="text-xs font-bold border-none bg-transparent focus:ring-0 text-slate-700 w-full"
-                      >
-                        <option value="">Nenhuma</option>
-                        {uniqueUnidades.map((un) => (
-                          <option key={un} value={un}>
-                            {un}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-6 py-4">
-                      <select
-                        value={u.role}
-                        onChange={(e) =>
-                          handleUpdateUser(u.uid, {
-                            role: e.target.value as UserRole,
-                          })
-                        }
-                        className="text-xs font-bold border-none bg-transparent focus:ring-0 text-slate-700"
-                      >
-                        {Object.values(ROLES).map((r) => (
-                          <option key={r} value={r}>
-                            {r}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={cn(
-                          "px-2 py-1 rounded-full text-[10px] font-bold uppercase",
-                          u.blocked
-                            ? "bg-rose-100 text-rose-600"
-                            : "bg-emerald-100 text-emerald-600",
-                        )}
-                      >
-                        {u.blocked ? "Bloqueado" : "Ativo"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => {
-                            setChangingPasswordUser(u);
-                            setNewPasswordValue("");
-                            setPasswordError(null);
-                          }}
-                          className="p-2 text-sky-500 hover:bg-sky-50 rounded-lg transition-all"
-                          title="Alterar Senha"
-                        >
-                          <KeyRound size={16} />
-                        </button>
-                        <button
-                          onClick={() => setEditingUser(u)}
-                          className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-all"
-                          title="Editar Perfil"
-                        >
-                          <Edit2 size={16} />
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleUpdateUser(u.uid, { blocked: !u.blocked })
-                          }
-                          className={cn(
-                            "p-2 rounded-lg transition-all",
-                            u.blocked
-                              ? "text-emerald-500 hover:bg-emerald-50"
-                              : "text-amber-500 hover:bg-amber-50",
-                          )}
-                          title={u.blocked ? "Desbloquear" : "Bloquear"}
-                        >
-                          {u.blocked ? (
-                            <Unlock size={16} />
-                          ) : (
-                            <Lock size={16} />
-                          )}
-                        </button>
-                        <button
-                          onClick={() => handleDeleteUser(u.uid)}
-                          className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
-                          title="Excluir Usu√°rio"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {editingUser && (
-            <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
-              >
-                <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                  <h3 className="text-xl font-bold text-slate-900">
-                    Editar Perfil
-                  </h3>
-                  <button
-                    onClick={() => setEditingUser(null)}
-                    className="text-slate-400 hover:bg-slate-50 p-2 rounded-lg"
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const formData = new FormData(e.currentTarget);
-                    const updateData: any = {
-                      name: formData.get("name") as string,
-                      phone: formData.get("phone") as string,
-                      email: formData.get("email") as string,
-                      cpf: formData.get("cpf") as string,
-                      dataNascimento: formData.get("dataNascimento") as string,
-                      chavePix: formData.get("chavePix") as string,
-                      telegram: formData.get("telegram") as string,
-                      botNumber: formData.get("botNumber") as string,
-                      unidade: formData.get("unidade") as string,
-                      role: formData.get("role") as string,
-                    };
-                    if (updateData.role === ROLES.PROMOTOR_RUA) {
-                      updateData.linkadoA = formData.get("linkadoA") as string;
-                    }
-                    handleUpdateUser(editingUser.uid, updateData);
-                  }}
-                  className="p-6 space-y-4"
-                >
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1">
-                      Nome Completo
-                    </label>
-                    <input
-                      name="name"
-                      required
-                      defaultValue={editingUser.name}
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1">
-                      Email
-                    </label>
-                    <input
-                      name="email"
-                      type="email"
-                      required
-                      defaultValue={editingUser.email}
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1">
-                      CPF (Opcional)
-                    </label>
-                    <input
-                      name="cpf"
-                      defaultValue={editingUser.cpf || ""}
-                      onChange={(e) =>
-                        (e.target.value = formatCPF(e.target.value))
-                      }
-                      placeholder="000.000.000-00"
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1">
-                      Data de Nascimento (Opcional)
-                    </label>
-                    <input
-                      name="dataNascimento"
-                      type="date"
-                      defaultValue={editingUser.dataNascimento || ""}
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1">
-                      Telefone (Contato)
-                    </label>
-                    <input
-                      name="phone"
-                      defaultValue={editingUser.phone}
-                      onChange={(e) =>
-                        (e.target.value = formatPhone(e.target.value))
-                      }
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      placeholder="(00) 00000-0000"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1">
-                      Telefone da IA (Multi-Device)
-                    </label>
-                    <input
-                      name="botNumber"
-                      defaultValue={editingUser.botNumber || ""}
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      placeholder="Ex: 5511999999999 (Somente n√∫meros)"
-                    />
-                    <p className="text-[10px] text-slate-400 mt-1">
-                      Este ser√° o n√∫mero de WhatsApp usado pelo sistema para
-                      enviar mensagens desta conta.
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1">
-                      Unidade (Para Gestor Unidade / FDV Comercial)
-                    </label>
-                    <select
-                      name="unidade"
-                      defaultValue={editingUser.unidade || ""}
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm bg-white"
-                    >
-                      <option value="">Selecione uma unidade</option>
-                      {uniqueUnidades.map((unidade) => (
-                        <option key={unidade} value={unidade}>
-                          {unidade}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1">
-                      Cargo
-                    </label>
-                    <select
-                      name="role"
-                      defaultValue={editingUser.role}
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                    >
-                      {Object.values(ROLES)
-                        .filter((r) => {
-                          const isComercial =
-                            localStorage.getItem("servidor_selected") ===
-                            "comercial";
-                          if (isComercial) {
-                            return [
-                              "Admin Master",
-                              "Gerente Comercial (Comercial)",
-                              "FDV (Comercial)",
-                              "Promotor/rua",
-                              "Financeiro",
-                            ].includes(r);
-                          } else {
-                            return ![
-                              "Gerente Comercial (Comercial)",
-                              "FDV (Comercial)",
-                              "Promotor/rua",
-                            ].includes(r);
-                          }
-                        })
-                        .map((r) => (
-                          <option key={r} value={r}>
-                            {r}
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1">
-                      Linkado a (FDV - Apenas para Promotor/rua)
-                    </label>
-                    <select
-                      name="linkadoA"
-                      defaultValue={editingUser.linkadoA || ""}
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                    >
-                      <option value="">Nenhum/N√£o se aplica</option>
-                      {users
-                        .filter(
-                          (u) =>
-                            u.role === ROLES.FDV_COMERCIAL ||
-                            u.role === ROLES.FDV,
-                        )
-                        .map((fdv) => (
-                          <option key={fdv.uid} value={fdv.uid}>
-                            {fdv.name} ({fdv.email})
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1">
-                      Chave PIX (Opcional)
-                    </label>
-                    <input
-                      name="chavePix"
-                      defaultValue={editingUser.chavePix}
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      placeholder="CPF, Email, Telefone ou Chave Aleat√≥ria"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1">
-                      Telegram (@username ou Chat ID) (Opcional)
-                    </label>
-                    <input
-                      name="telegram"
-                      defaultValue={editingUser.telegram || ""}
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      placeholder="@username ou Chat ID"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
-                  >
-                    Salvar Altera√ß√µes
-                  </button>
-                </form>
-              </motion.div>
-            </div>
-          )}
-
-          {changingPasswordUser &&
-            (() => {
-              const isMasterAdmin =
-                profile?.role === "Admin Master" ||
-                profile?.email === "marcos.teixeira@estacio.br" ||
-                profile?.email === "canaldonutri@gmail.com";
-              return (
-                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
-                  >
-                    <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                      <div>
-                        <h3 className="text-lg font-bold text-slate-900">
-                          {isMasterAdmin
-                            ? "Alterar Senha do Usu√°rio"
-                            : "Redefinir Senha do Usu√°rio"}
-                        </h3>
-                        <p className="text-xs text-slate-500 mt-1">
-                          {isMasterAdmin
-                            ? `Defina uma nova senha para ${changingPasswordUser.name}`
-                            : `Envie um e-mail de redefini√ß√£o para ${changingPasswordUser.name}`}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => setChangingPasswordUser(null)}
-                        className="text-slate-400 hover:bg-slate-200 p-2 rounded-lg transition-colors"
-                      >
-                        <X size={20} />
-                      </button>
-                    </div>
-
-                    <div className="p-6 space-y-6">
-                      {isMasterAdmin ? (
-                        <>
-                          {/* Option 1: Direct Password Change */}
-                          <form
-                            onSubmit={async (e) => {
-                              e.preventDefault();
-                              setPasswordError(null);
-                              if (
-                                !newPasswordValue ||
-                                newPasswordValue.length < 6
-                              ) {
-                                onToast(
-                                  "A senha deve ter pelo menos 6 caracteres.",
-                                  "error",
-                                );
-                                return;
-                              }
-
-                              setIsUpdatingPassword(true);
-                              try {
-                                const response = await fetch(
-                                  "/api/direct-pw-update",
-                                  {
-                                    method: "POST",
-                                    headers: {
-                                      "Content-Type": "application/json",
-                                    },
-                                    body: JSON.stringify({
-                                      uid: changingPasswordUser.uid,
-                                      newPassword: newPasswordValue,
-                                      servidor:
-                                        localStorage.getItem(
-                                          "servidor_selected",
-                                        ) || "principal",
-                                      adminEmail: profile?.email,
-                                    }),
-                                  },
-                                );
-
-                                const responseText = await response.text();
-                                let result;
-                                try {
-                                  result = JSON.parse(responseText);
-                                } catch (parseErr) {
-                                  console.error(
-                                    "Non-JSON response received:",
-                                    responseText,
-                                  );
-                                  const prefix = responseText
-                                    ? responseText.substring(0, 120).trim()
-                                    : "Vazio";
-                                  throw new Error(
-                                    `O servidor retornou uma resposta inv√°lida (HTML: "${prefix}..."). Isso geralmente ocorre se as credenciais administrativas para altera√ß√£o direta n√£o estiverem totalmente configuradas ou se o servidor de desenvolvimento estiver em processo de atualiza√ß√£o. Por favor, utilize a op√ß√£o "Enviar E-mail de Redefini√ß√£o" abaixo, que √© 100% nativa e funciona perfeitamente para ambos os servidores!`,
-                                  );
-                                }
-
-                                if (result.success) {
-                                  onToast(
-                                    `Senha de ${changingPasswordUser.name} alterada com sucesso!`,
-                                    "success",
-                                  );
-                                  setChangingPasswordUser(null);
-                                } else {
-                                  setPasswordError(result.error);
-                                  onToast(`Erro: ${result.error}`, "error");
-                                }
-                              } catch (err: any) {
-                                setPasswordError(err.message);
-                                onToast(
-                                  `Erro ao alterar senha: ${err.message}`,
-                                  "error",
-                                );
-                              } finally {
-                                setIsUpdatingPassword(false);
-                              }
-                            }}
-                            className="space-y-4"
-                          >
-                            {passwordError && (
-                              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl space-y-1.5 leading-relaxed">
-                                <p className="font-semibold text-red-800">
-                                  Erro ao alterar senha:
-                                </p>
-                                <p className="break-all">{passwordError}</p>
-                                {passwordError.includes("identitytoolkit") && (
-                                  <div className="mt-2 pt-2 border-t border-red-100">
-                                    <p className="font-bold text-red-950">
-                                      A√ß√£o Necess√°ria:
-                                    </p>
-                                    <p className="mt-1 text-red-800">
-                                      A API{" "}
-                                      <strong>Google Identity Toolkit</strong>{" "}
-                                      precisa ser ativada no seu projeto Google
-                                      Cloud para permitir a altera√ß√£o
-                                      administrativa de senhas.
-                                    </p>
-                                    <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0 mt-2.5">
-                                      <a
-                                        href="https://console.developers.google.com/apis/api/identitytoolkit.googleapis.com/overview?project=gestaopro-761e1"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center justify-center space-x-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors text-[11px]"
-                                      >
-                                        <span>
-                                          Ativar no Principal (gestaopro-761e1)
-                                        </span>
-                                      </a>
-                                      <a
-                                        href="https://console.developers.google.com/apis/api/identitytoolkit.googleapis.com/overview?project=gestaodeleadspro-d4230"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center justify-center space-x-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-colors text-[11px]"
-                                      >
-                                        <span>
-                                          Ativar no Comercial
-                                          (gestaodeleadspro-d4230)
-                                        </span>
-                                      </a>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-
-                            <div>
-                              <label className="block text-xs font-bold text-slate-500 mb-1.5">
-                                Nova Senha
-                              </label>
-                              <input
-                                type="text"
-                                required
-                                placeholder="Digite a nova senha (m√≠nimo 6 caracteres)"
-                                value={newPasswordValue}
-                                onChange={(e) =>
-                                  setNewPasswordValue(e.target.value)
-                                }
-                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                              />
-                            </div>
-
-                            <button
-                              type="submit"
-                              disabled={isUpdatingPassword}
-                              className="w-full bg-blue-600 text-white py-2.5 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 disabled:bg-blue-300 disabled:cursor-not-allowed flex items-center justify-center space-x-2 cursor-pointer"
-                            >
-                              {isUpdatingPassword ? (
-                                <span>Alterando...</span>
-                              ) : (
-                                <>
-                                  <KeyRound size={16} />
-                                  <span>Definir Nova Senha Diretamente</span>
-                                </>
-                              )}
-                            </button>
-                          </form>
-
-                          <div className="relative flex py-2 items-center">
-                            <div className="flex-grow border-t border-slate-100"></div>
-                            <span className="flex-shrink mx-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                              ou
-                            </span>
-                            <div className="flex-grow border-t border-slate-100"></div>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="p-4 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-2xl space-y-2 leading-relaxed">
-                          <p className="font-bold text-amber-900 flex items-center">
-                            <svg
-                              className="w-4.5 h-4.5 mr-2 text-amber-600 flex-shrink-0"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2.5}
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                              />
-                            </svg>
-                            Recurso Restrito ao Admin Master
-                          </p>
-                          <p>
-                            Por motivos de seguran√ßa e integridade das contas, a{" "}
-                            <strong>
-                              altera√ß√£o direta de senha administrativa
-                            </strong>{" "}
-                            √© de uso exclusivo do Admin Master.
-                          </p>
-                          <p>
-                            Como administrador, voc√™ pode disparar o fluxo de
-                            redefini√ß√£o enviando um e-mail com link seguro para
-                            o endere√ßo cadastrado do usu√°rio no bot√£o abaixo.
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Option 2: Email Password Reset */}
-                      <div className="space-y-3">
-                        <p className="text-xs text-slate-500 text-center">
-                          {isMasterAdmin
-                            ? "Voc√™ tamb√©m pode enviar um e-mail de redefini√ß√£o para o endere√ßo cadastrado do usu√°rio."
-                            : "Envie um link seguro de redefini√ß√£o para o endere√ßo cadastrado do usu√°rio."}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            if (
-                              window.confirm(
-                                `Deseja enviar um e-mail de redefini√ß√£o de senha para ${changingPasswordUser.name} (${changingPasswordUser.email})?`,
-                              )
-                            ) {
-                              try {
-                                await sendPasswordResetEmail(
-                                  auth,
-                                  changingPasswordUser.email,
-                                );
-                                onToast(
-                                  "E-mail de redefini√ß√£o enviado com sucesso!",
-                                  "success",
-                                );
-                                setChangingPasswordUser(null);
-                              } catch (err: any) {
-                                onToast(
-                                  `Erro ao enviar e-mail: ${err.message}`,
-                                  "error",
-                                );
-                              }
-                            }
-                          }}
-                          className="w-full bg-blue-50 text-blue-700 hover:bg-blue-100 py-2.5 rounded-xl font-bold transition-all text-xs text-center cursor-pointer"
-                        >
-                          Enviar E-mail de Redefini√ß√£o de Senha
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                </div>
-              );
-            })()}
-
-          {isAddingUser && (
-            <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
-              >
-                <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                  <h3 className="text-xl font-bold text-slate-900">
-                    Novo Usu√°rio
-                  </h3>
-                  <button
-                    onClick={() => setIsAddingUser(false)}
-                    className="text-slate-400 hover:bg-slate-50 p-2 rounded-lg"
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
-                <form
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    const formData = new FormData(e.currentTarget);
-                    const email = formData.get("email") as string;
-                    const name = formData.get("name") as string;
-                    const role = formData.get("role") as UserRole;
-                    const linkadoA = formData.get("linkadoA")?.toString() || "";
-
-                    try {
-                      // Create user in Auth using secondary app to avoid signing out admin
-                      const userCredential =
-                        await createUserWithEmailAndPassword(
-                          secondaryAuth,
-                          email,
-                          "123456",
-                        );
-                      await updateProfile(userCredential.user, {
-                        displayName: name,
-                      });
-                      const newUid = userCredential.user.uid;
-
-                      const profileData: any = {
-                        uid: newUid,
-                        name,
-                        email,
-                        cpf: (formData.get("cpf") as string) || "",
-                        dataNascimento:
-                          (formData.get("dataNascimento") as string) || "",
-                        role,
-                        servidor:
-                          localStorage.getItem("servidor_selected") ||
-                          "principal",
-                        phone: formData.get("phone") as string,
-                        chavePix: formData.get("chavePix") as string,
-                        telegram: (formData.get("telegram") as string) || "",
-                        unidade: (formData.get("unidade") as string) || "",
-                        blocked: false,
-                        mustChangePassword: true,
-                        createdAt: serverTimestamp(),
-                        updatedAt: serverTimestamp(),
-                      };
-                      if (role === ROLES.PROMOTOR_RUA && linkadoA) {
-                        profileData.linkadoA = linkadoA;
-                      }
-
-                      // Create profile in Firestore
-                      await setDoc(
-                        doc(db, COLLECTIONS.USERS, newUid),
-                        profileData,
-                      );
-
-                      onToast(
-                        "Usu√°rio criado com sucesso! Senha padr√£o: 123456",
-                      );
-                      setIsAddingUser(false);
-                      // Sign out from secondary auth to clean up
-                      await signOut(secondaryAuth);
-                    } catch (err: any) {
-                      console.error("Auth error details (UsersView):", {
-                        code: err.code,
-                        message: err.message,
-                        stack: err.stack,
-                      });
-                      onToast(
-                        err.message ===
-                          "Firebase: Error (auth/email-already-in-use)."
-                          ? "Este email j√° est√° em uso."
-                          : `Erro ao criar usu√°rio: ${err.message}`,
-                        "error",
-                      );
-                    }
-                  }}
-                  className="p-6 space-y-4"
-                >
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1">
-                      Nome Completo
-                    </label>
-                    <input
-                      name="name"
-                      required
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1">
-                      Email (Google)
-                    </label>
-                    <input
-                      name="email"
-                      type="email"
-                      required
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1">
-                      CPF (Opcional)
-                    </label>
-                    <input
-                      name="cpf"
-                      onChange={(e) =>
-                        (e.target.value = formatCPF(e.target.value))
-                      }
-                      placeholder="000.000.000-00"
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1">
-                      Data de Nascimento (Opcional)
-                    </label>
-                    <input
-                      name="dataNascimento"
-                      type="date"
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1">
-                      Cargo
-                    </label>
-                    <select
-                      name="role"
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                    >
-                      {Object.values(ROLES)
-                        .filter((r) => {
-                          const isComercial =
-                            localStorage.getItem("servidor_selected") ===
-                            "comercial";
-                          if (isComercial) {
-                            return [
-                              "Admin Master",
-                              "Gerente Comercial (Comercial)",
-                              "FDV (Comercial)",
-                              "Promotor/rua",
-                              "Financeiro",
-                            ].includes(r);
-                          } else {
-                            return ![
-                              "Gerente Comercial (Comercial)",
-                              "FDV (Comercial)",
-                              "Promotor/rua",
-                            ].includes(r);
-                          }
-                        })
-                        .map((r) => (
-                          <option key={r} value={r}>
-                            {r}
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1">
-                      Linkado a (FDV - Apenas para Promotor/rua)
-                    </label>
-                    <select
-                      name="linkadoA"
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                    >
-                      <option value="">Nenhum</option>
-                      {users
-                        .filter(
-                          (u) =>
-                            u.role === ROLES.FDV_COMERCIAL ||
-                            u.role === ROLES.FDV,
-                        )
-                        .map((fdv) => (
-                          <option key={fdv.uid} value={fdv.uid}>
-                            {fdv.name} ({fdv.email})
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        Unidade (Para Gestor Unidade / FDV Comercial)
-                      </label>
-                      <select
-                        name="unidade"
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm bg-white"
-                      >
-                        <option value="">Selecione uma unidade</option>
-                        {uniqueUnidades.map((unidade) => (
-                          <option key={unidade} value={unidade}>
-                            {unidade}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        Telefone
-                      </label>
-                      <input
-                        name="phone"
-                        onChange={(e) =>
-                          (e.target.value = formatPhone(e.target.value))
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                        placeholder="(00) 00000-0000"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        Chave PIX
-                      </label>
-                      <input
-                        name="chavePix"
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">
-                        Telegram (@username ou Chat ID)
-                      </label>
-                      <input
-                        name="telegram"
-                        placeholder="@username ou Chat ID"
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      />
-                    </div>
-                  </div>
-                  <button
-                    type="submit"
-                    className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
-                  >
-                    Criar Usu√°rio
-                  </button>
-                </form>
-              </motion.div>
-            </div>
-          )}
-        </section>
-      )}
-
-      {activeTab === "metaSM" && (
-        <MetaSMView metaSM={metaSM} onToast={onToast} />
-      )}
-      {activeTab === "metaCursos" && (
-        <MetaCursosView metaCursos={metaCursos} onToast={onToast} />
-      )}
-      {activeTab === "metaDia" && (
-        <div className="space-y-8">
-          <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 max-w-4xl mx-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-slate-900">
-                {editingMetaDia
-                  ? "Editar Registro de Meta Dia"
-                  : "Adicionar Novo Registro de Meta Dia"}
-              </h3>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const dataToExport = metaDia.map((m) => ({
-                      Data: m.data,
-                      "A.A Presencial": m.aaPresencial,
-                      "Meta Presencial": m.ytdPresencial,
-                      "Realizado Presencial": m.realizadoPresencial,
-                      "A.A Semipresencial": m.aaSemipresencial,
-                      "Meta Semipresencial": m.ytdSemipresencial,
-                      "Realizado Semipresencial": m.realizadoSemipresencial,
-                      "A.A Digital": m.aaDigital,
-                      "Meta Digital": m.ytdDigital,
-                      "Realizado Digital": m.realizadoDigital,
-                      "A.A T√©cnico": m.aaTecnico || 0,
-                      "Meta T√©cnico": m.ytdTecnico || 0,
-                      "Realizado T√©cnico": m.realizadoTecnico || 0,
-                      "A.A P√≥s-Gradua√ß√£o": m.aaPosGraduacao || 0,
-                      "Meta P√≥s-Gradua√ß√£o": m.ytdPosGraduacao || 0,
-                      "Realizado P√≥s-Gradua√ß√£o": m.realizadoPosGraduacao || 0,
-                    }));
-                    exportToExcel(dataToExport, "Meta_Dia_Admin");
-                  }}
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors"
-                >
-                  <Download size={14} /> Exportar
-                </button>
-                <label className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors">
-                  <Upload size={14} /> Importar
-                  <input
-                    type="file"
-                    accept=".xlsx, .xls"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      importFromExcel(file, async (data) => {
-                        let imported = 0;
-                        for (const row of data) {
-                          try {
-                            if (!row["Data"]) continue;
-                            const docData = {
-                              data: row["Data"],
-                              aaPresencial: Number(row["A.A Presencial"]) || 0,
-                              ytdPresencial: Number(row["Meta Presencial"]) || 0,
-                              realizadoPresencial: Number(row["Realizado Presencial"]) || 0,
-                              aaSemipresencial: Number(row["A.A Semipresencial"]) || 0,
-                              ytdSemipresencial: Number(row["Meta Semipresencial"]) || 0,
-                              realizadoSemipresencial: Number(row["Realizado Semipresencial"]) || 0,
-                              aaDigital: Number(row["A.A Digital"]) || 0,
-                              ytdDigital: Number(row["Meta Digital"]) || 0,
-                              realizadoDigital: Number(row["Realizado Digital"]) || 0,
-                              aaTecnico: Number(row["A.A T√©cnico"]) || 0,
-                              ytdTecnico: Number(row["Meta T√©cnico"]) || 0,
-                              realizadoTecnico: Number(row["Realizado T√©cnico"]) || 0,
-                              aaPosGraduacao: Number(row["A.A P√≥s-Gradua√ß√£o"]) || 0,
-                              ytdPosGraduacao: Number(row["Meta P√≥s-Gradua√ß√£o"]) || 0,
-                              realizadoPosGraduacao: Number(row["Realizado P√≥s-Gradua√ß√£o"]) || 0,
-                              createdAt: serverTimestamp(),
-                            };
-                            await addDoc(collection(db, COLLECTIONS.META_DIA), docData);
-                            imported++;
-                          } catch (err) {
-                            console.error(err);
-                          }
-                        }
-                        onToast(imported + " registros importados!", "success");
-                      });
-                      e.target.value = ""; // reset
-                    }}
-                  />
-                </label>
-              </div>
-              {editingMetaDia && (
-                <button
-                  onClick={() => {
-                    setEditingMetaDia(null);
-                    setNewMetaDia({
-                      data: new Date().toISOString().split("T")[0],
-                      aaPresencial: 0,
-                      ytdPresencial: 0,
-                      realizadoPresencial: 0,
-                      aaSemipresencial: 0,
-                      ytdSemipresencial: 0,
-                      realizadoSemipresencial: 0,
-                      aaDigital: 0,
-                      ytdDigital: 0,
-                      realizadoDigital: 0,
-                      aaTecnico: 0,
-                      ytdTecnico: 0,
-                      realizadoTecnico: 0,
-                      aaPosGraduacao: 0,
-                      ytdPosGraduacao: 0,
-                      realizadoPosGraduacao: 0,
-                    });
-                  }}
-                  className="text-slate-400 hover:text-slate-600 text-sm font-bold"
-                >
-                  Cancelar Edi√ß√£o
-                </button>
-              )}
-            </div>
-
-            <form onSubmit={handleAddMetaDia} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="flex items-center space-x-2 text-xs font-bold text-slate-500 mb-2">
-                    <Calendar size={14} className="text-blue-600" />
-                    <span>Data *</span>
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={newMetaDia.data}
-                    onChange={(e) =>
-                      setNewMetaDia({ ...newMetaDia, data: e.target.value })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                  />
-                </div>
-                <div className="flex bg-slate-50 items-center justify-around rounded-xl p-3 border border-slate-100/80">
-                  <div className="text-center">
-                    <span className="block text-[10px] font-bold text-slate-400 uppercase">
-                      Total A.A
-                    </span>
-                    <span className="text-sm font-extrabold text-slate-700">
-                      {Number(newMetaDia.aaPresencial) +
-                        Number(newMetaDia.aaSemipresencial) +
-                        Number(newMetaDia.aaDigital) +
-                        Number(newMetaDia.aaTecnico || 0)}
-                    </span>
-                  </div>
-                  <div className="text-center border-x border-slate-200 px-6">
-                    <span className="block text-[10px] font-bold text-slate-400 uppercase">
-                      Total YTD
-                    </span>
-                    <span className="text-sm font-extrabold text-blue-600">
-                      {Number(newMetaDia.ytdPresencial) +
-                        Number(newMetaDia.ytdSemipresencial) +
-                        Number(newMetaDia.ytdDigital) +
-                        Number(newMetaDia.ytdTecnico || 0)}
-                    </span>
-                  </div>
-                  <div className="text-center">
-                    <span className="block text-[10px] font-bold text-slate-400 uppercase">
-                      Total Realizado
-                    </span>
-                    <span className="text-sm font-extrabold text-emerald-600">
-                      {Number(newMetaDia.realizadoPresencial) +
-                        Number(newMetaDia.realizadoSemipresencial) +
-                        Number(newMetaDia.realizadoDigital) +
-                        Number(newMetaDia.realizadoTecnico || 0)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {[
-                {
-                  key: "Presencial",
-                  label: "Modalidade Presencial",
-                  color: "border-blue-100 bg-blue-50/10",
-                  aa: "aaPresencial",
-                  ytd: "ytdPresencial",
-                  realizado: "realizadoPresencial",
-                },
-                {
-                  key: "Semipresencial",
-                  label: "Modalidade Semipresencial",
-                  color: "border-orange-100 bg-orange-50/10",
-                  aa: "aaSemipresencial",
-                  ytd: "ytdSemipresencial",
-                  realizado: "realizadoSemipresencial",
-                },
-                {
-                  key: "Digital",
-                  label: "Modalidade Digital",
-                  color: "border-indigo-100 bg-indigo-50/10",
-                  aa: "aaDigital",
-                  ytd: "ytdDigital",
-                  realizado: "realizadoDigital",
-                },
-                {
-                  key: "Tecnico",
-                  label: "Curso T√©cnico",
-                  color: "border-emerald-100 bg-emerald-50/10",
-                  aa: "aaTecnico",
-                  ytd: "ytdTecnico",
-                  realizado: "realizadoTecnico",
-                },
-                {
-                  key: "PosGraduacao",
-                  label: "P√≥s-Gradua√ß√£o",
-                  color: "border-purple-100 bg-purple-50/10",
-                  aa: "aaPosGraduacao",
-                  ytd: "ytdPosGraduacao",
-                  realizado: "realizadoPosGraduacao",
-                },
-              ].map((modal) => (
-                <div
-                  key={modal.key}
-                  className="p-4 rounded-2xl border border-slate-100 bg-slate-50/30"
-                >
-                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4">
-                    {modal.label}
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-                        A.A (Ano Anterior) *
-                      </label>
-                      <input
-                        type="number"
-                        required
-                        value={newMetaDia[modal.aa as keyof typeof newMetaDia]}
-                        onChange={(e) =>
-                          setNewMetaDia({
-                            ...newMetaDia,
-                            [modal.aa]: Number(e.target.value),
-                          })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-                        YTD (Meta Dia) *
-                      </label>
-                      <input
-                        type="number"
-                        required
-                        value={newMetaDia[modal.ytd as keyof typeof newMetaDia]}
-                        onChange={(e) =>
-                          setNewMetaDia({
-                            ...newMetaDia,
-                            [modal.ytd]: Number(e.target.value),
-                          })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-                        Realizado no Dia *
-                      </label>
-                      <input
-                        type="number"
-                        required
-                        value={
-                          newMetaDia[modal.realizado as keyof typeof newMetaDia]
-                        }
-                        onChange={(e) =>
-                          setNewMetaDia({
-                            ...newMetaDia,
-                            [modal.realizado]: Number(e.target.value),
-                          })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              <button
-                type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-blue-100 flex items-center justify-center space-x-2 text-sm"
-              >
-                <span>
-                  {editingMetaDia
-                    ? "Salvar Altera√ß√µes"
-                    : "Salvar Registro de Meta Dia"}
-                </span>
-              </button>
-            </form>
-          </section>
-
-          {/* Table display */}
-          <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-slate-900">
-                Hist√≥rico de Metas Di√°rias
-              </h3>
-              <p className="text-xs text-slate-400 font-medium">
-                Registrados: {metaDia.length}
-              </p>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-bold uppercase text-slate-400 tracking-wider">
-                    <th className="p-4">Data</th>
-                    <th className="p-4 text-center text-teal-600 bg-teal-50/20">
-                      B.U Presencial (A.A / YTD / Real)
-                    </th>
-                    <th className="p-4 text-center text-blue-600">
-                      Presencial (A.A / YTD / Real)
-                    </th>
-                    <th className="p-4 text-center text-orange-600">
-                      Semipresencial (A.A / YTD / Real)
-                    </th>
-                    <th className="p-4 text-center text-indigo-600">
-                      EAD (A.A / YTD / Real)
-                    </th>
-                    <th className="p-4 text-center text-emerald-600">
-                      Curso T√©cnico (A.A / YTD / Real)
-                    </th>
-                    <th className="p-4 text-center text-purple-600">
-                      P√≥s-Gradua√ß√£o (A.A / YTD / Real)
-                    </th>
-                    <th className="p-4 text-center bg-slate-50/50">
-                      Total (A.A / YTD / Real)
-                    </th>
-                    <th className="p-4 text-center">A√ß√µes</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-xs text-slate-600">
-                  {metaDia.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={7}
-                        className="p-8 text-center text-slate-400 italic"
-                      >
-                        Nenhum registro de Meta Di√°ria encontrado.
-                      </td>
-                    </tr>
-                  ) : (
-                    [...metaDia]
-                      .sort((a, b) => b.data.localeCompare(a.data))
-                      .map((item) => {
-                        const totAA =
-                          item.aaPresencial +
-                          item.aaSemipresencial +
-                          item.aaDigital +
-                          (item.aaTecnico || 0) +
-                          (item.aaPosGraduacao || 0);
-                        const totYTD =
-                          item.ytdPresencial +
-                          item.ytdSemipresencial +
-                          item.ytdDigital +
-                          (item.ytdTecnico || 0) +
-                          (item.ytdPosGraduacao || 0);
-                        const totReal =
-                          item.realizadoPresencial +
-                          item.realizadoSemipresencial +
-                          item.realizadoDigital +
-                          (item.realizadoTecnico || 0) +
-                          (item.realizadoPosGraduacao || 0);
-
-                        // Function to get color class comparison Realizado vs YTD
-                        const getColorClass = (real: number, ytd: number) => {
-                          if (real > ytd)
-                            return "text-emerald-600 font-extrabold";
-                          if (real < ytd) return "text-rose-600 font-extrabold";
-                          return "text-blue-600 font-extrabold";
-                        };
-
-                        return (
-                          <tr
-                            key={item.id}
-                            className="hover:bg-slate-50/30 transition-colors"
-                          >
-                            <td className="p-4 font-bold text-slate-800 whitespace-nowrap">
-                              {new Date(
-                                item.data + "T00:00:00",
-                              ).toLocaleDateString("pt-BR")}
-                            </td>
-                            <td className="p-4 text-center bg-teal-50/20">
-                              <span className="text-slate-400">
-                                {item.aaPresencial + item.aaSemipresencial}
-                              </span>
-                              <span className="mx-1 text-slate-300">/</span>
-                              <span className="text-slate-600 font-semibold">
-                                {item.ytdPresencial + item.ytdSemipresencial}
-                              </span>
-                              <span className="mx-1 text-slate-300">/</span>
-                              <span
-                                className={cn(
-                                  getColorClass(
-                                    item.realizadoPresencial +
-                                      item.realizadoSemipresencial,
-                                    item.ytdPresencial + item.ytdSemipresencial,
-                                  ),
-                                )}
-                              >
-                                {item.realizadoPresencial +
-                                  item.realizadoSemipresencial}
-                              </span>
-                            </td>
-                            <td className="p-4 text-center">
-                              <span className="text-slate-400">
-                                {item.aaPresencial}
-                              </span>
-                              <span className="mx-1 text-slate-300">/</span>
-                              <span className="text-slate-600 font-semibold">
-                                {item.ytdPresencial}
-                              </span>
-                              <span className="mx-1 text-slate-300">/</span>
-                              <span
-                                className={cn(
-                                  getColorClass(
-                                    item.realizadoPresencial,
-                                    item.ytdPresencial,
-                                  ),
-                                )}
-                              >
-                                {item.realizadoPresencial}
-                              </span>
-                            </td>
-                            <td className="p-4 text-center">
-                              <span className="text-slate-400">
-                                {item.aaSemipresencial}
-                              </span>
-                              <span className="mx-1 text-slate-300">/</span>
-                              <span className="text-slate-600 font-semibold">
-                                {item.ytdSemipresencial}
-                              </span>
-                              <span className="mx-1 text-slate-300">/</span>
-                              <span
-                                className={cn(
-                                  getColorClass(
-                                    item.realizadoSemipresencial,
-                                    item.ytdSemipresencial,
-                                  ),
-                                )}
-                              >
-                                {item.realizadoSemipresencial}
-                              </span>
-                            </td>
-                            <td className="p-4 text-center">
-                              <span className="text-slate-400">
-                                {item.aaDigital}
-                              </span>
-                              <span className="mx-1 text-slate-300">/</span>
-                              <span className="text-slate-600 font-semibold">
-                                {item.ytdDigital}
-                              </span>
-                              <span className="mx-1 text-slate-300">/</span>
-                              <span
-                                className={cn(
-                                  getColorClass(
-                                    item.realizadoDigital,
-                                    item.ytdDigital,
-                                  ),
-                                )}
-                              >
-                                {item.realizadoDigital}
-                              </span>
-                            </td>
-                            <td className="p-4 text-center">
-                              <span className="text-slate-400">
-                                {item.aaTecnico || 0}
-                              </span>
-                              <span className="mx-1 text-slate-300">/</span>
-                              <span className="text-slate-600 font-semibold">
-                                {item.ytdTecnico || 0}
-                              </span>
-                              <span className="mx-1 text-slate-300">/</span>
-                              <span
-                                className={cn(
-                                  getColorClass(
-                                    item.realizadoTecnico || 0,
-                                    item.ytdTecnico || 0,
-                                  ),
-                                )}
-                              >
-                                {item.realizadoTecnico || 0}
-                              </span>
-                            </td>
-                            <td className="p-4 text-center">
-                              <span className="text-slate-400">
-                                {item.aaPosGraduacao || 0}
-                              </span>
-                              <span className="mx-1 text-slate-300">/</span>
-                              <span className="text-slate-600 font-semibold">
-                                {item.ytdPosGraduacao || 0}
-                              </span>
-                              <span className="mx-1 text-slate-300">/</span>
-                              <span
-                                className={cn(
-                                  getColorClass(
-                                    item.realizadoPosGraduacao || 0,
-                                    item.ytdPosGraduacao || 0,
-                                  ),
-                                )}
-                              >
-                                {item.realizadoPosGraduacao || 0}
-                              </span>
-                            </td>
-                            <td className="p-4 text-center bg-slate-50/20 font-bold">
-                              <span className="text-slate-400">{totAA}</span>
-                              <span className="mx-1 text-slate-300">/</span>
-                              <span className="text-slate-600 font-semibold">
-                                {totYTD}
-                              </span>
-                              <span className="mx-1 text-slate-300">/</span>
-                              <span
-                                className={cn(getColorClass(totReal, totYTD))}
-                              >
-                                {totReal}
-                              </span>
-                            </td>
-                            <td className="p-4 text-center whitespace-nowrap">
-                              <div className="flex items-center justify-center space-x-2">
-                                <button
-                                  onClick={() => {
-                                    setEditingMetaDia(item);
-                                    setNewMetaDia({
-                                      data: item.data,
-                                      aaPresencial: item.aaPresencial,
-                                      ytdPresencial: item.ytdPresencial,
-                                      realizadoPresencial:
-                                        item.realizadoPresencial,
-                                      aaSemipresencial: item.aaSemipresencial,
-                                      ytdSemipresencial: item.ytdSemipresencial,
-                                      realizadoSemipresencial:
-                                        item.realizadoSemipresencial,
-                                      aaDigital: item.aaDigital,
-                                      ytdDigital: item.ytdDigital,
-                                      realizadoDigital: item.realizadoDigital,
-                                      aaTecnico: item.aaTecnico || 0,
-                                      ytdTecnico: item.ytdTecnico || 0,
-                                      realizadoTecnico:
-                                        item.realizadoTecnico || 0,
-                                      aaPosGraduacao: item.aaPosGraduacao || 0,
-                                      ytdPosGraduacao:
-                                        item.ytdPosGraduacao || 0,
-                                      realizadoPosGraduacao:
-                                        item.realizadoPosGraduacao || 0,
-                                    });
-                                    // Scroll to form smoothly
-                                    window.scrollTo({
-                                      top: 0,
-                                      behavior: "smooth",
-                                    });
-                                  }}
-                                  className="p-1 px-2.5 text-blue-600 hover:bg-blue-50 rounded-lg font-bold hover:scale-105 transition-all text-xs"
-                                >
-                                  Editar
-                                </button>
-                                <button
-                                  onClick={async () => {
-                                    if (
-                                      window.confirm(
-                                        "Deseja excluir permanentemente este registro de Meta Di√°ria?",
-                                      )
-                                    ) {
-                                      try {
-                                        await deleteDoc(
-                                          doc(
-                                            db,
-                                            COLLECTIONS.META_DIA,
-                                            item.id,
-                                          ),
-                                        );
-                                        onToast(
-                                          "Registro de Meta Di√°ria exclu√≠do.",
-                                        );
-                                      } catch (err: any) {
-                                        onToast(
-                                          "Erro ao excluir registro.",
-                                          "error",
-                                        );
-                                      }
-                                    }
-                                  }}
-                                  className="p-1 px-2.5 text-rose-600 hover:bg-rose-50 rounded-lg font-bold hover:scale-105 transition-all text-xs"
-                                >
-                                  Excluir
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </div>
-      )}
-
-      {activeTab === "qgLigacoes" && (
-        <div className="space-y-6">
-          <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-bold text-slate-900 flex items-center">
-                <span className="bg-emerald-100 text-emerald-600 p-2 rounded-xl mr-3">
-                  <Phone size={20} />
-                </span>
-                {editingQgLigacao
-                  ? "Editar Registro QG Liga√ß√µes"
-                  : "Adicionar Novo Registro QG Liga√ß√µes"}
-              </h3>
-              {editingQgLigacao && (
-                <button
-                  onClick={() => {
-                    setEditingQgLigacao(null);
-                    setNewQgLigacao({
-                      nome: "",
-                      diaSemana: [],
-                      horario: "",
-                    });
-                  }}
-                  className="text-sm font-bold text-slate-400 hover:text-slate-600 px-3 py-1 bg-slate-100 rounded-lg"
-                >
-                  Cancelar Edi√ß√£o
-                </button>
-              )}
-            </div>
-
-            <form onSubmit={handleAddQgLigacao} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                    Nome
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newQgLigacao.nome}
-                    onChange={(e) =>
-                      setNewQgLigacao({ ...newQgLigacao, nome: e.target.value })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
-                    placeholder="Nome da pessoa"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                    Dias da Semana
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      "Segunda-feira",
-                      "Ter√ßa-feira",
-                      "Quarta-feira",
-                      "Quinta-feira",
-                      "Sexta-feira",
-                      "S√°bado",
-                      "Domingo",
-                    ].map((dia) => (
-                      <label
-                        key={dia}
-                        className="flex items-center space-x-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={newQgLigacao.diaSemana.includes(dia)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setNewQgLigacao({
-                                ...newQgLigacao,
-                                diaSemana: [...newQgLigacao.diaSemana, dia],
-                              });
-                            } else {
-                              setNewQgLigacao({
-                                ...newQgLigacao,
-                                diaSemana: newQgLigacao.diaSemana.filter(
-                                  (d) => d !== dia,
-                                ),
-                              });
-                            }
-                          }}
-                          className="rounded text-emerald-600 focus:ring-emerald-500 border-slate-300"
-                        />
-                        <span className="text-xs font-semibold text-slate-700">
-                          {dia}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                    Hor√°rio
-                  </label>
-                  <input
-                    type="time"
-                    required
-                    value={newQgLigacao.horario}
-                    onChange={(e) =>
-                      setNewQgLigacao({
-                        ...newQgLigacao,
-                        horario: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
-                  />
-                </div>
-              </div>
-              <button
-                type="submit"
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-emerald-100 flex items-center justify-center space-x-2 text-sm"
-              >
-                <span>
-                  {editingQgLigacao ? "Salvar Altera√ß√µes" : "Adicionar ao QG"}
-                </span>
-              </button>
-            </form>
-          </section>
-
-          <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-slate-900">
-                Lista de Registros - QG Liga√ß√µes
-              </h3>
-              <p className="text-xs text-slate-400 font-medium">
-                Total: {qgLigacoes.length}
-              </p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-bold uppercase text-slate-400 tracking-wider">
-                    <th className="p-4">Nome</th>
-                    <th className="p-4">Dia da Semana</th>
-                    <th className="p-4">Hor√°rio</th>
-                    <th className="p-4 text-center">A√ß√µes</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-xs text-slate-600">
-                  {qgLigacoes.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="p-8 text-center text-slate-400 italic"
-                      >
-                        Nenhum registro cadastrado no QG Liga√ß√µes.
-                      </td>
-                    </tr>
-                  ) : (
-                    [...qgLigacoes].map((item) => (
-                      <tr
-                        key={item.id}
-                        className="hover:bg-slate-50/30 transition-colors"
-                      >
-                        <td className="p-4 font-bold text-slate-800">
-                          {item.nome}
-                        </td>
-                        <td className="p-4">
-                          {Array.isArray(item.diaSemana)
-                            ? item.diaSemana.join(", ")
-                            : item.diaSemana}
-                        </td>
-                        <td className="p-4 font-medium text-emerald-600">
-                          {item.horario}
-                        </td>
-                        <td className="p-4 text-center whitespace-nowrap">
-                          <button
-                            onClick={() => {
-                              setEditingQgLigacao(item);
-                              setNewQgLigacao({
-                                nome: item.nome,
-                                diaSemana: Array.isArray(item.diaSemana)
-                                  ? item.diaSemana
-                                  : item.diaSemana
-                                    ? [item.diaSemana]
-                                    : [],
-                                horario: item.horario,
-                              });
-                              window.scrollTo({ top: 0, behavior: "smooth" });
-                            }}
-                            className="p-1 px-2.5 text-blue-600 hover:bg-blue-50 rounded-lg font-bold hover:scale-105 transition-all text-xs mr-2"
-                          >
-                            Editar
-                          </button>
-                          <button
-                            onClick={() => handleDeleteQgLigacao(item.id)}
-                            className="p-1 px-2.5 text-rose-600 hover:bg-rose-50 rounded-lg font-bold hover:scale-105 transition-all text-xs"
-                          >
-                            Excluir
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </div>
-      )}
-
-      {activeTab === "folgas" &&
-        (() => {
-          const currentUserUid = auth.currentUser?.uid;
-          const userProfile = users.find((u) => u.uid === currentUserUid);
-
-          const filteredRequests = adminRequests.filter((req) => {
-            if (!userProfile) return false;
-            if (userProfile.role === "Admin Master") return true;
-            if (userProfile.role === "L√≠der/FDV") {
-              return (
-                req.solicitanteRole === "Sala de Matr√≠cula" ||
-                (req.solicitanteRole === "L√≠der/FDV" &&
-                  req.solicitanteId !== userProfile.uid)
-              );
-            }
-            if (
-              userProfile.role === "Gestor Comercial" ||
-              userProfile.role === "Gerente Comercial (Comercial)"
-            ) {
-              return (
-                req.solicitanteRole === "FDV" ||
-                req.solicitanteRole === "FDV (Comercial)"
-              );
-            }
-            return false;
-          });
-
-          const pendingCount = filteredRequests.filter(
-            (r) => r.status === "Pendente",
-          ).length;
-          const approvedCount = filteredRequests.filter(
-            (r) => r.status === "Aprovado",
-          ).length;
-          const rejectedCount = filteredRequests.filter(
-            (r) => r.status === "Recusado",
-          ).length;
-
-          return (
-            <div id="admin-folgas-section" className="space-y-6">
-              {/* Header Stats */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center space-x-4">
-                  <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
-                    <Clock size={24} />
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold text-slate-400 block uppercase tracking-wider">
-                      Pendentes
-                    </span>
-                    <span className="text-2xl font-black text-slate-800">
-                      {pendingCount}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center space-x-4">
-                  <div className="p-3 bg-green-50 text-green-600 rounded-2xl">
-                    <CheckCircle2 size={24} />
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold text-slate-400 block uppercase tracking-wider">
-                      Aprovados
-                    </span>
-                    <span className="text-2xl font-black text-slate-800">
-                      {approvedCount}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center space-x-4">
-                  <div className="p-3 bg-red-50 text-red-600 rounded-2xl">
-                    <XCircle size={24} />
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold text-slate-400 block uppercase tracking-wider">
-                      Recusados
-                    </span>
-                    <span className="text-2xl font-black text-slate-800">
-                      {rejectedCount}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-                <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900">
-                      Solicita√ß√µes de Folgas e F√©rias
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      L√≠der/FDV aprova para Sala de Matr√≠cula e outros
-                      L√≠deres/FDV | Gestores aprovam para FDV / FDV Comercial
-                    </p>
-                  </div>
-
-                  {/* Filter controls */}
-                  <div className="flex bg-slate-50 border border-slate-100 p-1 rounded-xl font-bold text-xs">
-                    {(
-                      ["Todos", "Pendente", "Aprovado", "Recusado"] as const
-                    ).map((f) => (
-                      <button
-                        key={f}
-                        onClick={() => setStatusFilter(f)}
-                        className={`px-3 py-1.5 rounded-lg transition-all ${
-                          statusFilter === f
-                            ? "bg-blue-600 text-white shadow-sm font-semibold"
-                            : "text-slate-500 hover:text-slate-800 font-semibold"
-                        }`}
-                      >
-                        {f}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {loadingAdminRequests ? (
-                  <div className="flex justify-center items-center py-12 text-slate-400">
-                    <RefreshCw
-                      size={28}
-                      className="animate-spin text-blue-600 mr-2"
-                    />
-                    <span className="font-semibold text-sm">
-                      Carregando solicita√ß√µes...
-                    </span>
-                  </div>
-                ) : filteredRequests.length === 0 ? (
-                  <div className="p-12 text-center text-slate-400 text-sm">
-                    Nenhuma solicita√ß√£o de folga ou f√©rias para exibir sob sua
-                    responsabilidade de aprova√ß√£o.
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-100">
-                          <th className="px-6 py-4">Funcion√°rio / Cargo</th>
-                          <th className="px-6 py-4">Tipo</th>
-                          <th className="px-6 py-4">Per√≠odo</th>
-                          <th className="px-6 py-4">Justificativa</th>
-                          <th className="px-6 py-4">Status</th>
-                          <th className="px-6 py-4">A√ß√µes</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
-                        {filteredRequests
-                          .filter(
-                            (r) =>
-                              statusFilter === "Todos" ||
-                              r.status === statusFilter,
-                          )
-                          .map((request) => {
-                            const isApproved = request.status === "Aprovado";
-                            const isRejected = request.status === "Recusado";
-                            const isPending = request.status === "Pendente";
-
-                            // Helper to format date with DD/MM/YYYY
-                            const formatBrDate = (d: string) => {
-                              if (!d) return "";
-                              const parts = d.split("-");
-                              return parts.length === 3
-                                ? `${parts[2]}/${parts[1]}/${parts[0]}`
-                                : d;
-                            };
-
-                            return (
-                              <tr
-                                key={request.id}
-                                className="hover:bg-slate-50/50 transition-colors"
-                              >
-                                <td className="px-6 py-4">
-                                  <div className="flex items-center space-x-3">
-                                    <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs mt-0.5">
-                                      {request.solicitanteNome?.charAt(0) ||
-                                        "U"}
-                                    </div>
-                                    <div>
-                                      <span className="font-bold text-slate-900 block">
-                                        {request.solicitanteNome}
-                                      </span>
-                                      <span className="text-[10px] text-slate-400 font-medium block">
-                                        {request.solicitanteRole}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </td>
-
-                                <td className="px-6 py-4">
-                                  <span
-                                    className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                                      request.tipo === "F√©rias"
-                                        ? "bg-purple-100 text-purple-700"
-                                        : "bg-blue-100 text-blue-700"
-                                    }`}
-                                  >
-                                    {request.tipo}
-                                  </span>
-                                </td>
-
-                                <td className="px-6 py-4 font-semibold text-slate-800">
-                                  <span className="text-blue-600 font-bold">
-                                    {formatBrDate(request.dataInicio)}
-                                  </span>
-                                  <span className="mx-1 text-slate-400">
-                                    at√©
-                                  </span>
-                                  <span className="text-blue-600 font-bold">
-                                    {formatBrDate(request.dataFim)}
-                                  </span>
-                                </td>
-
-                                <td className="px-6 py-4 max-w-xs truncate text-[11px] text-slate-500 italic">
-                                  {request.justificativa
-                                    ? `"${request.justificativa}"`
-                                    : "-"}
-                                </td>
-
-                                <td className="px-6 py-4">
-                                  <span
-                                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                                      isApproved
-                                        ? "bg-green-100 text-green-700"
-                                        : isRejected
-                                          ? "bg-red-100 text-red-700"
-                                          : "bg-amber-100 text-amber-700"
-                                    }`}
-                                  >
-                                    {isApproved && <Check size={10} />}
-                                    {isRejected && <X size={10} />}
-                                    {isPending && <Clock size={10} />}
-                                    {request.status}
-                                  </span>
-                                  {request.aprovadoPorNome && (
-                                    <span className="block text-[9px] text-slate-400 mt-0.5 font-medium">
-                                      Por {request.aprovadoPorNome}
-                                    </span>
-                                  )}
-                                </td>
-
-                                <td className="px-6 py-4">
-                                  {isPending ? (
-                                    <div className="flex items-center space-x-2">
-                                      <button
-                                        onClick={() =>
-                                          handleDecideRequest(
-                                            request,
-                                            "Aprovado",
-                                          )
-                                        }
-                                        className="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold text-[10px] flex items-center gap-1 transition-all"
-                                      >
-                                        <Check size={10} />
-                                        <span>Aprovar</span>
-                                      </button>
-                                      <button
-                                        onClick={() =>
-                                          handleDecideRequest(
-                                            request,
-                                            "Recusado",
-                                          )
-                                        }
-                                        className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-[10px] flex items-center gap-1 transition-all"
-                                      >
-                                        <X size={10} />
-                                        <span>Recusar</span>
-                                      </button>
-                                    </div>
-                                  ) : (
-                                    <span className="text-[10px] text-slate-400 font-medium">
-                                      Decidido
-                                    </span>
-                                  )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </section>
-            </div>
-          );
-        })()}
-
-      {activeTab === "bomDia" && (
-        <div className="space-y-8">
-          <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 max-w-4xl mx-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-slate-900">
-                {editingBomDia ? "Editar Card" : "Adicionar Novo Card"}
-              </h3>
-              {editingBomDia && (
-                <button
-                  onClick={() => {
-                    setEditingBomDia(null);
-                    setNewBomDia({
-                      titulo: "",
-                      metaFinal: { insc: 0, matFin: 0, matAcad: 0 },
-                      metaDia: { insc: 0, matFin: 0, matAcad: 0 },
-                      anoAnterior: { insc: 0, matFin: 0, matAcad: 0 },
-                      real: { insc: 0, matFin: 0, matAcad: 0 },
-                    });
-                  }}
-                  className="text-slate-400 hover:text-slate-600 text-sm font-bold"
-                >
-                  Cancelar Edi√ß√£o
-                </button>
-              )}
-            </div>
-            <form onSubmit={handleAddBomDia} className="space-y-6">
-              <div>
-                <label className="flex items-center space-x-2 text-xs font-bold text-slate-500 mb-2">
-                  <TrendingUp size={14} className="text-blue-600" />
-                  <span>T√≠tulo do Card *</span>
-                </label>
-                <input
-                  required
-                  placeholder="Ex: CAPTA√á√ÉO BU PRESENCIAL 25.1"
-                  value={newBomDia.titulo}
-                  onChange={(e) =>
-                    setNewBomDia({ ...newBomDia, titulo: e.target.value })
-                  }
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                />
-              </div>
-
-              {[
-                {
-                  key: "metaFinal",
-                  label: "Meta Final",
-                  color: "border-orange-200 bg-orange-50/30",
-                },
-                {
-                  key: "metaDia",
-                  label: "Meta Dia",
-                  color: "border-slate-200 bg-slate-50/30",
-                },
-                {
-                  key: "anoAnterior",
-                  label: "Ano Anterior",
-                  color: "border-slate-200 bg-slate-50/30",
-                },
-                {
-                  key: "real",
-                  label: "Real",
-                  color: "border-blue-200 bg-blue-50/30",
-                },
-              ].map((section) => (
-                <div
-                  key={section.key}
-                  className={cn("p-4 rounded-2xl border", section.color)}
-                >
-                  <h4 className="text-sm font-bold text-slate-700 mb-4">
-                    {section.label}
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-                        INSC *
-                      </label>
-                      <input
-                        type="number"
-                        required
-                        value={
-                          (
-                            newBomDia[
-                              section.key as keyof typeof newBomDia
-                            ] as any
-                          ).insc
-                        }
-                        onChange={(e) => {
-                          const val = Number(e.target.value);
-                          setNewBomDia({
-                            ...newBomDia,
-                            [section.key]: {
-                              ...(newBomDia[
-                                section.key as keyof typeof newBomDia
-                              ] as BomDiaMetrics),
-                              insc: val,
-                            },
-                          });
-                        }}
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-                        MAT FIN *
-                      </label>
-                      <input
-                        type="number"
-                        required
-                        value={
-                          (
-                            newBomDia[
-                              section.key as keyof typeof newBomDia
-                            ] as any
-                          ).matFin
-                        }
-                        onChange={(e) => {
-                          const val = Number(e.target.value);
-                          setNewBomDia({
-                            ...newBomDia,
-                            [section.key]: {
-                              ...(newBomDia[
-                                section.key as keyof typeof newBomDia
-                              ] as BomDiaMetrics),
-                              matFin: val,
-                            },
-                          });
-                        }}
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-                        MAT ACAD *
-                      </label>
-                      <input
-                        type="number"
-                        required
-                        value={
-                          (
-                            newBomDia[
-                              section.key as keyof typeof newBomDia
-                            ] as any
-                          ).matAcad
-                        }
-                        onChange={(e) => {
-                          const val = Number(e.target.value);
-                          setNewBomDia({
-                            ...newBomDia,
-                            [section.key]: {
-                              ...(newBomDia[
-                                section.key as keyof typeof newBomDia
-                              ] as BomDiaMetrics),
-                              matAcad: val,
-                            },
-                          });
-                        }}
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              <button
-                type="submit"
-                className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
-              >
-                Salvar Card Bom Dia
-              </button>
-            </form>
-          </section>
-
-          <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="p-6 border-b border-slate-100">
-              <h3 className="text-xl font-bold text-slate-900">
-                Cards Cadastrados
-              </h3>
-            </div>
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-              {bomDia.map((card) => (
-                <div
-                  key={card.id}
-                  className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center"
-                >
-                  <div>
-                    <p className="font-bold text-slate-900">{card.titulo}</p>
-                    <p className="text-[10px] text-slate-500">
-                      {formatLocalDateString(card.data)}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => {
-                        setEditingBomDia(card);
-                        setNewBomDia({
-                          titulo: card.titulo,
-                          metaFinal: card.metaFinal,
-                          metaDia: card.metaDia,
-                          anoAnterior: card.anoAnterior,
-                          real: card.real,
-                        });
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      }}
-                      className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-all"
-                    >
-                      <Edit2 size={18} />
-                    </button>
-                    <button
-                      onClick={async () => {
-                        try {
-                          await updateDoc(
-                            doc(db, COLLECTIONS.BOM_DIA, card.id),
-                            {
-                              oculto: !card.oculto,
-                            },
-                          );
-                          onToast(
-                            `Card ${card.oculto ? "exibido" : "ocultado"} da rotina.`,
-                          );
-                        } catch (err) {
-                          onToast("Erro ao alterar visibilidade.", "error");
-                        }
-                      }}
-                      className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-all"
-                      title={
-                        card.oculto ? "Mostrar na Rotina" : "Ocultar da Rotina"
-                      }
-                    >
-                      {card.oculto ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                    <button
-                      onClick={async () => {
-                        if (window.confirm("Deseja excluir este card?")) {
-                          try {
-                            await deleteDoc(
-                              doc(db, COLLECTIONS.BOM_DIA, card.id),
-                            );
-                            onToast("Card removido.");
-                          } catch (err: any) {
-                            onToast("Erro ao excluir card.", "error");
-                          }
-                        }
-                      }}
-                      className="text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-all"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-              {bomDia.length === 0 && (
-                <p className="col-span-full text-center text-slate-400 italic py-8">
-                  Nenhum card cadastrado.
-                </p>
-              )}
-            </div>
-          </section>
-        </div>
-      )}
-
-      {activeTab === "forecast" && (
-        <div className="space-y-8">
-          <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 max-w-4xl mx-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-slate-900">
-                {editingForecast ? "Editar Forecast" : "Novo Forecast"}
-              </h3>
-              {editingForecast && (
-                <button
-                  onClick={() => {
-                    setEditingForecast(null);
-                    setNewForecast({
-                      nome: "",
-                      dataInicio: new Date().toISOString().split("T")[0],
-                      dataFim: new Date().toISOString().split("T")[0],
-                      metaDiaYTD: 0,
-                      realizado: 0,
-                      metaFechamento: 0,
-                    });
-                  }}
-                  className="text-slate-400 hover:text-slate-600 text-sm font-bold"
-                >
-                  Cancelar Edi√ß√£o
-                </button>
-              )}
-            </div>
-            <form
-              onSubmit={handleAddForecast}
-              className="grid grid-cols-1 md:grid-cols-3 gap-4"
-            >
-              <div className="md:col-span-3">
-                <label className="block text-xs font-bold text-slate-500 mb-1">
-                  Nome do Forecast
-                </label>
-                <input
-                  required
-                  value={newForecast.nome}
-                  onChange={(e) =>
-                    setNewForecast({ ...newForecast, nome: e.target.value })
-                  }
-                  className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                  placeholder="Ex: Capta√ß√£o 2024.2"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1">
-                  Data In√≠cio
-                </label>
-                <input
-                  type="date"
-                  required
-                  value={newForecast.dataInicio}
-                  onChange={(e) =>
-                    setNewForecast({
-                      ...newForecast,
-                      dataInicio: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1">
-                  Data Final
-                </label>
-                <input
-                  type="date"
-                  required
-                  value={newForecast.dataFim}
-                  onChange={(e) =>
-                    setNewForecast({ ...newForecast, dataFim: e.target.value })
-                  }
-                  className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1">
-                  Meta Dia (YTD)
-                </label>
-                <input
-                  type="number"
-                  required
-                  value={newForecast.metaDiaYTD}
-                  onChange={(e) =>
-                    setNewForecast({
-                      ...newForecast,
-                      metaDiaYTD: Number(e.target.value),
-                    })
-                  }
-                  className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1">
-                  Realizado
-                </label>
-                <input
-                  type="number"
-                  required
-                  value={newForecast.realizado}
-                  onChange={(e) =>
-                    setNewForecast({
-                      ...newForecast,
-                      realizado: Number(e.target.value),
-                    })
-                  }
-                  className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1">
-                  Meta Fechamento
-                </label>
-                <input
-                  type="number"
-                  required
-                  value={newForecast.metaFechamento}
-                  onChange={(e) =>
-                    setNewForecast({
-                      ...newForecast,
-                      metaFechamento: Number(e.target.value),
-                    })
-                  }
-                  className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                />
-              </div>
-              <button
-                type="submit"
-                className="md:col-span-3 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all"
-              >
-                Criar Forecast
-              </button>
-            </form>
-          </section>
-
-          <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="p-6 border-b border-slate-100">
-              <h3 className="text-xl font-bold text-slate-900">
-                Forecasts Ativos
-              </h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider">
-                    <th className="px-4 py-4">Nome</th>
-                    <th className="px-4 py-4">Per√≠odo</th>
-                    <th className="px-4 py-4">YTD (Meta Dia)</th>
-                    <th className="px-4 py-4">Realizado</th>
-                    <th className="px-4 py-4">% YTD</th>
-                    <th className="px-4 py-4">Meta Fech.</th>
-                    <th className="px-4 py-4">% Fech.</th>
-                    <th className="px-4 py-4">Gap Fech.</th>
-                    <th className="px-4 py-4">Pacing</th>
-                    <th className="px-4 py-4">A√ß√£o</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {[...forecast]
-                    .sort((a, b) => a.nome.localeCompare(b.nome))
-                    .map((f) => {
-                      const percYTD =
-                        f.metaDiaYTD > 0
-                          ? ((f.realizado / f.metaDiaYTD) * 100).toFixed(1)
-                          : "0";
-                      const percFech =
-                        f.metaFechamento > 0
-                          ? ((f.realizado / f.metaFechamento) * 100).toFixed(1)
-                          : "0";
-                      const gapFech = f.realizado - f.metaFechamento;
-
-                      const diasRestantes = getWorkingDaysRemaining(f.dataFim);
-                      const pacing =
-                        f.realizado >= f.metaFechamento
-                          ? "0"
-                          : (
-                              Math.abs(gapFech) / Math.max(1, diasRestantes)
-                            ).toFixed(1);
-
-                      return (
-                        <tr
-                          key={f.id}
-                          className="hover:bg-slate-50 transition-colors"
-                        >
-                          <td className="px-4 py-4 font-bold text-slate-900">
-                            {f.nome}
-                          </td>
-                          <td className="px-4 py-4 text-slate-500">
-                            {f.dataInicio
-                              .split("T")[0]
-                              .split("-")
-                              .reverse()
-                              .join("/")}{" "}
-                            -{" "}
-                            {f.dataFim
-                              .split("T")[0]
-                              .split("-")
-                              .reverse()
-                              .join("/")}
-                          </td>
-                          <td className="px-4 py-4 font-bold text-blue-600">
-                            {f.metaDiaYTD}
-                          </td>
-                          <td className="px-4 py-4 font-bold text-emerald-600">
-                            {f.realizado}
-                          </td>
-                          <td className="px-4 py-4">
-                            <span
-                              className={`px-2 py-1 rounded-full font-bold ${Number(percYTD) >= 100 ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"}`}
-                            >
-                              {percYTD}%
-                            </span>
-                          </td>
-                          <td className="px-4 py-4 font-bold text-slate-700">
-                            {f.metaFechamento}
-                          </td>
-                          <td className="px-4 py-4 font-bold text-blue-600">
-                            {percFech}%
-                          </td>
-                          <td
-                            className={`px-4 py-4 font-bold ${gapFech >= 0 ? "text-emerald-600" : "text-rose-600"}`}
-                          >
-                            {gapFech}
-                          </td>
-                          <td className="px-4 py-4 font-bold text-slate-900">
-                            {pacing}/dia
-                          </td>
-                          <td className="px-4 py-4">
-                            <div className="flex items-center space-x-1">
-                              <button
-                                onClick={() => {
-                                  setEditingForecast(f);
-                                  setNewForecast({
-                                    nome: f.nome,
-                                    dataInicio: f.dataInicio,
-                                    dataFim: f.dataFim,
-                                    metaDiaYTD: f.metaDiaYTD,
-                                    realizado: f.realizado,
-                                    metaFechamento: f.metaFechamento,
-                                  });
-                                  window.scrollTo({
-                                    top: 0,
-                                    behavior: "smooth",
-                                  });
-                                }}
-                                className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-all"
-                              >
-                                <Edit2 size={16} />
-                              </button>
-                              <button
-                                onClick={async () => {
-                                  try {
-                                    await updateDoc(
-                                      doc(db, COLLECTIONS.FORECAST, f.id),
-                                      {
-                                        oculto: !f.oculto,
-                                      },
-                                    );
-                                    onToast(
-                                      `Forecast ${f.oculto ? "exibido" : "ocultado"} da rotina.`,
-                                    );
-                                  } catch (err) {
-                                    onToast(
-                                      "Erro ao alterar visibilidade.",
-                                      "error",
-                                    );
-                                  }
-                                }}
-                                className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-all"
-                                title={
-                                  f.oculto
-                                    ? "Mostrar na Rotina"
-                                    : "Ocultar da Rotina"
-                                }
-                              >
-                                {f.oculto ? (
-                                  <EyeOff size={16} />
-                                ) : (
-                                  <Eye size={16} />
-                                )}
-                              </button>
-                              <button
-                                onClick={async () => {
-                                  if (
-                                    window.confirm(
-                                      "Deseja excluir este forecast?",
-                                    )
-                                  ) {
-                                    try {
-                                      await deleteDoc(
-                                        doc(db, COLLECTIONS.FORECAST, f.id),
-                                      );
-                                      onToast("Forecast removido.");
-                                    } catch (err: any) {
-                                      onToast(
-                                        "Erro ao excluir forecast.",
-                                        "error",
-                                      );
-                                    }
-                                  }
-                                }}
-                                className="text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-all"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </div>
-      )}
-
-      {activeTab === "planner" && (
-        <div className="space-y-8">
-          <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 max-w-4xl mx-auto">
-            <h3 className="text-xl font-bold text-slate-900 mb-4">
-              Novo Planner
-            </h3>
-            <form
-              onSubmit={handleAddPlanner}
-              className="grid grid-cols-1 md:grid-cols-3 gap-4"
-            >
-              <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1">
-                  Nome do Atendente
-                </label>
-                <input
-                  required
-                  value={newPlanner.atendenteName}
-                  onChange={(e) =>
-                    setNewPlanner({
-                      ...newPlanner,
-                      atendenteName: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1">
-                  Base a ser Trabalhada
-                </label>
-                <input
-                  required
-                  value={newPlanner.baseName}
-                  onChange={(e) =>
-                    setNewPlanner({ ...newPlanner, baseName: e.target.value })
-                  }
-                  className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1">
-                  Dia da Semana
-                </label>
-                <select
-                  value={newPlanner.dayOfWeek}
-                  onChange={(e) =>
-                    setNewPlanner({ ...newPlanner, dayOfWeek: e.target.value })
-                  }
-                  className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                >
-                  {[
-                    "Segunda-feira",
-                    "Ter√ßa-feira",
-                    "Quarta-feira",
-                    "Quinta-feira",
-                    "Sexta-feira",
-                    "S√°bado",
-                  ].map((d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <button
-                type="submit"
-                className="md:col-span-3 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all"
-              >
-                Adicionar ao Planner
-              </button>
-            </form>
-          </section>
-
-          <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="p-6 border-b border-slate-100">
-              <h3 className="text-xl font-bold text-slate-900">
-                Planner Configurado
-              </h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider">
-                    <th className="px-4 py-4">Dia</th>
-                    <th className="px-4 py-4">Atendente</th>
-                    <th className="px-4 py-4">Base</th>
-                    <th className="px-4 py-4">A√ß√£o</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {[...planner]
-                    .sort((a, b) => {
-                      const days = [
-                        "Segunda-feira",
-                        "Ter√ßa-feira",
-                        "Quarta-feira",
-                        "Quinta-feira",
-                        "Sexta-feira",
-                        "S√°bado",
-                        "Domingo",
-                      ];
-                      return (
-                        days.indexOf(a.dayOfWeek) - days.indexOf(b.dayOfWeek)
-                      );
-                    })
-                    .map((p) => (
-                      <tr
-                        key={p.id}
-                        className="hover:bg-slate-50 transition-colors"
-                      >
-                        <td className="px-4 py-4 font-bold text-slate-900">
-                          {p.dayOfWeek}
-                        </td>
-                        <td className="px-4 py-4 text-slate-700">
-                          {p.atendenteName}
-                        </td>
-                        <td className="px-4 py-4 text-slate-500">
-                          {p.baseName}
-                        </td>
-                        <td className="px-4 py-4">
-                          <button
-                            onClick={async () => {
-                              if (window.confirm("Deseja excluir este item?")) {
-                                await deleteDoc(
-                                  doc(db, COLLECTIONS.PLANNER, p.id),
-                                );
-                                onToast("Item removido.");
-                              }
-                            }}
-                            className="text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-all"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </div>
-      )}
-
-      {activeTab === "periodo" && (
-        <div className="space-y-8">
-          <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 max-w-4xl mx-auto">
-            <h3 className="text-xl font-bold text-slate-900 mb-4">
-              Novo Per√≠odo de Capta√ß√£o
-            </h3>
-            <form
-              onSubmit={handleAddPeriodo}
-              className="grid grid-cols-1 md:grid-cols-2 gap-4"
-            >
-              <div className="md:col-span-2">
-                <label className="block text-xs font-bold text-slate-500 mb-1">
-                  Nome do Per√≠odo
-                </label>
-                <input
-                  required
-                  value={newPeriodo.nome}
-                  onChange={(e) =>
-                    setNewPeriodo({ ...newPeriodo, nome: e.target.value })
-                  }
-                  className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
-                  placeholder="Ex: 2024.2"
-                />
-              </div>
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
-                <h4 className="text-sm font-bold text-slate-700">Inscri√ß√£o</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-                      In√≠cio
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      value={newPeriodo.inicioInscricao}
-                      onChange={(e) =>
-                        setNewPeriodo({
-                          ...newPeriodo,
-                          inicioInscricao: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-                      Fim
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      value={newPeriodo.fimInscricao}
-                      onChange={(e) =>
-                        setNewPeriodo({
-                          ...newPeriodo,
-                          fimInscricao: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
-                <h4 className="text-sm font-bold text-slate-700">Mat Fin</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-                      In√≠cio
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      value={newPeriodo.inicioMatFin}
-                      onChange={(e) =>
-                        setNewPeriodo({
-                          ...newPeriodo,
-                          inicioMatFin: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-                      Fim
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      value={newPeriodo.fimMatFin}
-                      onChange={(e) =>
-                        setNewPeriodo({
-                          ...newPeriodo,
-                          fimMatFin: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
-                <h4 className="text-sm font-bold text-slate-700">Mat Acad</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-                      In√≠cio
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      value={newPeriodo.inicioMatAcad}
-                      onChange={(e) =>
-                        setNewPeriodo({
-                          ...newPeriodo,
-                          inicioMatAcad: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-                      Fim
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      value={newPeriodo.fimMatAcad}
-                      onChange={(e) =>
-                        setNewPeriodo({
-                          ...newPeriodo,
-                          fimMatAcad: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs"
-                    />
-                  </div>
-                </div>
-              </div>
-              <button
-                type="submit"
-                className="md:col-span-2 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all"
-              >
-                Salvar Per√≠odo
-              </button>
-            </form>
-          </section>
-
-          <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="p-6 border-b border-slate-100">
-              <h3 className="text-xl font-bold text-slate-900">
-                Per√≠odos Cadastrados
-              </h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider">
-                    <th className="px-4 py-4">Nome</th>
-                    <th className="px-4 py-4">Inscri√ß√£o (Dias)</th>
-                    <th className="px-4 py-4">Mat Fin (Dias)</th>
-                    <th className="px-4 py-4">Mat Acad (Dias)</th>
-                    <th className="px-4 py-4">A√ß√£o</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {periodos.map((p) => (
-                    <tr
-                      key={p.id}
-                      className="hover:bg-slate-50 transition-colors"
-                    >
-                      <td className="px-4 py-4 font-bold text-slate-900">
-                        {p.nome}
-                      </td>
-                      <td className="px-4 py-4">
-                        <p className="text-slate-700">
-                          {formatLocalDateString(p.inicioInscricao)} -{" "}
-                          {formatLocalDateString(p.fimInscricao)}
-                        </p>
-                        <p className="text-blue-600 font-bold">
-                          {getWorkingDaysBetween(
-                            p.inicioInscricao,
-                            p.fimInscricao,
-                          )}{" "}
-                          dias √∫teis
-                        </p>
-                      </td>
-                      <td className="px-4 py-4">
-                        <p className="text-slate-700">
-                          {formatLocalDateString(p.inicioMatFin)} -{" "}
-                          {formatLocalDateString(p.fimMatFin)}
-                        </p>
-                        <p className="text-blue-600 font-bold">
-                          {getWorkingDaysBetween(p.inicioMatFin, p.fimMatFin)}{" "}
-                          dias √∫teis
-                        </p>
-                      </td>
-                      <td className="px-4 py-4">
-                        <p className="text-slate-700">
-                          {formatLocalDateString(p.inicioMatAcad)} -{" "}
-                          {formatLocalDateString(p.fimMatAcad)}
-                        </p>
-                        <p className="text-blue-600 font-bold">
-                          {getWorkingDaysBetween(p.inicioMatAcad, p.fimMatAcad)}{" "}
-                          dias √∫teis
-                        </p>
-                      </td>
-                      <td className="px-4 py-4">
-                        <button
-                          onClick={async () => {
-                            if (
-                              window.confirm("Deseja excluir este per√≠odo?")
-                            ) {
-                              await deleteDoc(
-                                doc(db, COLLECTIONS.PERIODO_CAPTACAO, p.id),
-                              );
-                              onToast("Per√≠odo removido.");
-                            }
-                          }}
-                          className="text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-all"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </div>
-      )}
-
-      {activeTab === "whatsapp" && (
-        <div className="space-y-6">
-          <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="p-6 border-b border-slate-100">
-              <h3 className="text-xl font-bold text-slate-900">
-                Integra√ß√£o Bot ARGO'S
-              </h3>
-              <p className="text-slate-500 text-sm">
-                Configure a conex√£o com a intelig√™ncia artificial
-              </p>
-            </div>
-            <div className="p-6">
-              <div className="flex flex-col gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">
-                    URL do App Railway (API do Bot)
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="https://seu-app-no-railway.app"
-                      defaultValue={botConfig.url}
-                      onBlur={async (e) => {
-                        let newUrl = e.target.value.trim();
-                        if (
-                          newUrl &&
-                          !newUrl.startsWith("http://") &&
-                          !newUrl.startsWith("https://")
-                        ) {
-                          newUrl = `https://${newUrl}`;
-                          e.target.value = newUrl;
-                        }
-                        if (newUrl === botConfig.url) return;
-                        try {
-                          await setDoc(
-                            doc(db, COLLECTIONS.BOT_CONFIG, "main"),
-                            {
-                              url: newUrl,
-                              active: botConfig.active || false,
-                              updatedAt: serverTimestamp(),
-                            },
-                            { merge: true },
-                          );
-                          onToast("URL do Bot atualizada!");
-                        } catch (err: any) {
-                          onToast(
-                            `Erro ao salvar URL: ${err.message}`,
-                            "error",
-                          );
-                        }
-                      }}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                    />
-                    <button
-                      onClick={async () => {
-                        if (!botConfig.url) {
-                          onToast("Insira uma URL primeiro.", "error");
-                          return;
-                        }
-                        try {
-                          const data = await callBotApi("/api/status");
-                          onToast(
-                            `Servidor online! Status: ${data.name || "OK"}`,
-                            "success",
-                          );
-                        } catch (e: any) {
-                          onToast(
-                            `Falha de rede (CORS/Offline): O Railway pode estar reiniciando o bot ou o bot est√° quebrado. Erro: ${e.message}`,
-                            "error",
-                          );
-                        }
-                      }}
-                      className="bg-blue-100 text-blue-700 px-4 py-3 rounded-xl hover:bg-blue-200 transition-colors whitespace-nowrap text-sm font-bold"
-                    >
-                      Testar Conex√£o
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    Insira a URL base do servidor onde seu bot est√° rodando (ex:
-                    https://meubot.up.railway.app).
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100">
-                  <label className="block text-sm font-bold text-slate-700 mb-1">
-                    Chave de API do OpenRouter (OPENROUTER_API_KEY)
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="sk-or-v1-..."
-                    defaultValue={botConfig.openRouterApiKey || ""}
-                    onBlur={async (e) => {
-                      const newKey = e.target.value.trim();
-                      if (newKey === (botConfig.openRouterApiKey || "")) return;
-                      try {
-                        await setDoc(
-                          doc(db, COLLECTIONS.BOT_CONFIG, "main"),
-                          {
-                            openRouterApiKey: newKey,
-                            updatedAt: serverTimestamp(),
-                          },
-                          { merge: true },
-                        );
-                        onToast(
-                          "Chave da API do OpenRouter atualizada com sucesso!",
-                        );
-                      } catch (err: any) {
-                        onToast(
-                          `Erro ao salvar chave da API do OpenRouter: ${err.message}`,
-                          "error",
-                        );
-                      }
-                    }}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    Esta chave √© a nova prefer√™ncia para o processamento de IA
-                    (relat√≥rios e insumos) atrav√©s do OpenRouter.
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100">
-                  <label className="block text-sm font-bold text-slate-700 mb-1">
-                    Modelo de IA (OpenRouter)
-                  </label>
-                  <select
-                    value={botConfig.aiModel || ""}
-                    onChange={async (e) => {
-                      const newModel = e.target.value;
-                      try {
-                        await setDoc(
-                          doc(db, COLLECTIONS.BOT_CONFIG, "main"),
-                          {
-                            aiModel: newModel,
-                            updatedAt: serverTimestamp(),
-                          },
-                          { merge: true },
-                        );
-                        onToast("Modelo de IA atualizado!");
-                      } catch (err: any) {
-                        onToast(
-                          `Erro ao salvar modelo de IA: ${err.message}`,
-                          "error",
-                        );
-                      }
-                    }}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white"
-                  >
-                    <option value="">Selecione um modelo (Padr√£o: Gemini 2.0 Flash)</option>
-                    {OPENROUTER_MODELS.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.name}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    Escolha qual modelo ser√° usado para as an√°lises inteligentes.
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100">
-                  <label className="block text-sm font-bold text-slate-700 mb-1">
-                    URL do Bot do Telegram (Railway)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="https://seu-bot.up.railway.app/api/enviar-aviso"
-                    defaultValue={botConfig.telegramBotUrl || ""}
-                    onBlur={async (e) => {
-                      const newUrl = e.target.value.trim();
-                      if (newUrl === (botConfig.telegramBotUrl || "")) return;
-                      try {
-                        await setDoc(
-                          doc(db, COLLECTIONS.BOT_CONFIG, "main"),
-                          {
-                            telegramBotUrl: newUrl,
-                            updatedAt: serverTimestamp(),
-                          },
-                          { merge: true },
-                        );
-                        onToast("URL do Bot do Telegram atualizada!");
-                      } catch (err: any) {
-                        onToast(
-                          `Erro ao salvar URL do Telegram: ${err.message}`,
-                          "error",
-                        );
-                      }
-                    }}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    Insira a URL completa do endpoint de envio de mensagens do
-                    seu bot Telegram (ex:
-                    https://meu-bot.up.railway.app/api/enviar-aviso).
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100">
-                  <label className="block text-sm font-bold text-slate-700 mb-1">
-                    Senha API do Bot do Telegram (x-api-key)
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="minha_senha_super_secreta_123"
-                    defaultValue={botConfig.telegramApiKey || ""}
-                    onBlur={async (e) => {
-                      const newKey = e.target.value.trim();
-                      if (newKey === (botConfig.telegramApiKey || "")) return;
-                      try {
-                        await setDoc(
-                          doc(db, COLLECTIONS.BOT_CONFIG, "main"),
-                          {
-                            telegramApiKey: newKey,
-                            updatedAt: serverTimestamp(),
-                          },
-                          { merge: true },
-                        );
-                        onToast("Chave API do Bot do Telegram atualizada!");
-                      } catch (err: any) {
-                        onToast(
-                          `Erro ao salvar Chave API do Telegram: ${err.message}`,
-                          "error",
-                        );
-                      }
-                    }}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    A mesma senha configurada na vari√°vel de ambiente do seu bot
-                    Telegram no Railway.
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold text-slate-800">
-                      Gest√£o de Sess√µes WhatsApp (Multi-Device)
-                    </h3>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={async () => {
-                          if (!botConfig.url) return;
-                          if (
-                            window.confirm(
-                              "Tem certeza que deseja resetar TODAS as sess√µes criptografadas? (Esta a√ß√£o apagar√° a pasta corrompida e solicitar√° nova conex√£o em todos os n√∫meros)",
-                            )
-                          ) {
-                            try {
-                              await callBotApi("/api/reset", {
-                                method: "POST",
-                              });
-                              onToast(
-                                "A Rota M√°gica de Reset foi ativada. Todas as sess√µes foram apagadas e o bot ser√° reiniciado.",
-                                "success",
-                              );
-                              setBotStatuses({});
-                            } catch (err: any) {
-                              onToast(
-                                `Erro ao resetar: ${err.message}`,
-                                "error",
-                              );
-                            }
-                          }
-                        }}
-                        className="bg-red-600 text-white text-xs px-3 py-2 rounded-lg font-bold hover:bg-red-700 transition"
-                      >
-                        Resetar Sess√µes (Pasta Corrompida)
-                      </button>
-                      <button
-                        onClick={() => setShowInjectModal(true)}
-                        className="bg-blue-600 text-white text-xs px-3 py-2 rounded-lg font-bold hover:bg-blue-700 transition"
-                      >
-                        Injetar Sess√£o (JSON)
-                      </button>
-                      <button
-                        onClick={async () => {
-                          const num = prompt(
-                            "Digite o n√∫mero no formato 5511999999999:",
-                          );
-                          if (num) {
-                            const botNumber = num.replace(/\D/g, "");
-                            if (!botNumber) return;
-                            if (!botConfig || !botConfig.url) {
-                              onToast(
-                                "Configura a URL do bot primeiro.",
-                                "error",
-                              );
-                              return;
-                            }
-                            try {
-                              await callBotApi("/api/connect", {
-                                method: "POST",
-                                body: { botNumber },
-                              });
-                              onToast(
-                                "Solicita√ß√£o enviada! Aguarde alguns segundos o QR Code.",
-                              );
-                              // Force a status check after 3 seconds
-                              setTimeout(async () => {
-                                try {
-                                  const data = await callBotApi("/api/status");
-                                  if (data && data.bots)
-                                    setBotStatuses(data.bots);
-                                } catch (e) {}
-                              }, 3000);
-                            } catch (err: any) {
-                              onToast(
-                                `Servidor offline ou reiniciando... ${err.message}`,
-                                "error",
-                              );
-                            }
-                          }
-                        }}
-                        className="bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-bold hover:bg-green-700 transition"
-                      >
-                        + Novo N√∫mero
-                      </button>
-                    </div>
-                  </div>
-
-                  {Object.keys(botStatuses || {}).length === 0 ? (
-                    <p className="text-sm text-slate-500 italic">
-                      Nenhum n√∫mero conectado ou conectando. Adicione um
-                      clicando no bot√£o acima.
-                    </p>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {Object.entries(botStatuses || {}).map(
-                        ([botNumber, info]) => {
-                          const userForBot = users.find(
-                            (u) =>
-                              u.botNumber &&
-                              String(u.botNumber).replace(/\D/g, "") ===
-                                String(botNumber).replace(/\D/g, ""),
-                          );
-                          const nameForBot = userForBot
-                            ? userForBot.name
-                            : botConfig.botNames?.[botNumber] || "";
-
-                          return (
-                            <div
-                              key={botNumber}
-                              className="border border-slate-200 rounded-xl p-4 flex flex-col gap-2"
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex flex-col">
-                                  <div className="font-bold text-slate-700 text-lg">
-                                    {botNumber}
-                                  </div>
-                                  <div className="flex items-center mt-1">
-                                    <span className="text-[10px] text-slate-500 mr-1 uppercase font-bold tracking-wider">
-                                      Resp:
-                                    </span>
-                                    {userForBot ? (
-                                      <span className="text-xs font-bold text-blue-600 truncate max-w-[150px]">
-                                        {userForBot.name} (Auto)
-                                      </span>
-                                    ) : (
-                                      <input
-                                        type="text"
-                                        className="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-xs w-32 focus:ring-1 focus:ring-blue-500 focus:outline-none text-slate-600"
-                                        placeholder="Nome"
-                                        defaultValue={nameForBot}
-                                        onBlur={async (e) => {
-                                          const newName = e.target.value;
-                                          try {
-                                            await updateDoc(
-                                              doc(
-                                                db,
-                                                COLLECTIONS.BOT_CONFIG,
-                                                "main",
-                                              ),
-                                              {
-                                                [`botNames.${botNumber}`]:
-                                                  newName,
-                                              },
-                                            );
-                                          } catch (err) {}
-                                        }}
-                                      />
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <span
-                                    className={`px-2 py-1 rounded-full text-xs font-bold ${info?.status === "online" ? "bg-green-100 text-green-700" : info?.status === "pairing" ? "bg-orange-100 text-orange-700" : "bg-red-100 text-red-700"}`}
-                                  >
-                                    {info?.status?.toUpperCase() ||
-                                      "DESCONHECIDO"}
-                                  </span>
-                                  <button
-                                    onClick={async () => {
-                                      if (
-                                        window.confirm(
-                                          `Tem certeza que deseja apagar a sess√£o do bot ${botNumber}?`,
-                                        )
-                                      ) {
-                                        try {
-                                          await callBotApi("/api/reset", {
-                                            method: "POST",
-                                            body: { botNumber },
-                                          });
-                                          onToast(
-                                            `Sess√£o ${botNumber} apagada.`,
-                                          );
-                                          setTimeout(async () => {
-                                            try {
-                                              const data =
-                                                await callBotApi("/api/status");
-                                              setBotStatuses(data.bots || {});
-                                            } catch (e) {}
-                                          }, 1000);
-                                        } catch (e: any) {
-                                          onToast(
-                                            `Erro ao apagar sess√£o: ${e.message}`,
-                                            "error",
-                                          );
-                                        }
-                                      }
-                                    }}
-                                    className="text-red-500 hover:text-red-700 px-2 py-1 bg-red-50 rounded-lg transition"
-                                    title="Apagar sess√£o do Railway"
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                                </div>
-                              </div>
-
-                              {info?.status === "pairing" && (
-                                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 mt-2 text-center flex flex-col gap-2 items-center">
-                                  <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center animate-pulse">
-                                    <RefreshCw size={24} />
-                                  </div>
-                                  <p className="text-xs font-bold text-slate-700">
-                                    Aguardando inje√ß√£o de sess√£o via extens√£o.
-                                  </p>
-                                  <p className="text-[10px] text-slate-500 max-w-[200px]">
-                                    O QR Code nativo est√° desabilitado. Use a
-                                    extens√£o PESK Linker para conectar.
-                                  </p>
-                                </div>
-                              )}
-
-                              {info?.status === "online" && (
-                                <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
-                                  <span className="text-xs font-bold text-slate-600">
-                                    Auto-Reply (IA)
-                                  </span>
-                                  <div className="flex items-center space-x-2">
-                                    <button
-                                      onClick={async () => {
-                                        const currentActive =
-                                          (info as any)?.isAutoReplyActive ??
-                                          (info as any)?.active ??
-                                          false;
-                                        const newActive = !currentActive;
-
-                                        // Optimistic update
-                                        setBotStatuses((prev) => ({
-                                          ...prev,
-                                          [botNumber]: {
-                                            ...prev[botNumber],
-                                            active: newActive,
-                                            isAutoReplyActive: newActive,
-                                          },
-                                        }));
-
-                                        try {
-                                          await callBotApi("/api/toggle", {
-                                            method: "POST",
-                                            body: {
-                                              botNumber,
-                                              active: newActive,
-                                              isAutoReplyActive: newActive,
-                                            },
-                                          });
-                                          onToast(
-                                            `IA para ${botNumber} alterada para ${newActive ? "ON" : "OFF"}`,
-                                          );
-                                        } catch (e: any) {
-                                          onToast(
-                                            `Erro ao alterar IA para ${botNumber}: ${e.message}`,
-                                            "error",
-                                          );
-                                          // Revert back
-                                          setBotStatuses((prev) => ({
-                                            ...prev,
-                                            [botNumber]: {
-                                              ...prev[botNumber],
-                                              active: !newActive,
-                                              isAutoReplyActive: !newActive,
-                                            },
-                                          }));
-                                        }
-                                      }}
-                                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${((info as any)?.isAutoReplyActive ?? (info as any)?.active ?? false) ? "bg-blue-600" : "bg-slate-200"}`}
-                                    >
-                                      <span
-                                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${((info as any)?.isAutoReplyActive ?? (info as any)?.active ?? false) ? "translate-x-5" : "translate-x-1"}`}
-                                      />
-                                    </button>
-                                    <span className="text-[10px] text-slate-500">
-                                      {((info as any)?.isAutoReplyActive ??
-                                      (info as any)?.active ??
-                                      false)
-                                        ? "ON"
-                                        : "OFF"}
-                                    </span>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        },
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="p-6 border-b border-slate-100 bg-slate-50">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900">
-                    Mensagens Padr√£o do WhatsApp
-                  </h3>
-                  <p className="text-slate-500 text-sm">
-                    Gerencie m√∫ltiplos modelos de mensagens para cada categoria
-                  </p>
-                </div>
-                <div className="flex overflow-x-auto pb-2 md:pb-0 gap-2 scrollbar-hide">
-                  {[
-                    { id: "historico", label: "Hist√≥rico", icon: <History size={16} /> },
-                    { id: "bases", label: "Bases", icon: <Database size={16} /> },
-                    { id: "gap", label: "GAP Acad√™mico", icon: <GraduationCap size={16} /> },
-                    { id: "fiesProuni", label: "Fies/Prouni", icon: <FileText size={16} /> },
-                    { id: "bases_renovacao", label: "Base L√≠quida", icon: <RefreshCw size={16} /> },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => setActiveWhatsappTab(tab.id as any)}
-                      className={cn(
-                        "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shadow-sm",
-                        activeWhatsappTab === tab.id
-                          ? "bg-blue-600 text-white shadow-blue-100"
-                          : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-                      )}
-                    >
-                      {tab.icon}
-                      <span>{tab.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="p-6">
-              {[
-                {
-                  id: "historico",
-                  label: "Hist√≥rico",
-                  multi: true,
-                  icon: <History size={18} />,
-                },
-                {
-                  id: "bases",
-                  label: "Bases",
-                  multi: true,
-                  icon: <Database size={18} />,
-                },
-                {
-                  id: "gap",
-                  label: "GAP Acad√™mico",
-                  multi: false,
-                  icon: <GraduationCap size={18} />,
-                  subLabels: [
-                    "Padr√£o",
-                    "Matr√≠cula Acad√™mica OK",
-                    "Indica√ß√£o de Amigo",
-                  ],
-                },
-                {
-                  id: "fiesProuni",
-                  label: "Fies/Prouni",
-                  multi: false,
-                  icon: <FileText size={18} />,
-                  subLabels: ["Padr√£o", "Matr√≠cula Acad√™mica OK"],
-                },
-                {
-                  id: "bases_renovacao",
-                  label: "Base L√≠quida",
-                  multi: true,
-                  icon: <RefreshCw size={18} />,
-                },
-              ]
-                .filter((tipo) => tipo.id === activeWhatsappTab)
-                .map((tipo) => {
-                  const messages = tipo.multi
-                    ? whatsappMessages.filter((m) => m.tipo === tipo.id)
-                    : (tipo.subLabels || []).map((label, idx) => {
-                        const subtypeId = `${tipo.id}_${idx}`;
-                        const msg = whatsappMessages.find(
-                          (m) => m.tipo === subtypeId,
-                        );
-                        return {
-                          id: msg?.id || subtypeId,
-                          tipo: subtypeId,
-                          texto: msg?.texto || "",
-                          nome: label,
-                          isVirtual: !msg,
-                        };
-                      });
-
-                  const selectedKey = activeWhatsappTemplates[tipo.id];
-                  const selectedMsg = messages.find((m) =>
-                    tipo.multi ? m.id === selectedKey : m.tipo === selectedKey,
-                  );
-
-                  return (
-                    <div key={tipo.id} className="space-y-6">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between bg-blue-50/50 p-5 rounded-2xl border border-blue-100 gap-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shadow-sm">
-                            {tipo.icon}
-                          </div>
-                          <div>
-                            <h4 className="text-base font-bold text-slate-800 uppercase tracking-wider">
-                              {tipo.label}
-                            </h4>
-                            <p className="text-xs text-slate-500">
-                              {messages.length} modelo(s) dispon√≠vel(is)
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 flex-1 md:max-w-md">
-                          <select
-                            value={selectedKey || ""}
-                            onChange={(e) =>
-                              setActiveWhatsappTemplates((prev) => ({
-                                ...prev,
-                                [tipo.id]: e.target.value,
-                              }))
-                            }
-                            className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none shadow-sm transition-all"
-                          >
-                            <option value="">Selecione um modelo...</option>
-                            {messages.map((m, idx) => (
-                              <option
-                                key={m.id}
-                                value={tipo.multi ? m.id : m.tipo}
-                              >
-                                {m.nome || `Modelo ${idx + 1}`}
-                              </option>
-                            ))}
-                          </select>
-
-                          {tipo.multi && (
-                            <button
-                              onClick={async () => {
-                                try {
-                                  const docRef = await addDoc(
-                                    collection(
-                                      db,
-                                      COLLECTIONS.WHATSAPP_MESSAGES,
-                                    ),
-                                    {
-                                      tipo: tipo.id,
-                                      texto: "",
-                                      nome: `Novo Modelo ${messages.length + 1}`,
-                                      createdAt: serverTimestamp(),
-                                    },
-                                  );
-                                  setActiveWhatsappTemplates((prev) => ({
-                                    ...prev,
-                                    [tipo.id]: docRef.id,
-                                  }));
-                                  onToast("Novo modelo adicionado!");
-                                } catch (err: any) {
-                                  onToast("Erro ao adicionar modelo.", "error");
-                                }
-                              }}
-                              className="bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-xl shadow-sm transition-all flex-shrink-0"
-                              title="Adicionar Novo Modelo"
-                            >
-                              <Plus size={20} />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="bg-slate-50/30 rounded-2xl border border-slate-100 p-6">
-                        {selectedMsg ? (
-                          <div className="space-y-6">
-                            <div className="flex items-center gap-4">
-                              <div className="flex-1">
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">
-                                  Nome do Modelo
-                                </label>
-                                <input
-                                  type="text"
-                                  value={selectedMsg.nome || ""}
-                                  readOnly={!tipo.multi}
-                                  onChange={async (e) => {
-                                    if (!tipo.multi) return;
-                                    const newName = e.target.value;
-                                    try {
-                                      await updateDoc(
-                                        doc(
-                                          db,
-                                          COLLECTIONS.WHATSAPP_MESSAGES,
-                                          selectedMsg.id,
-                                        ),
-                                        { nome: newName },
-                                      );
-                                    } catch (err) {}
-                                  }}
-                                  className={cn(
-                                    "w-full px-4 py-2 rounded-xl border border-slate-200 text-sm font-bold shadow-sm",
-                                    !tipo.multi
-                                      ? "bg-slate-100 text-slate-500 cursor-not-allowed"
-                                      : "bg-white text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none",
-                                  )}
-                                  placeholder="D√™ um nome a este modelo..."
-                                />
-                              </div>
-                              {tipo.multi && (
-                                <button
-                                  onClick={async () => {
-                                    if (
-                                      window.confirm("Excluir este modelo?")
-                                    ) {
-                                      await deleteDoc(
-                                        doc(
-                                          db,
-                                          COLLECTIONS.WHATSAPP_MESSAGES,
-                                          selectedMsg.id,
-                                        ),
-                                      );
-                                      setActiveWhatsappTemplates((prev) => {
-                                        const next = { ...prev };
-                                        delete next[tipo.id];
-                                        return next;
-                                      });
-                                      onToast("Modelo removido.");
-                                    }
-                                  }}
-                                  className="mt-5 p-2.5 text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
-                                  title="Excluir Modelo"
-                                >
-                                  <Trash2 size={20} />
-                                </button>
-                              )}
-                            </div>
-
-                            <WhatsAppMessageEditor
-                              key={selectedMsg.id}
-                              msgId={selectedMsg.id}
-                              initialText={selectedMsg.texto}
-                              label={`Editando: ${selectedMsg.nome || "Modelo"}`}
-                              onUpdate={async (novoTexto) => {
-                                if (novoTexto === selectedMsg.texto) return;
-                                try {
-                                  if ((selectedMsg as any).isVirtual) {
-                                    const docRef = await addDoc(
-                                      collection(
-                                        db,
-                                        COLLECTIONS.WHATSAPP_MESSAGES,
-                                      ),
-                                      {
-                                        tipo: (selectedMsg as any).tipo,
-                                        texto: novoTexto,
-                                        nome: selectedMsg.nome,
-                                        createdAt: serverTimestamp(),
-                                      },
-                                    );
-                                  } else {
-                                    await updateDoc(
-                                      doc(
-                                        db,
-                                        COLLECTIONS.WHATSAPP_MESSAGES,
-                                        selectedMsg.id,
-                                      ),
-                                      {
-                                        texto: novoTexto,
-                                        updatedAt: serverTimestamp(),
-                                      },
-                                    );
-                                  }
-                                  onToast("Modelo atualizado!");
-                                } catch (err: any) {
-                                  onToast("Erro ao salvar.", "error");
-                                }
-                              }}
-                            />
-                          </div>
-                        ) : (
-                          <div className="flex flex-col items-center justify-center py-20 text-slate-400 space-y-4">
-                            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
-                              <MessageSquare size={32} />
-                            </div>
-                            <p className="text-sm font-medium text-center">
-                              Selecione um modelo no menu acima para come√ßar a
-                              editar e ver a pr√©via.
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-          </section>
-        </div>
-      )}
-
-      {activeTab === "treinamento" && (
-        <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden max-w-4xl mx-auto">
-          <div className="p-6 border-b border-slate-100">
-            <h3 className="text-xl font-bold text-slate-900">
-              Treinamento do Bot
-            </h3>
-            <p className="text-slate-500 text-sm">
-              Insira o texto sobre a sua empresa para refinar as respostas da
-              IA.
-            </p>
-          </div>
-          <div className="p-6 space-y-6">
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">
-                Contexto da Empresa
-              </label>
-              <textarea
-                placeholder="Insira aqui informa√ß√µes sobre pre√ßos, cursos, pol√≠tica da empresa..."
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm min-h-[300px]"
-                defaultValue={botConfig.trainingContext || ""}
-                onBlur={async (e) => {
-                  const newContext = e.target.value.trim();
-                  if (newContext === botConfig.trainingContext) return;
-                  try {
-                    await setDoc(
-                      doc(db, COLLECTIONS.BOT_CONFIG, "main"),
-                      {
-                        trainingContext: newContext,
-                        updatedAt: serverTimestamp(),
-                      },
-                      { merge: true },
-                    );
-                    onToast("Treinamento do Bot atualizado!");
-                  } catch (err: any) {
-                    onToast(
-                      `Erro ao salvar treinamento: ${err.message}`,
-                      "error",
-                    );
-                  }
-                }}
-              />
-              <p className="text-xs text-slate-400 mt-2">
-                Dica: Quanto mais claro e objetivo for o texto, melhores ser√£o
-                as respostas da IA.
-              </p>
-            </div>
-
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center">
-              <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4">
-                {isProcessingPdf ? (
-                  <span className="animate-spin text-xl font-bold">...</span>
-                ) : (
-                  <span className="font-bold text-xl">PDF</span>
-                )}
-              </div>
-              <h4 className="font-bold text-slate-800 mb-2">
-                Treinamento via PDF
-              </h4>
-              <p className="text-xs text-slate-500 max-w-sm mb-4">
-                Fa√ßa o upload de um arquivo PDF para extrair o texto
-                automaticamente e anex√°-lo ao contexto da empresa.
-              </p>
-              <label className="cursor-pointer bg-blue-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-blue-700 transition-colors">
-                {isProcessingPdf ? "Processando..." : "Selecionar PDF"}
-                <input
-                  type="file"
-                  accept=".pdf"
-                  className="hidden"
-                  onChange={handlePdfUpload}
-                  disabled={isProcessingPdf}
-                />
-              </label>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {activeTab === "logo" && (
-        <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden max-w-4xl mx-auto">
-          <div className="p-6 border-b border-slate-100">
-            <h3 className="text-xl font-bold text-slate-900">
-              Customizar Logotipo de Login
-            </h3>
-            <p className="text-slate-500 text-sm">
-              Fa√ßa o upload da imagem ou marca que aparecer√° na tela de login de
-              todos os usu√°rios.
-            </p>
-          </div>
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Upload do Novo Logotipo
-                </label>
-
-                <div
-                  className={`border-2 border-dashed rounded-3xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all ${
-                    isUploadingLogo
-                      ? "border-blue-300 bg-blue-50/50"
-                      : "border-slate-200 hover:border-blue-400 hover:bg-slate-50"
-                  }`}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  onDrop={async (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const file = e.dataTransfer.files?.[0];
-                    if (file) {
-                      await handleLogoUploadProcess(file);
-                    }
-                  }}
-                  onClick={() => {
-                    document.getElementById("logo-file-input")?.click();
-                  }}
-                >
-                  <input
-                    type="file"
-                    id="logo-file-input"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        await handleLogoUploadProcess(file);
-                      }
-                    }}
-                  />
-                  <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-4">
-                    {isUploadingLogo ? (
-                      <span className="animate-spin text-sm">...</span>
-                    ) : (
-                      <Upload size={24} />
-                    )}
-                  </div>
-                  <h4 className="font-bold text-slate-800 text-sm mb-1">
-                    {isUploadingLogo
-                      ? "Processando imagem..."
-                      : "Arraste e solte o arquivo aqui"}
-                  </h4>
-                  <p className="text-xs text-slate-400">
-                    ou clique para navegar no seu computador
-                  </p>
-                  <p className="text-[10px] text-slate-400 mt-2 font-mono">
-                    Arquivos recomendados: PNG, JPG ou SVG (Max. 5MB)
-                  </p>
-                </div>
-              </div>
-
-              {logoPreview && (
-                <div className="pt-2">
-                  <button
-                    onClick={async () => {
-                      if (
-                        window.confirm(
-                          "Deseja realmente remover o logotipo personalizado e voltar ao √≠cone padr√£o?",
-                        )
-                      ) {
-                        setIsUploadingLogo(true);
-                        try {
-                          await setDoc(
-                            doc(db, COLLECTIONS.BOT_CONFIG, "main"),
-                            {
-                              loginLogo: "",
-                            },
-                            { merge: true },
-                          );
-                          setLogoPreview(null);
-                          onToast("Logotipo removido com sucesso!");
-                        } catch (err: any) {
-                          onToast(
-                            `Erro ao remover logotipo: ${err.message}`,
-                            "error",
-                          );
-                        } finally {
-                          setIsUploadingLogo(false);
-                        }
-                      }
-                    }}
-                    className="w-full text-center text-sm font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-50 border border-rose-100 py-3 rounded-2xl transition-all cursor-pointer"
-                  >
-                    Remover Marca Customizada
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="bg-[#011430] rounded-3xl p-8 flex flex-col justify-between border border-slate-800 min-h-[300px] text-white relative overflow-hidden select-none">
-              <div className="absolute top-2 right-2 px-3 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] font-mono tracking-widest rounded-full">
-                SIMULA√á√ÉO DE LOGIN
-              </div>
-              <div className="absolute inset-0 bg-[radial-gradient(#1e3a8a_1px,transparent_1px)] [background-size:16px_16px] opacity-10 pointer-events-none" />
-
-              <div className="my-auto space-y-4">
-                <div>
-                  {logoPreview ? (
-                    <div className="mb-4 flex">
-                      <img
-                        src={logoPreview}
-                        alt="Preview Logo"
-                        className="max-h-16 max-w-full rounded-xl object-contain drop-shadow-md border border-slate-700/50 p-1 bg-[#011a3c]"
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-12 h-12 bg-gradient-to-tr from-sky-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg mb-4">
-                      <TrendingUp size={24} />
-                    </div>
-                  )}
-                  <h3 className="text-xl font-extrabold text-white tracking-tight">
-                    Gest√£o Oeste pro
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Bem-vindo de volta! Insira suas credenciais:
-                  </p>
-                </div>
-
-                <div className="space-y-2 pointer-events-none opacity-20">
-                  <div className="w-full h-8 bg-slate-800 rounded-lg border border-slate-700" />
-                  <div className="w-full h-8 bg-slate-800 rounded-lg border border-slate-700" />
-                </div>
-
-                <div className="w-full h-9 bg-slate-700 rounded-lg pointer-events-none opacity-25 mt-4" />
-              </div>
-
-              <div className="text-center text-[8px] text-slate-500 font-mono tracking-wider mt-4">
-                OESTE HUNTER ¬© 2026
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {activeTab === "links" && (
-        <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 max-w-2xl mx-auto">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold text-slate-900">Links √öteis</h3>
-            {editingLink && (
-              <button
-                onClick={() => {
-                  setEditingLink(null);
-                  setNewLink({ nome: "", url: "", local: "" });
-                }}
-                className="text-slate-400 hover:text-slate-600 text-sm font-bold transition-colors"
-              >
-                Cancelar Edi√ß√£o
-              </button>
-            )}
-          </div>
-          <form onSubmit={handleAddLink} className="flex flex-col sm:flex-row gap-2 mb-6">
-            <input
-              placeholder="Nome"
-              required
-              value={newLink.nome}
-              onChange={(e) => setNewLink({ ...newLink, nome: e.target.value })}
-              className="flex-1 px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-            />
-            <input
-              placeholder="URL"
-              required
-              value={newLink.url}
-              onChange={(e) => setNewLink({ ...newLink, url: e.target.value })}
-              className="flex-1 px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-            />
-            <input
-              placeholder="Local (Opcional)"
-              value={newLink.local || ""}
-              onChange={(e) => setNewLink({ ...newLink, local: e.target.value })}
-              className="flex-1 px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-            />
-            <button
-              type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-all font-bold flex items-center justify-center gap-2"
-            >
-              {editingLink ? <Save size={20} /> : <Plus size={20} />}
-            </button>
-          </form>
-          <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
-            {links.map((l) => (
-              <div
-                key={l.id}
-                className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 group"
-              >
-                <div className="flex flex-col">
-                  <span className="text-sm font-bold text-slate-700">
-                    {l.nome}
-                  </span>
-                  {l.local && (
-                    <span className="text-xs text-slate-400 font-medium uppercase mt-1">
-                      {l.local}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => {
-                      setEditingLink(l);
-                      setNewLink({ nome: l.nome, url: l.url, local: l.local || "" });
-                    }}
-                    className="text-slate-400 hover:text-blue-500 hover:bg-blue-50 p-2 rounded-lg transition-all"
-                  >
-                    <Edit size={18} />
-                  </button>
-                  <button
-                    onClick={async () => {
-                      await deleteDoc(doc(db, COLLECTIONS.LINKS, l.id));
-                      onToast("Link removido.");
-                    }}
-                    className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-all"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {activeTab === "funcionarios" && (
-        <AdminFuncionariosView
-          onToast={onToast}
-          uniqueUnidades={uniqueUnidades}
-        />
-      )}
-
-      {activeTab === "crescimentoAnual" && (
-        <CrescimentoAnualAdmin
-          schemes={analysisSchemes}
-          onSave={onSaveAnalysisScheme}
-          onDelete={onDeleteAnalysisScheme}
-        />
-      )}
-
-      {activeTab === "formularios" && (
-        <FormulariosView user={profile!} onToast={onToast} />
-      )}
-
-      {activeTab === "backup" && (
-        <section className="bg-rose-50 p-6 rounded-3xl border border-rose-100 max-w-2xl mx-auto">
-          <h3 className="text-xl font-bold text-rose-900 mb-4">
-            Backup e Seguran√ßa
-          </h3>
-          <p className="text-sm text-rose-600 mb-6">
-            Gere um arquivo JSON contendo todos os dados do sistema para
-            seguran√ßa ou migra√ß√£o.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <button
-              onClick={handleBackup}
-              className="flex-1 bg-white text-rose-600 border border-rose-200 font-bold py-3 rounded-2xl hover:bg-rose-100 transition-all flex items-center justify-center space-x-2"
-            >
-              <Download size={20} />
-              <span>Gerar Backup</span>
-            </button>
-            <button className="flex-1 bg-rose-600 text-white font-bold py-3 rounded-2xl hover:bg-rose-700 transition-all flex items-center justify-center space-x-2">
-              <Upload size={20} />
-              <span>Restaurar Dados</span>
-            </button>
-          </div>
-        </section>
-      )}
-    </div>
-  );
-}
-
-// --- Controle de Pagamentos View ---
-interface ControlePagamentosViewProps {
-  calendarioAcoes: CalendarioAcao[];
-  users: UserProfile[];
-  onToast: (m: string, t?: "success" | "error") => void;
-  profile?: UserProfile | null;
-}
-
-export function ControlePagamentosView({
-  calendarioAcoes = [],
-  users = [],
-  onToast,
-  profile,
-}: ControlePagamentosViewProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [empresaFilter, setEmpresaFilter] = useState<"all" | "GR15" | "RP7">(
-    "all",
-  );
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | "Pendente" | "Recusada" | "Realizada"
-  >("all");
-  const [regionFilter, setRegionFilter] = useState("all");
-
-  const getDiarias = (startStr: string, endStr: string) => {
-    if (!startStr || !endStr) return 1;
-    const s = new Date(startStr + "T00:00:00");
-    const e = new Date(endStr + "T00:00:00");
-    const diffTime = Math.abs(e.getTime() - s.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-    return isNaN(diffDays) ? 1 : diffDays;
-  };
-
-  const paymentRows = useMemo(() => {
-    const result: any[] = [];
-    calendarioAcoes.forEach((action) => {
-      if (!action.precisaPromotor || !action.promotoresSelecionados) return;
-      action.promotoresSelecionados.forEach((pUid) => {
-        // Apenas promotores que compareceram (presenca === true)
-        if (!action.presencaPromotores?.[pUid]) return;
-
-        const promoterObj = users.find((u) => u.uid === pUid);
-        const creatorObj = users.find((u) => u.uid === action.creatorId);
-
-        const details = action.dadosPresencaPromotores?.[pUid] || {
-          empresa: "GR15",
-          horas: 4,
-        };
-        let statusPgt =
-          (action.statusPagamentoPromotores?.[pUid] as string) || "Pendente";
-        if (statusPgt === "Agendada") statusPgt = "Pendente";
-
-        const diarias = getDiarias(action.dataInicio, action.dataFim);
-        const valorPromotor = action.valorPromotor || 0;
-        const horasAtuadas = details.horas || 4;
-        let valorDia = action.valorPromotor || 0;
-        if (horasAtuadas === 4) valorDia = 60;
-        else if (horasAtuadas === 6) valorDia = 90;
-        else if (horasAtuadas === 8) valorDia = 100;
-        else if (horasAtuadas === 10) valorDia = 150;
-
-        const custoTotal = diarias * valorDia;
-
-        const collaborators = (action.colaboradoresIds || []).map(id => users.find(u => u.uid === id)).filter(Boolean);
-        const fdvResponsavel = collaborators.find(u => u?.role === "FDV (Comercial)" || u?.role === "Gestor Comercial");
-        
-        result.push({
-          actionId: action.id,
-          promoterUid: pUid,
-          empresa: details.empresa || "GR15",
-          promoterName: promoterObj?.name || "N√£o cadastrado",
-          promoterPhone: promoterObj?.phone || "Sem celular",
-          promoterPix: promoterObj?.chavePix || "Sem Pix cadastrado",
-          promoterUnit: promoterObj?.servidor
-            ? promoterObj.servidor.charAt(0).toUpperCase() +
-              promoterObj.servidor.slice(1)
-            : "Principal",
-          diarias,
-          horas: horasAtuadas,
-          solicitante:
-            fdvResponsavel?.name ||
-            (action.colaboradoresNomes?.length
-              ? action.colaboradoresNomes.join(", ")
-              : action.colaboradorNome) ||
-            (action.colaboradorId
-              ? users.find((u) => u.uid === action.colaboradorId)?.name
-              : null) ||
-            (creatorObj?.role === "FDV (Comercial)" || creatorObj?.role === "Gestor Comercial" ? creatorObj?.name : null) ||
-            "Sem FDV Respons√°vel",
-          tipoAcao: action.nome,
-          dataInicio: action.dataInicio,
-          dataFim: action.dataFim,
-          valorDia,
-          custoTotal,
-          valorOrcado: action.valorOrcado || 0,
-          statusPagamento: statusPgt,
-        });
-      });
-    });
-    return result;
-  }, [calendarioAcoes, users]);
-
-  // Regi√µes dispon√≠veis de atua√ß√£o para o filtro
-  const uniqueRegions = useMemo(() => {
-    const set = new Set<string>();
-    paymentRows.forEach((r) => {
-      if (r.promoterUnit) set.add(r.promoterUnit);
-    });
-    return Array.from(set);
-  }, [paymentRows]);
-
-  // Dados filtrados
-  const filteredRows = useMemo(() => {
-    return paymentRows.filter((row) => {
-      const matchSearch =
-        row.promoterName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        row.tipoAcao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        row.solicitante.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchEmpresa =
-        empresaFilter === "all" ? true : row.empresa === empresaFilter;
-      const matchStatus =
-        statusFilter === "all" ? true : row.statusPagamento === statusFilter;
-      const matchRegion =
-        regionFilter === "all" ? true : row.promoterUnit === regionFilter;
-
-      return matchSearch && matchEmpresa && matchStatus && matchRegion;
-    });
-  }, [paymentRows, searchTerm, empresaFilter, statusFilter, regionFilter]);
-
-  const isReadOnly =
-    profile?.role === ROLES.FDV_COMERCIAL ||
-    profile?.role === ROLES.SALA_MATRICULA;
-
-  // M√©tricas acumuladas
-  const metrics = useMemo(() => {
-    let totalCusto = 0;
-    let totalRealizado = 0;
-    let totalAgendado = 0;
-    let totalRecusado = 0;
-
-    filteredRows.forEach((row) => {
-      totalCusto += row.custoTotal;
-      if (row.statusPagamento === "Realizada") {
-        totalRealizado += row.custoTotal;
-      } else if (row.statusPagamento === "Pendente") {
-        totalAgendado += row.custoTotal;
-      } else {
-        totalRecusado += row.custoTotal;
-      }
-    });
-
-    return {
-      totalCusto,
-      totalRealizado,
-      totalAgendado,
-      totalRecusado,
-      count: filteredRows.length,
-    };
-  }, [filteredRows]);
-
-  const updatePaymentStatus = async (
-    actionId: string,
-    promoterUid: string,
-    status: "Pendente" | "Recusada" | "Realizada",
-  ) => {
-    try {
-      const action = calendarioAcoes.find((a) => a.id === actionId);
-      if (!action) return;
-      const currentStatus = action.statusPagamentoPromotores || {};
-      const updatedStatus = {
-        ...currentStatus,
-        [promoterUid]: status,
-      };
-      await updateDoc(doc(db, COLLECTIONS.CALENDARIO_ACOES, actionId), {
-        statusPagamentoPromotores: updatedStatus,
-      });
-      onToast("Status de pagamento atualizado com sucesso!", "success");
-    } catch (err) {
-      onToast("Erro ao atualizar status de pagamento.", "error");
-    }
-  };
-
-  const handleExportExcel = () => {
-    try {
-      const dataToExport = filteredRows.map((r) => ({
-        Empresa: r.empresa,
-        "Nome do Promotor": r.promoterName,
-        Telefone: r.promoterPhone,
-        PIX: r.promoterPix,
-        Di√°rias: r.diarias,
-        "Horas de Atua√ß√£o": `${r.horas} Horas`,
-        Solicitante: r.solicitante,
-        "Regi√£o de Atua√ß√£o": r.promoterUnit,
-        "Tipo de A√ß√£o": r.tipoAcao,
-        "Data de In√≠cio": r.dataInicio,
-        "Data Final": r.dataFim,
-        "Valor Dia (R$)": r.valorDia,
-        "Custo Total (R$)": r.custoTotal,
-        "Valor Or√ßado (R$)": r.valorOrcado,
-        "Status de Pagamento": r.statusPagamento,
-      }));
-
-      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(
-        workbook,
-        worksheet,
-        "Controle de Pagamentos",
-      );
-      XLSX.writeFile(
-        workbook,
-        `Controle_Pagamentos_${new Date().toISOString().split("T")[0]}.xlsx`,
-      );
-      onToast("Relat√≥rio exportado para Excel com sucesso!", "success");
-    } catch (err) {
-      onToast("Erro ao exportar relat√≥rio.", "error");
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-            Controle de Pagamentos
-          </h2>
-          <p className="text-sm text-slate-500">
-            Gest√£o e liquida√ß√£o financeira di√°ria de promotores de a√ß√µes
-          </p>
-        </div>
-        <button
-          onClick={handleExportExcel}
-          className="flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-3 rounded-2xl shadow-sm transition-all text-sm self-start md:self-auto"
-        >
-          <Download size={18} />
-          <span>Exportar Relat√≥rio Excel</span>
-        </button>
-      </div>
-
-      {/* M√©tricas / KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 bg-white border border-slate-100 rounded-3xl shadow-sm space-y-2">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
-            Registros Eleg√≠veis
-          </span>
-          <div className="flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-slate-800">
-              {metrics.count}
-            </span>
-            <span className="text-xs text-slate-400">atua√ß√µes</span>
-          </div>
-        </div>
-
-        <div className="p-5 bg-white border border-slate-100 rounded-3xl shadow-sm space-y-2">
-          <span className="text-xs font-bold text-amber-500 uppercase tracking-wider block">
-            Total Pendente / Agendado
-          </span>
-          <div className="flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-amber-600">
-              R$ {metrics.totalAgendado.toFixed(2).replace(".", ",")}
-            </span>
-          </div>
-        </div>
-
-        <div className="p-5 bg-white border border-slate-100 rounded-3xl shadow-sm space-y-2">
-          <span className="text-xs font-bold text-emerald-500 uppercase tracking-wider block">
-            Total Realizado / Pago
-          </span>
-          <div className="flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-emerald-600">
-              R$ {metrics.totalRealizado.toFixed(2).replace(".", ",")}
-            </span>
-          </div>
-        </div>
-
-        <div className="p-5 bg-white border border-slate-100 rounded-3xl shadow-sm space-y-2">
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block font-bold">
-            Custo de Di√°rias Total
-          </span>
-          <div className="flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-slate-700">
-              R$ {metrics.totalCusto.toFixed(2).replace(".", ",")}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Filtros */}
-      <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm space-y-4">
-        <span className="text-sm font-bold text-slate-700 block uppercase tracking-wider">
-          Filtros de Pesquisa
-        </span>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="relative">
-            <Search
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-              size={18}
-            />
-            <input
-              type="text"
-              placeholder="Buscar por Promotor, A√ß√£o ou Solicitante..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-slate-300 transition-all border-none outline-none"
-            />
-          </div>
-
-          <div>
-            <select
-              value={empresaFilter}
-              onChange={(e) => setEmpresaFilter(e.target.value as any)}
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 appearance-none focus:bg-white focus:ring-2 focus:ring-slate-300 transition-all border-none outline-none cursor-pointer"
-            >
-              <option value="all">Todas as Empresas (GR15 / RP7)</option>
-              <option value="GR15">Empresa: GR15</option>
-              <option value="RP7">Empresa: RP7</option>
-            </select>
-          </div>
-
-          <div>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 appearance-none focus:bg-white focus:ring-2 focus:ring-slate-300 transition-all border-none outline-none cursor-pointer"
-            >
-              <option value="all">Todos os Status de Pagamento</option>
-              <option value="Pendente">Status: Pendente</option>
-              <option value="Recusada">Status: Recusada</option>
-              <option value="Realizada">Status: Realizada</option>
-            </select>
-          </div>
-
-          <div>
-            <select
-              value={regionFilter}
-              onChange={(e) => setRegionFilter(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 appearance-none focus:bg-white focus:ring-2 focus:ring-slate-300 transition-all border-none outline-none cursor-pointer"
-            >
-              <option value="all">Todas as Regi√µes de Atua√ß√£o</option>
-              {uniqueRegions.map((region) => (
-                <option key={region} value={region}>
-                  {region}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabela de Pagamentos */}
-      <div className="bg-white border border-slate-100 rounded-3xl shadow-sm overflow-hidden whitespace-normal">
-        {filteredRows.length === 0 ? (
-          <div className="p-12 text-center space-y-3">
-            <span className="text-slate-400 text-lg block">
-              Nenhum registro de pagamento qualificado.
-            </span>
-            <span className="text-slate-400 text-xs block max-w-md mx-auto">
-              Certifique-se de que os promotores est√£o escalados nas a√ß√µes do
-              Plano de A√ß√£o e marque o comparecimento deles como confirmado
-              ("Compareceu").
-            </span>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left text-xs">
-              <thead className="bg-slate-50/70 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                <tr>
-                  <th className="px-5 py-4">Empresa</th>
-                  <th className="px-5 py-4">Promotor</th>
-                  <th className="px-5 py-4">Telefone</th>
-                  <th className="px-5 py-4">Chave Pix</th>
-                  <th className="px-5 py-4 text-center">Di√°rias</th>
-                  <th className="px-5 py-4 text-center">Horas</th>
-                  <th className="px-5 py-4">Respons√°vel (FDV)</th>
-                  <th className="px-5 py-4">Regi√£o</th>
-                  <th className="px-5 py-4">A√ß√£o</th>
-                  <th className="px-5 py-4">Datas</th>
-                  <th className="px-5 py-4 text-right">Valor Dia</th>
-                  <th className="px-5 py-4 text-right bg-slate-50 font-bold text-slate-600">
-                    Custo Total
-                  </th>
-                  <th className="px-5 py-4 text-right">Valor Or√ßado</th>
-                  <th className="px-5 py-4 text-center min-w-[200px]">
-                    Status Pagamento
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-600 font-medium">
-                {filteredRows.map((row, idx) => {
-                  const d = new Date();
-                  const year = d.getFullYear();
-                  const month = String(d.getMonth() + 1).padStart(2, "0");
-                  const day = String(d.getDate()).padStart(2, "0");
-                  const todayStr = `${year}-${month}-${day}`;
-                  const isOverdue =
-                    row.dataFim < todayStr &&
-                    row.statusPagamento === "Pendente";
-
-                  return (
-                    <tr
-                      key={`${row.actionId}-${row.promoterUid}-${idx}`}
-                      className={cn(
-                        "hover:bg-slate-50/50 transition-colors",
-                        isOverdue && "bg-rose-50/25",
-                      )}
-                    >
-                      {/* Empresa */}
-                      <td className="px-5 py-4 font-bold">
-                        <span
-                          className={cn(
-                            "px-2.5 py-1 rounded-full text-[10px] uppercase tracking-wide",
-                            row.empresa === "GR15"
-                              ? "bg-purple-100 text-purple-700"
-                              : "bg-amber-100 text-amber-700",
-                          )}
-                        >
-                          {row.empresa}
-                        </span>
-                      </td>
-
-                      {/* Promotor */}
-                      <td className="px-5 py-4 font-semibold text-slate-800">
-                        {row.promoterName}
-                      </td>
-
-                      {/* Telefone */}
-                      <td className="px-5 py-4 font-mono">
-                        {row.promoterPhone}
-                      </td>
-
-                      {/* Chave Pix */}
-                      <td
-                        className="px-5 py-4 font-mono select-all truncate max-w-[120px]"
-                        title={row.promoterPix}
-                      >
-                        {row.promoterPix}
-                      </td>
-
-                      {/* Di√°rias */}
-                      <td className="px-5 py-4 text-center font-bold">
-                        {row.diarias}
-                      </td>
-
-                      {/* Horas */}
-                      <td className="px-5 py-4 text-center">{row.horas}h</td>
-
-                      {/* Solicitante */}
-                      <td className="px-5 py-4">{row.solicitante}</td>
-
-                      {/* Regi√£o */}
-                      <td className="px-5 py-4">
-                        <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md font-semibold">
-                          {row.promoterUnit}
-                        </span>
-                      </td>
-
-                      {/* A√ß√£o */}
-                      <td
-                        className="px-5 py-4 font-semibold text-slate-700 truncate max-w-[150px]"
-                        title={row.tipoAcao}
-                      >
-                        {row.tipoAcao}
-                      </td>
-
-                      {/* Datas */}
-                      <td className="px-5 py-4 font-mono text-[10px]">
-                        <div className="flex items-center space-x-1.5">
-                          <div className="flex-1">
-                            <div>
-                              {row.dataInicio.split("-").reverse().join("/")}
-                            </div>
-                            <div
-                              className={cn(
-                                "text-[9px]",
-                                isOverdue
-                                  ? "text-rose-500 font-bold"
-                                  : "text-slate-400",
-                              )}
-                            >
-                              at√© {row.dataFim.split("-").reverse().join("/")}
-                            </div>
-                          </div>
-                          {isOverdue && (
-                            <span
-                              className="text-rose-500 animate-pulse shrink-0"
-                              title="Per√≠odo da a√ß√£o finalizado"
-                            >
-                              <AlertCircle size={15} />
-                            </span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Valor Dia */}
-                      <td className="px-5 py-4 text-right font-mono font-bold">
-                        R$ {row.valorDia.toFixed(2).replace(".", ",")}
-                      </td>
-
-                      {/* Custo Total */}
-                      <td className="px-5 py-4 text-right font-mono font-extrabold bg-slate-50 text-slate-800 text-sm">
-                        R$ {row.custoTotal.toFixed(2).replace(".", ",")}
-                      </td>
-
-                      {/* Valor Or√ßado */}
-                      <td className="px-5 py-4 text-right font-mono">
-                        R$ {row.valorOrcado.toFixed(2).replace(".", ",")}
-                      </td>
-
-                      {/* Status de Pagamento */}
-                      <td className="px-5 py-4 text-center">
-                        <div className="flex items-center justify-center space-x-2">
-                          <div className="flex items-center justify-center space-x-1.5 bg-slate-50/80 p-1.5 rounded-full border border-slate-100 w-fit">
-                            {(
-                              ["Pendente", "Recusada", "Realizada"] as const
-                            ).map((st) => {
-                              const isSelected = row.statusPagamento === st;
-                              let btnClass =
-                                "px-2 py-1 rounded-full text-[9px] font-bold uppercase transition-all ";
-
-                              if (isSelected) {
-                                if (st === "Realizada")
-                                  btnClass +=
-                                    "bg-emerald-600 text-white shadow-sm";
-                                else if (st === "Pendente")
-                                  btnClass +=
-                                    "bg-amber-500 text-white shadow-sm";
-                                else
-                                  btnClass +=
-                                    "bg-rose-500 text-white shadow-sm";
-                              } else {
-                                btnClass +=
-                                  "text-slate-400 hover:text-slate-600 hover:bg-slate-200/50";
-                              }
-
-                              if (isReadOnly && !isSelected) {
-                                btnClass += " opacity-50 cursor-not-allowed";
-                              }
-
-                              return (
-                                <button
-                                  key={st}
-                                  onClick={() =>
-                                    !isReadOnly &&
-                                    updatePaymentStatus(
-                                      row.actionId,
-                                      row.promoterUid,
-                                      st,
-                                    )
-                                  }
-                                  disabled={isReadOnly}
-                                  className={btnClass}
-                                >
-                                  {st === "Realizada"
-                                    ? "Paga"
-                                    : st === "Pendente"
-                                      ? "Pendente"
-                                      : "Recusada"}
-                                </button>
-                              );
-                            })}
-                          </div>
-                          {isOverdue && (
-                            <div
-                              className="flex items-center space-x-1 bg-rose-50 text-rose-700 px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase border border-rose-200 animate-pulse shrink-0"
-                              title="Alerta: A√ß√£o conclu√≠da, pagamento ainda pendente!"
-                            >
-                              <AlertCircle size={12} className="shrink-0" />
-                              <span>Atrasado</span>
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+                  <label classxúÏΩÀrIí xÁWb≥≥#2Å ¿LfWb@ ÃBI`	0kwQ“· <ÈÂÓÅG°!≤◊ô√fŒ+≥µΩ"-›"%2"-sÈcÛOˆÊV’ûjÄd1ª“%ì7∑ßööö™ööÍÎhØwN“l¯ÅïÒUπtU∞”lR.ùdÈH§iT∆KOVVÿ¯diµÛÏ<˚y6öï˚*um9çN‚4Tp≠à”xX´ºà“Yº~èíÚEñè∑£2ÍOE3∑¡ŸdÎ<öúAôn‹cÎ·é2VƒÂ©≥{Sëè±~øO[_¨Ã(ª5`qøåÚ≥∏ÏÛŒ≥®`—‰∫™‹m/¯!<∏a≈k>[óKß≥4e”´•oŸÙzÈqˇ	À≥ŸdèñÆRvíÂ£8ó‰‰=Ü…s9ÜŸŒäA6+”d/M≤I,ìdâË8üÌì≥•ÀÛ§å;Å˛Ña{3õ$øü≈ä˛8övªSú
+÷≠Ä¡Z6-ìl¬>ƒ◊Î7”[5È”€™ŸÉV¶a!¢â⁄¬e{ΩPπµeÅÇ~ôµÂQrÒÏëüŒì5q,ßuˇeuè„¢Ã„π◊U2ôŒ¬À™ºûB◊∞°âe,è?KÚx‘zM≤èü€¢T˝rWÂœs9Ü&k˘ÛD⁄˝8ˇ¯ßlî}2îÓqû@>7§î›˙'Ÿß≈…Wq	`O≥≥$˙≥¢ÂÿÙ„sCM“µ_–ì}ZÙƒŸâÿ(fªì≥<.ä?/Ì<≈ﬁ®û|nhjuÓDeüQ_ˇ€ø≤WQ	¸pñ˛yIÈd6éÛ;ì`_>7<u∫˜¶≤O,:ïQ9+ÿ(c[—dîå¢ü^;Q&?7DΩ˙K◊M(EÉò∑Œ~}ö@œ‘ØzÂÅS|
+‡ç≤Œ3Ú2W%[Ÿ‰"ŒÀÎ0øÁ™‚ı«» zcñ»>¿Ä¸¥π™<Äí9∞Ç˘∫E^L%˛0J\\Iƒ¢4.¯hÏ§∫4j`ÇâNÍÕÚWúâb'≥≤Ã&˚jŸ≈U$>UO”¯ä˝8+ ‰Ùz	êÄùE”•oÿ¥‘ï¯V⁄®∫
+0–K—d`dbWüCò
+4!MÜÄ$pYx≠Eÿ-ê&º FQ∫7ç'›”(-‚ﬁ”™Ïò9ôú)≤w'∞$ÉŸoCÎôÄH/c≤BÅÒ8q©ÒwbUj@±Ûz†ìpôJPÊ—§H%ñÜ s‰ÖüÆ¿òÜqÂT`ûzäŸ…8	≤£§àN“x¥~ìf— ˙–‚d!≈iŸwP<Âol8Á@U.ó∆#bå#0‘6.ñÜH¡ré¡´@rUœŸ4&Â5–ÃvU#e¨˜P(Éç¶√Ú=gõ)¥}¸«èˇV∫ë™â¨Âµe‰Âiöì…zÌ›™5øˆ€Û®,6ß”WHtœ‚N>2ÉIÅÀd˝¶êÕÙW]Vƒj’¡Ç9 ˘‰‚2Ÿ”8Ò˘ï’≈£ùIô_oÙ'Ÿ8fˇ˜¨”±3oÕÚ"Ûr15î]sà~6Èã—Î7óèH√£Ëü&8I›Óòèp‹/ìi∆÷◊◊YÁ$*`⁄zbÙ éqqÊ—°‰îu≠nı2uô ä\ˆ30jjﬁÊ©]Æ_¬¨áxëa;ã¨ÛÓ$ç&:a2˝"§È$+aC9MŒ÷oÙO{ ì—ÛLé`ëqÛñ8gÛG◊ÊXT∆…µôÁ—u?)¯_–Ô— 1,!ÏûSÄtÁ◊n1Ã.–¨Âgs/í1–ØÉñÂïì∑z±t4”M(˚Oá±w≈ñ√x<≈Ì©0&¶(ëçﬂŸ∫?∑§0üd˝S}Dﬂèüz´â~	 €;˘ÎÁUÄ∞fΩ{"'¿ GYì…0ùç‚¢{“OF=ˆÂól!ô SñåûCUª£¢…èãz~o‘ƒÏG◊∏@g‹˛â≥ºtë%£´ ≥bC k¿AˆWÊΩü∆ì≥Ú¸ÿfGÄ«úÂèRÀl¿“ %'˚>Ä:†Öa,QÍá(Op,∫™ÈEñˆ‹¬∏¬∞r•›Z+ÕÇY6Î@–	vVŒÍ%„‰:∞ß∂{tLr‰ÜsC´{ìÙz˝¶Ãgq`ÂoNí1åwxˇÿ%≤üJÿ(ƒ‰%•éí$ éèFØä3ÕqﬁZ£w©¬Æõ›#0ì∞û◊ÂZ∂*;Ã¢£¸AãDQí‚Í©\ø9≤Ê»EóÒ5)G8ô«w™πîü_„∂= b∂óiö«I|˘J6ê˜∂Ã≤Ÿ"'Î≠˝z£⁄Ê€<4Æõ„‹ º;5oé∆…$)JŒI˝C÷Ò*m6ö:™›[ë°i`2€æ1è“Ü¡Ö˚ƒ=z7í^uáP7—–õI|…∂QNÈıÀÏe6Å_`)LŒ∫»ûøÈÙ⁄¡øàf£hYSpÄiÃﬁ<Ï•ˇË ˇÿ °Vm≠-ïfPaµ{z:õπdåÙ∑xO≤ÏÀ–W‰pÙ«¶$∂„œiû…Áƒ«›1Moa¢ò$:‚ÖP°≈G∑¶õp‚àZŸﬁÄu«Vp∏.≤r∆_ÃÜChÆ√Ä∑åÛ<À;|U_d…Ë©È›ÄΩ-‚|_º<tu¿vC¥´{=R?ü“Å@èJú#’'ÿ5Õ·ç6T™’;ic2÷]∫!˚á(˝‘Ï*âÖÆù›#lI+∑ÇC‹905i,µ?$◊m¿n◊ì!Î ∏bçeyrè≠éãï”¢◊Tt%%ãF£ÌlÂS‹ É∫£ìE∂µ˜ÚÂŒ÷·ÓﬁÎÉ˛¡ÊÀùÉw[{Ø7∑Ä}6ãR∂∫;®ü∞„Ñ[ú˙bot>ÍªøÀräf2W•Ò‚<´ıÖ)\ïL¯IÕ(#´_ÄÑ‘ù«∞¶Fõ 2¿/É¥Ÿà∆”Æ^ÔfÔïX‹ı5N∞˜üqb
+t}òç`5û-¿z◊.´πe√®û≥.`;ü(#‡gi‹ÁÎ ø˚-Ô¿'e∫Ωúy}Èc£r)…&IvB„——©“⁄‚˛©T∏«ÄI≥"F≈u,ø8]∏ña•J0äÈTofUJ<Ü]”ºßß‰EL•z’VkùÔr3µEÖì 3z¯ÒüÜìd(^ˆ?˛K±tFr»ûqquoöÂ•‹¶LS∆G7Æ!TÇu¸¨ù√æé’9[™HKMáKÒ€∞·√dÅ"éÚ·˘aúèK¶^≠bù-É‰ˆÁÿyôÁ˙ïñY‡Ë¯ô‚ÎTã\3O êÑöVÂƒëÇ˚4•¶$« RnÀº◊îR≥G{j%’ñ5ºÔ¢´liö"/∫lÚµbΩ·Ç¢∫ÛôQz ⁄\9w1ƒù◊w»„ãÉÏo}%¿Ì@fΩ¯_ÎW{˘≥q6äS‹˚8vsÂ!_ÀuuB\åπƒÁ	ëRn§dyô}SñÂL1"`&ˇé™π›˜s ÉB˙∂ãt±ƒÏ*ø\ÔH¸OÙÀîw2Pmã˘8|ùΩïÙÚë"« ö"µé±qÄ|ì˘9øxÁ[0ÍÆ:±2r±Y—vFIó≠Äl]VañµW90V¯¯Ã'"+:™YDÆ≥∫ﬁ¨
+˘jßµ(k®∆Z˛¢û©˙*`n>j‚k^uÅêQO∞fÜJr7√T[ØÍ∆lJÌ… Bıâ}˘•—ÂË‘™˛ÿ:]í}íò¶t*6FÈ÷(∏âr
+›d5'n∫Ä∞WâÏ*OÂ]≥V≤∞ùVÎX(õNÛl‹EÒË .ªbis=åX◊ÌzΩ~˚nó€™<≤vıE≤©/ˆÙc∑&>®ˆ]„àR›/ßB±ªW◊™¶ªßH‹ÛHU4Èqv—4ÊpÏ¸å«0Í@Sﬂƒ»≥"ÎµsB0!îqeDH€éO£Y™ÍS5±Ω≠È)‘¶∏∏>pYl√zÌKmTw˘w€À¿Ñ¿¶àg(ùßnMáíÉ£’)Æ.Pâ’ï§ÿûM”d(Tn\†DWØ*À“†´ª˛Âó8C8†*µgñ#‰]†ôÌûÚ“•Ó∑™B}óúªÍ*n§£f–Lı¡LgÏ«èdÒ¸éŸ$‚„a]
+íS(âv˚/ñu#>õ≠∫b∫%„©òø.jÀd÷ªH`œ7@{≥ÛzÔáÕ≠Õ=KÎ˜˚ßûÜ≤ª0∂˜|4§ä(Ω»4ê`≥Õπ≤Å/›"\K_®P©vä/\Âa|4T»‡	∂†ÅOXÿ Õ◊Hb(Æ¡ku•|Çí>“Ñiﬁì(Ë<‘HéjÇ‡K_j<!ÿ≠Iî¶ÒjRù∞î√lp#iu“ÜC
+üœ“€PöìI	Òs»≠±,PœZdò[éFûQ«ìèÕ˘≈˚Ì∏àå`]√éù‰Ïãõpı∑J¶Ü=ÜÁÄ5ãæÿxØÊAwËtÛπÂ
+$ã#ñù∫ß%ˆAüXÙ#\˜#¸ø~¡„—GOØ,z˙¶fˇ}õ±ÂÒ8ªH``˝˜§≤˙#ÄÃË&§uõ!Ryƒµ2;;KÂQ!†G7m‹y<¸C¬â‹rm§ëü{ΩΩ!ùÙ∞9Î%√2®´¿ØísƒÒ]¡E3Ku£€LS‡ í¿lnÖt•qhz∫›^KÜo&¬Ñê1(ÒmÔ¢ﬁtZ(gS4jç˝º-~ñHêO4W≥cIŒ˛â“‰∞†Z(‚⁄ê” îa¢úÇë¡agrä’qUålàZCl$∂⁄çNØä = IÒ˜yE-˙ù"ÌiÅÄËŒÓ»∏TÙD<ˇAÆµ
+ˇ5«Òös'ñÓ˘PÛ'ûŒ¯ºÅ‰Oπ…ãN\Öî-TÍæb,åå•B\F≠◊)ã—·›Ú8ªŸÕy!’ ±Ø∏êuÌÃ˛˛ä2$'ÙêùØ„]·¥ÿßÑmèO∆„ò©ÇÔ3í£§§J%!“ov∆≥ù´aúvG\y’·3˛Ns	ÑÚQhw¨PHã]Çéq¡kÌ◊áØ^Ó‚≈ÄùÄ;)üyàÜ$(ÆÌóÒΩÿË≠.ds"“y√/@Æ›ÊÁlä,‡,C{5ãñ°µ"æQ‰Ÿ•<÷Å=ÏC|≠I,–Ì∞Èî¯‰É¬{'?©Á•∞ÎÏü∞-˘ÃÊZ%I8†Y ‘	U  ìëk©‘˝¿{Ù¡VÜpˆÍ∂Sk¨ã\uõ ÙA£GÍ˝òÔµh¶]¿R*Y¨<ac%≠ê—•	SıÙë3D~ÿ:b£ Î^DiÄ¶õN/@›#ã¯¶/)*Ö"}®q,°5Ñû:uÛ¸Fˇ‘:‹ö⁄ï.c‘¿tPÙfﬁ7°ûÅ™≠YQÕhÌMS”¨70˝¯/EUÌû>Ë©? ≤V3G»ﬂ¸≥˜PS&‘ŸhÛaÍﬁŸ‹COdûä≥˛$JIô}ìXSm~É≈Ï5U†u/)¯_k≤ü''9ﬁ$–-ì?˛I§õö~≠íjj%gIiu|[¶‹ƒ#π≥9—@ÎP¶™÷ÜÜúbcµ∑Zp}ER›¬÷#5•…nù,>ÖJ¢Q‘°:∏@^ærìéE:tÅá˚K]Ûé™π∑…uìa—9™®^+—6(’ûG˘fŸ]¡È|;ùÍçÏk˛µHìa‹]Ì’aﬁ	gî◊9ß*8S¥ñ∑ôS|ÑÍK⁄â=üÁ\÷b»2cAE;ùûD3∫y]Y∞≈ÓbU*´©N©y-X	ùØïDV0óÙÖ´‡ÇM7ç≠BøA£W∂Í|v∏6iŒ÷·ôÍ ¢~Ón3ÿäÃâÌ»jtKï)eÂVÉ≤%ái‚;iæ∏‡ÂıÛd’_{6sŒì†4∫œ ¥îÄ¬≠]‘Ô∫ôQ‚Jx‘Dà¨|"¨ü‹¡Gßeˇ-Ölà-hÅ$7vÅTŸåéﬁ∑yÿæâV-òê®ﬂ=ó{K5 O„¸ »J$¡
+T’Ì˘∆ıüÇı∂D s‚–{Ãß(.ˇ-⁄R$Ω1GÕ+Gäµ§ŒâÃ|Yâ_çò÷Ê\Gä’˙-çK)™∆hyøÚ‘˙R|H`Ôs>H=˜⁄ÄB[”S3’±iØ*lBN>ùëà°\œáÇ(ﬂ={…ñüÊÒPÑBA8‰'Ü÷á.9ô4Á√ÚÙQó
+,":@~ó¡d\b‡›Ç1ªUö√ÀÊæYgõv˘ö^"xI/u	
+g…⁄jÚ;≤ﬂÆ–˜ÉIﬁÅÄ0O`mÅ⁄ ﬂ™ X#6Öußâ€_mÈlç∏x$≤;9˘øîûìd{ˇ≈çjâû∑$änñe(ûC…ïıå≠∞,.nYrÙÇÅ≤lƒèÆ˘ˆ›œÒoﬂõµ|GΩ¨Ï‘éÌ‘he+îjõ£—÷¨(≥±¥∑æámÉ∆Jcô÷Á÷fíû⁄G~w†˛€_olÓÔø{µsp∞˘˝ém’åFÚˆ◊ª\ÎÈÈ47às;ÌhìÔ⁄¢©∏V>›˚P˛U<¡;«¸å>≤„ç±_ìÅü.Ruπ¶Ò≈∂f÷àWà[ºc’i“„Ù"dı¸æ¢Ï 9¢ÅUÒPgﬁRqÃ…åƒT≠fVWÇ«◊ÂvÜˆ$h⁄øÓ]ZÓ⁄U›>‡üßè≤uR˛œ…*;
+ÄÖ™£r|:ßm`∆
+–ì¬A≠>ìgU I~Nû£—∂…=çF9^œ∆€còπ¢H∆6ØdËóEÇÈJW#˛Z@â9·Ve:/øK√ƒÌ´EX}∞pÄÇ˛~—çòa!Y„èÿ◊»iñ»Åç¢>˚Åó8ãÚhR&9/vùE0û<bHîˇÂ*Å)!áé©≥óË∂Å∆aë1ß˘ìQ".´ã≥∞"πà
+Q#÷OÏyˆcº ;ÅìOn5±Y∆ëU¥¥¿ˆ†≠Ëô®è÷˝` vça‡%z∆/EÄ‰4åÙ¿tÂ«öG úß»â)p”πz*€ÇŒJJ{.◊ﬁ |íIQïÛ∞…⁄€Ùá≈fkÂ5ÂÅıPy5„ë1(£t3ùM∏•£}¥)˜SùW‚m '•+∆t—ò˙Rœ/¬n—≠{eoHı¥[K¶aﬁqÀ∫’ıqRL£aºtΩÙ+Ì∑$ËˇAØl<ﬂyv©]£úƒÂeOlO„ËjÈTåØñ"<ñA◊ﬂÔ(kÁﬂ–fÑ'ß4Ï…ÈoWV˜ã!∫;….ÛhjyZ·J„óˇÙ˚†àic˘¸“bÂ»∞:=‚*„±’F»Qà„°%∏s6»vÑAYù-µ £t¥ÙD::RÔË¸√¯!N?|«0WêM{Qµ†Ø‚∂[€˝õ^πu|pÏIdH∆Î7´ø∫uùy≠A√ìgªrEÈeª∂Ã”)n?j⁄fãØ™ÚFÒË[–oÓP„∫&Œ£’ïÈ’q§HEÀîªÖr ≈ˆ%È©ôÂ†·˜≥(è’T|ÎLEææ◊¥3Â"KtZ˚òπ;öÒ*⁄‡òPÁK”L®˛ùQæùrœMò&≈"¡*‹
+>x≤Ô:∏âÜ√xZÆw˙Wiqµ»èõ≈¯d£ñ
+ÆOﬂÛd4äWNŒ4yŒ‰Z¨ad”åÌ´++ÆÀ•ªO,ÒævwÍ±ù]N⁄Ã´ah^}ƒ∂º˛ÿﬁæ\√pÛ*`t∞ô◊o˝M…)Ø‹»±È“wÄﬂ∑K ÖêÀ:ú{ﬂt6ˆû‚∑Ωﬂ8ùÒWî„Ïp6ÂÏ#ÏÑ0c√ p,]&ÿπÒâ≥ï1vàà„ŒiÅ€q√Ï≈7zßN#ÂÜQÙ„Wû¥¬ú‹V∑‰æﬁw&Ëˆ˜…ÊÇÓ‹ÛÃÜÊÂd&T/˛∆üÕ~¬ô»r§°üv"dõÛŒó¡v2dOsAy¯O8yV‹c2@úÄuû\ƒ˜â”Zêõ^t¢ì"Kg–IîΩ %Ó	ê˜‚ÇÓY#òuÎÄ!0·L‘Â$⁄ao~^¸`Ï˚hj∑p[◊5x|ƒ∞I¶T?[ﬂÄ≠‹ﬁ©Wi∑îqî˚"JAjøÈ0œëü€EÁ3É.wªVßó©î⁄c_1¿A4›xë\≈£Ó™ÔO÷%c%)ûGı®[EıLÉ+∫˛$¸ÅΩ\ÊîÖ3øu)WvÅîKöÖ«cz
+jAÖJƒéá÷ËnÖ_ÄT¸¶xª)
+‹vÉL779áé«˘∫Ùß$÷›π–Æ±«+èøÌ?ÓπúwEêÈTY_ÑTg¿.û4:S∂.æY◊Û»Y¥„Ÿsy\#∏né€89ûåÒòÚìÌ‘ò˙=Æë1Z∞¡.ﬂ[3óÅŸÙ]ÖV∆
+MòÔ¥ÖÔÎÜ	kû¨êoÍ?ﬂÑº¢∑Åæ6ª˚®Cÿ˚œB‡{≈MW˙C8n/SÓü√K◊û=œ>?∑m±'?‡∫D+æ∆πNOzÒqªB1ì–wvì÷í˛€«7bMuäÿ•‚ûƒ±> ƒœnÇ>Ì™“ñìwüﬂÍËw˜õÿ™Ëu?ª≠£·Ç≤2∏Á˝ YúÛÛáß?‹9„lŒc3_≥:ÇÉW3—a˛•Ì¨m5µæ˚∫Æ‘v?Ñ¨	¥ˆ˘ccz›(2äKw	˘)”C ÉÚ∂√œW∆∑®ãm—◊¬9o∂BVU4oa4 èo*‚~‡YSc†
+OuV†bS[C}¸ø-+qWô8JuBQÃ°N“:¢˘Œè™’´n®{RÒèöŒ°®˝¸∂¥ºÆ=áœ6Õ©ßr®≥p]±√<:â“sòÜÆ≤ÿËY†vTTıfæùFµ÷ÿﬂ.Ñì∑:™U◊ ∂ñÄ´e6]Z]~Ãñ8¶Ú°^Û€Œ¿ﬂY‰	ËwÓbj+Å‘Ö¿≥®ÁÛY1‡¢i2™F˚Î8Mó˛x Eõ®ÈDq¢ÎU™ï1πjà◊Â“∑ø™WçW∆Êç’vƒÍäü†ÌMØfiôÑ¯Q¡ﬁÎ7ƒü€ÄÚ?√ΩáCV„≤zG≤‹¬∫ŸlÌOÜÊoﬂs◊M>>@._¢mA}>ÔÙ=4T;f—7ü1‹1)Nîz¨l⁄€=w∑ıX·≠>;xYÁ@3Éa ëHe¨≤π∏ÓπxÓ«]’ó€Æ‡µÛNúâ∂ôu‚¨¯°Ê\8µlòqëIÃ˜∞Õ|ı|√Û=¸Àúo€Ykõ)∑›L?‘¨kÁ£ØÛâπ/⁄Ã}°Áæœ} >Ë_ƒ‹˜∆≠fû‰êyVÅ˙Œ·AÔÙ^!A4Ëü/h≠Á3í—¬îw¢yKî02-«n‰˙]È¢<è£ëû2oaÅ¸D…¡V–‚*îP0—Ú‹Y∫ﬂ·“˝XÍ’«∂’‘ˇ≤∂\ûœYC0Vrc\nÓÒ$ª
+«ÊñN◊√ÜÃuƒI›âÜ.X∏7tÕÃ≤M¡ß]f◊'§°4 ıc®û`ƒÎyÊ÷%HnÛñ¡qœ[FQΩπ0%X‘?b¡ß¬Â)7k˙ÚÀ†>∫Jg•«:⁄x¨œ)Ût⁄ˆÀ,A°±¬ù-«≠,å…a}8”N©_⁄∏*£–Ú¯•~bÙt¸§˛,OÔŒÍ0éÅ+,Êq°´/TB±hı°èπë†ãÙ¨*rÌ|≥≤ˆ<+≠ÎlgÃph—CÃMh…@ZÓn]ÅÕb≠<…F◊n∞]Ω_∫fÚGu8ÈõÄ;ÕX∏vM zWU,hÈáDfÇ!U~[Ç;˜û¨,?qo¥!ºVé¬TÖZôUäﬂöÕ3Hj :Ïk∂>¢*ΩmªÆGç‘láÌ6D≤%VÜÏ‘ﬁt´V]ÌN•ã/≤VVpÀz8Ä’])¨(√ƒ≈´X;53}$rá≠Œ‘˝õD5ù∞Ãh5O◊‹Ö‡±TÀ>Ñ¿Wq{'h≈ÎuÜ8;©ÿ1ÍF/o∫9”‹™n>–Ö*ê4É•b«¥Z!1cÓ9P≠∫&GWp@˚ï˛ì–60MoËÂOÂy¯ﬁ†òŒÚi⁄ ùÁ‡ê˝I†P˘7~öó
+ÍrˆUº™-Àê®ê%Û]:PEÜ+Ãlƒ#’0#πT–vÎ©úﬂ5Ω‚UÖMEÕÁÕpRçÃÖî´î∑Ù≈oK}%ı]¸X=l¡äì∏≤Ø5B’Ú)ÔSÕeÕπ⁄£ä§Ê&Õ-] °œ’ Q=5∑g]>wn∆Õ’j@g’‹∫æ‚dI{sµK’[ıä&…%7ÁZM≥`v‘dmöóÙV7/ﬂÎöØ†ëï\»]†Ã´≠®f>ÖhE%!≈h%»˝Ãï{Õ\ù¯Ñ
+U”√–yÅ˙6ÁÆW√ñVmHÛ®%™¥á^∞îÎn»Ω]∞ ’nTeøm´ˆÌü‹À∏ûT;Æ⁄º éV^"¨úÖRaπÎ8™:Õ»ú≥ê≠ôãB'l-lÜà≠÷_∑VCÆ-T†”ô√
+p÷p«˛Äñg,»OåS@*mÄp˚Ò¶:Ùú≥ÃoÀÏÕ ≥m‹Zœ≤§üpäM§ùfUFP=˚≠Ωå¥ vJ}T®;ƒîΩkPI·S	¨√<*ŒS≠*∏÷Å+L8}’`»0˙&xÑ!bÀÂ∂5øVëÏ0„3Ã“¿Åıõ'·πv˚T…ï˙—Â2A9∏◊Ò‰|66aì‚	Fá◊qŸ≥Ç‚†_Œà«ÉDﬂó˜É±{BŒuØˆI"? lg€©»•¢∂r—eìw•◊˚ıJ∫ï∆Mªµ	èá&{G#!ÂXëÆ78âûÜÌÃ‹≈ÀÕUO°Ï˙Vêﬂ@(Dê),:Î7U.[xJÏQ∏8 `∆E8⁄É’A◊Ætòò!A®TìÙ6OÌr&í√vYÁ›IM>t¨›ü¯ì5?ıIÀ˙ç˛i`2zû…,¢ó∂2ñ8{ÛG◊ÊÆ˜ä¡8πD∏‹§‡@7pºG+«lÄ?‹§≥8”v+4(óxöÄµ<ˇrqcØ◊-Ôp™rŸt∂`+JF∞ﬂímˆS‡Ó]ÒÊ0Oë¥!£Jı]E&≥L
+ÛÈ÷Ô0ÈGÙ›
+ª$*VS˛@∑wÚcE†x*O.xXCÀó®ﬂûöÑ˝Ëö{áZ˜z N∂RåÄw‡ˇmx†D5∫#(¿˛ ºÀMÙÿÊÔ•SDW®0óì” Â%˚>`2HÜDü¢<¡}§Ë™¶YÍ]dw’”¿™∫µVï≥l"p^–vVŒÍÂ·‰™	&jëΩ”,∆–Íﬁ$Ω^øAA)∞ 7'…∆+#—ùT¬F°˜âH)°\˛âÎ3Ò÷ΩK™\”R∏v◊ΩukUÀ›ÇÆﬂ»¥pt%)N¶û‘ıõ#k∂\ƒ˘_XGx}ı4.‹Â€ÄIO„.Pº\Ëx;â/πÈ¯ £Â(#d≥?∏1nÌ◊’8ﬂÁ°u›ûä≈‚‘º9'.èà€/^Ö·±…%’√{[‡ƒi^fc[(Di√‡¬}¡Ä=ÔÜBñ™ÓﬁﬂjË∆:Äl±å	59	_e¥áŒ¥\z˛¶”kˇ"öçÀË`öE·›!;¿?6X∏l8–‡˙“\*,‹€GèNgÓﬂ˝ çp˜g—kóé?ßy∆£¬Ow˚√4ΩEâbí‰àBÉ0A5ífõ√åÔHG«ãènL6<¿ûp‚à”^ŸâÎéMÃ‡r‡PÃÜËÃ∑√˛^;ﬂ≈Ö~ë%<üÏÚÄΩ-‚|_º<Ù¿nC¥´á4`œ’œßtt–£2NMü`´$Açk¥aE#SΩ≥‡2ê⁄XwÈÜl)¢ÙS≥Å®§∫vvãpDø€§ÿêyã§DıV∞ë:(∏∫≥hﬂë°°¿ª¡˘ 2√È©∞ßÂE∂‘[M	Îb∆¢wÛ¢Æ-c´øËÿÓ◊µ'éi{4•¶$,  ‘àî|ESjJ.ìRﬂ´∑öI°w¶E±_Èw´îŸôe¡xî†õx™9.wHÇ√]≠-X3ìYö>Î‚ø¥*yrëx‘Øo˚ûQ‰)∏f'á—âóx≥ vFQq~íE˘à/˙6£®ÛL¨ÚmÒëde’"–T∞;˝€&	Vq);¯@£‚ŸX√=œ.uÒŸ1b/95:◊îŸí”Mì⁄C˝˙EñˇV5¸Ù„±å`”à∫úîi<LNì!	è Â_≈„¨KÏí1vâ´‹ãjD$hÇ«˙ix§ïó≈oìÚºãüﬁôH˝"ÀÀn7Zd'cèÇq®“I{∑bÇ*.≠>µäüäüT'•eäh´ürV`+O£<ñµwı"Ê ";r¡t‹ÛÇTÎ‘`@
+W‡@Øÿ¡UH§à™ Ôù0Â_Tòê“8‘n‘Ô7˜7t1oUQÕI8ÇdÑ±ú÷l›FõË–∏˜‹èÎÛæÕ∞&|$:Fz—OÍ¨ÇÓD]±}0ujºá¡OMP˙Ee,8 V&K„h‚`è≤Î£1Tºëı˚}è¿'#5^'÷R†ÿäME¡É=õ9´›f „e?¿†îÆ®ü–ŒÏ¨O:“80=Á≤œˆ‚u™Ã
+ñ|°˘ùÂ	w„E´ΩKÿ£ÉÕó;Ô∂ˆ^nn⁄—8d´ª 6˘M<ıg°\P_lÉaC’w_ø!=]®¸UGaEJj}·Ja~ûL∏∞ïiHÓ;…;/SkLùË@ ãFêò7ˆQ(¶ë^€yıŸ]e∏∆ÃO=6i#S :%&OÖJ4”•R∏£5ı¢]Y¡ƒ•«"ë%ÓT◊%&ZΩWR*≈Ú@£ù(ô*ŸÛ0¶;©¬à™éÌ7ƒdÒ~KwNÿ¯Uˆ}Ö≥|¥¶h°dÍ |í]Y≠ÛÊ{F<†-%”4có∂≈/ôOpµvv^Ôºí)Á0«Ä≤CÏﬂØ·w_ç!ç&ŸŒ§H&¯eﬂT[¸‹äœ"FÆJÅÔ¡∑ØZ˙T±^$¬‰ NÖD}—ä”®|ëLTƒÁä3{dY;vï†çz5ûıevŒd†ZèÜ-¥øvåõ;ˆ}úªa•ùÃ{øëpËzè·¥a˙Ä "‰XñL◊iﬁ!7Ê)ÄBæ·^≈}pü»¿ÜÍAKÔ¬ø¬Ë˘eE∆êVj_Ÿˆ¢izëvn—m˝V1| Yã«„Û˘¸öKΩ|ÁÆûÿ≥<õMπJ‡à+å*pùƒ9ê´uMü»™∞E?˛”p¬qT'uˆ?˛K±tFàÄ˛( ≤|'û´“Ä6EÑQæ’8Qß4ÖÜ1#8˘∑{ Ø«ÃáØ◊O≠àπ˘ﬁ…è∞ﬂıcπÌä=±oM"ÿ™†;≥IylGﬂÊ_tw·ªz¡ìPÍQ*Í%£Ñó‰0ü*1DB≠◊kòÎi¨˜@SΩ˜2ù ñé$mûÕ@F7F$x|å Gs∂ùÓÇÑ?˝I… a˚7‹ÑÅõﬂåí58◊‹†ôÌO^≠LÆÖ¬F›«±Ê‡QÖˇ≈øo¸'¸vΩÚÄl?
+./Ó‡NÀ‘)Ä»´É¿Yj|˚9∞hb"ÌB7x‚Ç*!9§bg˙'À…
+j»∏r¶1¥·y ∏
+UN:ës”•¯1¬eúo°Âì±k7«£F1kg’®’è¢Ã¥fVå^7Lç˙c∏
+©ë≈j,u≠®J—˝u$Û9‹Œ¯≤@‘∏65‡ÏíõRmÄ uº¥]Kl∑,?mT5nıö∑⁄O
+dß>πT#«òﬁr‹ØTﬁ•Dñ6ª™Ωû_H’√%„ä 4˘3Ï÷E÷œÇ«)kh|Uu<[◊°⁄˝°∫ìsm3m˙A6çˆ≠íBÇç'|÷á FM ¨@H›‹⁄Î‡<*—ïª0EWI=ùR9±]ËÚjÖ0ÿC‰8ºÆDù˙ÄõÓö7q"w`'ë=∞Ò+\!◊Ì∏`ëîí\b ¥ÕOU‰*êüü@	}±≠jF¸/05I˝ÕË˛ç˚†‚´î∞¨÷îÃ)èá®dNìËQåií}<•Z4Ø÷F,‘i ®}’¬Ïˇ∆pù‹Åi®Rµ¬!Ûs%BNFT´∆1"1'|Î∆ˆN``§4æî¢w©*Å]TÔ”óÆ*°pWÂòoÅb*´–¶Õ¶£®YìºÌõV∫_}”∂ ∆Ä…è“‰—ËnAfUÒ‹¥‹]VGb≠ñ3‰Ûdû˘;E‰”««Ø¶Y"W©"€ObÁ¿4Çù¸Dï∆r~(0ö:õ·HM–ëÛñâ£ovNS:Œ!
+∞ü±1Zñ'$ù^’°»è9ÙËuut—'Á˜:ôh"q∆oì
+‘‹ÛUl¨;<·WÓi·≈ni¨í¢0⁄ G@2ªõÏ•ñ(ƒÜVµ—©‹B∞z'-qD~˛SÒx¢—tö^øÜ|ÿOÏIm‹x¢∑äj√ø´rQ–:y£ÖQ≠ò[ŸêÖÄœ»>∞ò°oZÅ·\ÖJ˙gq†§’<®ˇΩñd◊|(Æ	ﬁˆó_™k9∂ö∑ÁÏ„‚å´Fµ∏âœãﬂ≠v¨ΩÑ◊A—Yù…∫ì$rˆy‹q/àxe°˜˚õo6ü¸èØdxvˆ?ˇ€˛OlÛ,À#vë?˛3˚¯O,B„<∂É·ŸáIY˛ÀFu˛£èˇëü7úÂ@[`⁄Ú≥YzÎãçgI¡Zó°‹ET+jœM&ñkòSìã«u'>ô$√$ZÄ˛ﬂˇ
+Ω~ÙË˛∑ˇ˙±ÕIîÛZƒ˘«?≤DÑæ.´*≥∆A√ú?f˘fÉy™n˜π¡ãò©cÏ˝Êêwßàgå◊íÇ¸ŒŸ`<´‰«æ—Iî\eÉGè Oº4éíI9PæŸ(‚ä&RÂ‡P*˙xÇÉÕù‰NŒ¿%„8AƒœfDÃ6h/w<dÌ∆OûìBÁáÆ|¸”YRäÛSÏÎ÷˛ˆ5˚§rE(!¡ø2ø
+’}¸◊Ç√
+sÒŸl2
+fL&*„£Gõ¬Ã#ÅÇN„íÅ§æJp=⁄è!;øÏ9âÅ.úóÂ¥,/ID∆èØy˘evñMﬁÎùNÀ∏ò~¬53◊Jëôﬂ£"˚Ç˙HYÙ¯$åÄH|¸Á1@q
+fÿ>ÃÏ…«öÔ’N¨h€Êhƒ i® §≠”∏•¢TÜ¢C>h*N”klùÒdF'\÷ªOßcùÃ
+(˚™8´¢b,õÏU®uà<ø0ÑP7c&–Ù»πŒnÅù‡Ÿàæ.Typä`AfÏ$o†u0F÷√¿”ò#q4-%	d¨ó6≤HÿÚ¯4F:FÔ˜Œ‰≈g∫P«ñ«ö>€E)-á¢*ÃHp±M∞—”,a w¡Ò!-@Ê€√√ïèˇ<ä«F|ŸüÕpE_˛≈ÖÃèY2È"ª“ÉN ı=≈5çYÅx·bÂå!ãI)O,RﬂàsºN|Œ‡D.(pt0c–∑ä√»£	,˛H∞˝–]·8›Í€8ç3‹
+qè\êsÊ:prwMíøÜY˛›‰wì◊ˇˆØD10ìÓƒáÚ;µÄ\P_ùG"NÀ<Å¨npskg˜pámÔ1¥5x≥y∏∑(Äï Õæ ‘JœJìãÑCiar§˛ ¡ãÿ3V∑
+˝ﬂﬂ<8ÿ@≈õoÿ€ﬂ{s∏˘í7±˘z{w⁄0Ùs®/ÁÙ≈ñD©i4D”´…yº3∂§7ﬁ“„˚Ô»IÔ˝Øowÿ¡Œ[æI‡Ø◊øﬁ{Û`~ˇ›&€d´êÒáùˇcQÁﬁ9Ä∑vŸ´]»+JÙyïﬂ`ï/wyûWlg˚Ì÷Ê∞Î0˛Â`Á˚∑0¸…¡£‹·Ÿw_ø›|cOç“+∞?ä(Ç—G]ãíPb<ÚF4ÿπ  h‹GrH€éO£YZvmfvàbü–”êol√zÌKˆµª¸ªÌÂ3X_~ `V¨I§’)ªÑ@%VWíB[QJe◊Q)rÏûF'#Æ•ßˆØòH7›Æ¨7ÆÁD[•ˆ®z≤/–ÏˆxxyÌKW¢æ˜zz º∞è/≠ÍfÕÖ3ˆ#–mÿ1#i™"M—∫¿ÁsR
+IÄ∂À∫…>1ùëÚô∂ø≥∑m«åq/ub‡kum6πΩs°,Ã0<≈çŒ≠ß^e$Ã≠©Á…ø-Ù¥ÇæP6ê9¨à%)Í≠7%≤ØPs"=?F/aõ9€2koøk7≠U·*r˙Önä7÷m 8ÒÍXw]⁄\5B…√`
+ ä	¡`uë7\÷ùq4hwü4¶QÙ±ï)
+)ˇ}4›K%Å…ØÌª±MÛaeæ<F®€ç∆˙∫ºù#˚“p{±ò®ûú8ãK‰X∫≤áVâ6KakÛÂŒÎÌÕ7ª{Ô6∑ˆvÏæ8w†N2‡à≥‚EúpÙê}È£À⁄m:±Te‘Û ∂Éú‚<  si^Ë,∑õ…◊ÒÂO6ì©ZL§Ëà?ëê˛ I∫“<è–‰ßòG˚Fäs?‘πtbÓï»èÅø∂Â"üvœzëwíZ0‚∂b$ˆ¨5&åºB€åü†·">∆ã¶ôÄ#Ô£kƒ»q¡2dT)∆òQLñ‘KŒØÙ.0nYPsŸ*5käÏˇt√˙-¥©6ó[P”È^DnøÿÿﬁgyËïÁÊ>F›@èëY√^…RÍO∑˜‘…\Scæ—lZëáVò•ÏY–D-^™Æß»j#$}Ωπ¢ï^õ§ ƒnØ˜›.≤ÿ+6ì5:¡/x”>X›IÎÍ§†!Î[Ç>öÃG˜’qºá◊4‘–]•‘y$çN§@0–˙•ÄC˚ú‚wû∫EajtQÍe÷N	W"ˇ†¬á≥€»|RìƒPŸ;®Q!Lí∫∫{=À4H÷B≠'nÌ ∞ø≤2ƒ*RY©•Å∆Iï<-Åxÿ¶—xA™d0Õ¯zft¶(éÓ©õ:›3Ω7ôuÔ˝C	h¨Äwwu◊»#I¬_Oƒƒ’;¡jjü=‚$Œ±∫ØíS,¬ÄÀ¸a∫B§}ÂgG˚
+*ÿ7∫ÔÙ∆œ8JêËñ…ºL≥¢H.‚tÃï^ÚÚ ø‰ˆ⁄ßï;W∏Î8$RëÄâ@≈ÌΩ/æÊª‚ôu„PÔãgﬁıB¨’∆†j{‘VZ⁄ÍïEt_ÏñºÌ“ñ
+∂ƒv)m≥TÍÅ6˛?3Óí≠rØËûzFﬂ⁄˘:» µœÚnY;Ø]b_mÆ⁄jÀiŸÏ…gaüD$'ó•Ù˙¯Ñ¶≠h"CR‚VåÓ⁄6Êö9Â¡%©çw“SLãâ|ˇ≈ˇrã˙¬ÆeF$πèç>?ï&∏ñiÎÌ{√øêΩ´eäQ.µ≥ù´aúvG¸NK–ˇ¬&'√¨j5Ìé’j“Í-·ò+∏÷~}¯ÍÂ.˙‘ﬂIπ
+˝ô∑ÊP‘≈}Ey∆˜Ü∂rl¥ÙòhQD:o¯EûçEßπÔ•j√X[º-≠Ëc¯}ånû] Î^¿)†ñ:">:Æp◊%~˘ª-Hµ≤;√w‹õ1õÎJ¬˝‹AùP•¨‹:Ê–HÛÅ˜ËÉm›»—Í∂Sk|;	∏Í6aüÑFè‘ªg≠N«iZı∞"ÛÍ“D\—&5ËŒ8Øs¬+H-˙n¨Äπ\™o"îÍ§kHbByã|ÂcvD˜±˘	©}Ü/}˘·û~uzæñ≈ˆ\-˘'çB€óAì†I%≥Çdß@C<K≈ÈÁ…>4fπFá¬yêZzôl∏)`ı4y%”V·^I»ârNÏÍp≥DPcÊûÑ¶ç†\à÷¡Ø}±d05¯Zjª6#®ÜP≈¥⁄æ±U2Ñx˘©©e-˚«"∑~lHflÄäÿ⁄√pë^Ä:<S}=Ê&`∞*≈+p∂O˝Æ≠–í«€¿ò0|Ìë◊
+Háöu§˝6˚Ã$Zı`B¢~˜‹ıÅOªŒÖ‘µ=Ù⁄·]ˆ[˜∏¬@øÒPÆ¨Ó˚Û†µ'mf@rÉÈ≠üˇÑøÁh÷”Ë<xu}’p≠ÕbüÜr‘UÂ+W~úv˙TBoLˆ˜Í≥â∂gñØ;≠§¿áã˛úeãQªæÚ‘˙R|H¶S˜É‹D'–≤5HtªµÛŸ§.ÌCHY¬9_„*ı\]b¡Å™N¨]}™Õ™’9¶Ú} BáÁÍ;Btä+bù"Jô¶ûY'§éZ°∫èïjãA‡ªÜP®^ªåÔ|«n!◊Ô∆pÉC◊fïz≈.gÜmç≤F›"kê∏¸ı◊Ï*~ë»Ì‰|‰ˇÚùπ®Z¢ i08 äÙ#Wè∏¯^'‹≤‰lí	≠
+‰ßöû˛{n`…âw3Cñ]…Ö≠aç2 %)Í∆¿€Øóæ”°nñøbá—	{]$g¬¿Ï´e∂ÊZ<æ ∫zø<át6%>ﬁ_•¨8áé_¢Û¯PXdªqπtö–H±æœt?Œ¢ˆé’%^Ø,7ñ5ën*Òò)œ›è˚Oº`ÕË˝ﬁ¯√∑]•€¥\˚Ò2ÅÈü≥Ó7L|ôÔTÙC	≥ÙL˝‚ô˚†¨„Ñ»ıÇ⁄BóÅêÂ»˚yîoùGy˘çr‡˛+«ÅªpÜø≠Ü‚:ƒ˜Ω∫œ9â¬ëŸÁ9Å¢oüÔ‰ΩLä≤~ﬁ0Á–πˇT/úÅ;{∂ÁˆõJ|∂Î7öPÆ≥<1¸#@;äÒ¿º>fÈy˝6-wØœlAá¯ á‹ÔWLºH&h±ò‰ﬁtíPÍË@]\∏~˛‡÷o–ï¶ﬁ:óÂÎùì™PÌÀsuXÎP§—∞≠6ıV8‚wòü]n%˘0çW˜[≈Zπg◊Ò@∞ÀÔl(]i—´Ì<qR—˝4z#3˝é–˙æΩ>åÆ"ÙQt!¿^—a‹¯yüm'∑ı>‹Û√\åÌÌ¥∫˚& `MˇÌÂ»SöëµjÛUÛùªjú:»˛ùµÅWm€zc˜b≠ù„á6∆∏4¡8§øÇ∫∆'ï±±C!ê÷π2õΩ`$ek(…6≤y……,fœ÷]f≤‹Q-ü„ç¥ÇÊ}ËÙçÂE®cãä†√≤fe∏Ë£+ã€P3UKÉL€è≥¢LNØóN‚Ú2é'v4ø"'µ!H√¡-u æ™∏”˝'5Ò¿xùï_k9 ˜È\bp¯ﬂ
+öÈK˙ÙÄ’GS∏õQR¯mC :ªƒê 4_%ƒ=ã™Ü#Ú|µêKÛ™®∂ñö@®ïAí≠~V·ÕÇ∫–&4ÓR‰Ÿ§ºΩÈ∞NıÍö“Qx'®µ¨∂⁄Ω¡]Kπêπ˝´™úçCØç)Uk’Y⁄ó”ô”]Ÿ ”àıy2,≠^‰PyÂpZØ∆Œπh’ÍB-√m?˜\ó∞*bMﬁE÷¨«¢º∆ÂÊÜ]&£Ú|¿ïVæØéæWò´2àoÉÇ+ê—g]~Êåá0∑D4ﬁV˜a¯‘…c´üàÂêNˆœ1m¡sL<GÁôÍÁ'ÿd¶üxìô˛•o2j!BuÌé2≠ú~∆¥≤2¡zÌ›V©gÑ∂ QÕ‘i`ÇïRCWp<Ïa8íÎ*€yÜ˜∑¥XïQ{\/äÚUá¿≠ä©Ÿ"Ïm≠çæì1`ØOﬂvü>a;~˙x6˝Ùi≤Ô∑:“`Îo5Í€˝”ßÚ }jÓ¯›™∏`ç5tO¿<Œm ˚q.dTÑ#,oõˇ©qßW¿†*ô*ík"5Â-Ø√ﬂ⁄™Ωb8¿wÏß≥B≤èWÇ¡UÖ¶wK^;À√îø*˙Í∑ÖAÂâ¯˛æpYı·‚kÁ9öÊK”,	–ﬁﬂ∑S˝ÆBÎM!≤+–™∂¬µÌ'∏U^Oë%©ÁÂüh8åßÂzßïWãˇÑ≤M‚ÊöÎ7‘û3¥›–ùOl†^&oåkÀ|ﬁÊ&ê¡[-~ßFIÅÓyFÎ72&N›:B°∞37r4¢ÇÍ√ É2IyÕEò›F»HÖ™ΩñπÒÆ˘∏™>íÃIeÆJo”1ÿ°é¨Ì\«{ßßvB0ŸJÛ¡ÈÒèP$ô§…$rU·^t^&ÉÖΩ‡aÅQÀπ≠˘9D~ê7™s˘Aÿ,:5)iá|‚ö@a6Ï¶£nº;u<nAÜZêÂÌÏr“ñâœGô´x¬véà”ﬂŒyÔ#åG‰·˚T·ªY\àör{ŒsÄhúØsÉ’~ø_u*§}D∫®a(i761†UÓÆ6pÁyK◊œ-Qá¥aÚòà‰9õï∏Aéõ†fa8+h#íóvÅç–⁄⁄Q,Ì@≥¨tP∫ü)®Dù0 ,◊°mÄa≈⁄˚ô ƒ£Ÿî€Ít:œ‰†÷ñ≈áÜ¸T∞xF^ZW:œ‘ØñΩ∞œ‹îpE@69ÃΩÇ∏;ÌÍ5d\Ã∂ZE&˚œmÊ&9˚“l∏fñﬁVÀç¯ô¬≠é˛X>à€ ƒä†˘3H#˝qÏVZ“ˇ·3/©eUµ> }∂¨.ª«ùµ£mÍ∏Èô˙’≤ 9 zf~œEÎS;ƒnÉõ:NÎøº‘FIΩñ≥Å◊Rümecnƒ$|Ôµ,…ØØ>;àõãÜfqÊ^ÅõVå}ΩjﬁmDÁæZBìæ˛µDâ<p>¿'3çOÀê∆¶<è£QPg^ÊA©Ôâ%Ù=Q2‡—Í ÙÍòhfSTÊ„)t√à(ó…(®6íq0ó[å~À.óVCG~≤TïñH<BWƒC/ûdW’g28„zX•,ûöò¶ÙÊºLv.#ÿO ˇ3∂RY†˙\À£N\JC*T¯…πOT Û˘ÊV®r∂uß¬‹iÁ2”LÛ¸U®ÎÈäkùøs[v˛“ß÷Æ@nûä∞Ø¸ZÉuZ‰ı†B£cG∑c˜VcÛŒê∏EƒwÙ<V*mê“Â\˘UY[›Y™r‰NCıVèµB´•ûJºnÄÓIVn°á¸≥˛,O‹’]ÊQŒDÔˆN~,Ï0áéG…„N˚jÂ!cÎM”Ç7nˇ¶—5Í—∞o¥´Aˇ UOY„#§Íë>Faß˝–rSìÄ≥ís€kÄD6y+‚ áÁYŸUi(Tå9ÿèy•>ˆ©\îHåVQ˚ò’k˛$=´≤Ω€b^–(eÎ∑\Øæ3f6óc'EÓ∂§´(2§ÁˆfπÇøY+O≤—5Ö+p[¿û,]3˘C≥ia›æÁ-'÷±#¬4¯©äër”ÂM©
+Ë·É{e˘â´5œb%Ué*v¬ÍŸ´gº⁄≥^Ñ˘™§f⁄”T›qy°⁄ÂI˘$]˝"Ûÿ•∫ıZ˘≠“*∞1»jÛowòÉê}˛É'µvLﬁyV–H‰o+pﬂ<‘ç{]sµ∆P¡)ã4[‘h◊ù·ÙÙ≥Ë∑»(˜œaøso’ﬁß5bü3äYÁx„xîÃ∆û”zvπˇ˚Õo„ÂŸj+ß6£î≤∞mdÿPìü<4©aõ1ö˙t0πÊˆ·G√ÿˇ˜˛?NÍ«‘nTKßfi‡A–õZ»8ƒSÒfç Çˆ=∫ÔÏ◊@ÈÛ óy4ïW‘«º.=^A`÷Ì¶“€úåéÂxñkö‘FâŒù¡?M»kKç´Cá<lZî¯h•E^ÑAãl~ÙB€√^s-uÏ>M õ„">.Õ  ≠òk‰R˘¯∑Œ:l´E<M∞h–Î6å∂çQ	ﬂ˘ˆÑ°GXDÌköoõ5P«zÈ{±Å¯‘Àmºü˝	ûæ–GûƒHwJV ππ§çm˜ˆ#≈õ∞I?∫•„‹∆Ïcüzı˜}M€£°ãõñ≠S–#>G{‹Ô^œ´ê:?Å∏°DL≥Í{•JÛ=VEzV©
+•È‡Éûû5,›¶HàUOqkú∂iπ¡{lÎj|	Ósö95\{‡‹HÑâ›#Õ”5ñvàú#∑ﬁI∏ﬁ]w@i·€Ô!‚J•Æ@º~w˜ª∆µï}‹*»L„a{MÎÉ⁄Å{˘kÖÑπª3ß}Ê∞f∏g'Á1V∞õ
+.–ÔÛÔ…u6øu˚ı√û±8J¯ÎY˛[T±Ú´(ø[à≤ºÓ&ãyÓ¶≈]ìˆ7ñf_iNàJ,¨´u˘¿&;∆‘ﬁ•è:z"›∞ÏM?˛„«ˇÛ8ÿÍ Ê˛ßﬂM≤I^.‚™ˆöubMLÈ√£ñuc≠%:5\^3è8ø2Í’êªKˇ1GméoƒV•˘’7„È±U}#ŒR^Ò≤ÕW‰»p˝ÀrçUúT«®¨∏rGtäÌ á¬¢h8¬@’c›‰ìåBUÙÅ™«πË'j©âIPıx7√∫±vh†.⁄:«VeEÏ!Q∑/ÖÒâLπ›Qõí∑mh~„’ERﬂ‹ˇ€ ¡ÁwgºKyˆÅm€ã’öp#ÅäÚ;íj,¸∏±˛	àØ0X∆*ﬂG”v'ÄAÀ⁄⁄ö≈Ç6OΩ/¥Ö=À¡}òG≈˘¡ªöaíWÈknvj<¨Nµæ|-\ø¯‰∫y3œ0K`_øyR=ø6sı±‡ç$œ„8u ‰î™öèjäA⁄Ì¨åŸ8`áÆÚqsˇÚ7ÈúˇÓŸÊ$˘3ﬁá› ûù
+nCﬂB3È)Ìì´xƒ˝óK+Ï∏N|~S9*êØx…çS±h¯≠N‡Ô(œ¶H◊Úêãhvú·jÎá›P$XãQä˛"‰ç”[Yd≈0Ja+^ÈˇÌì0%é$¨r´∫‹j∏P|ïîs∑‘“~I≥\qÓÅW ];`Øˆ†¡ã3MË¶GZü¯¶∆Ûzì–≠\˜T9ï®≥∏°ÅqQ√!6'¶çE˘’W}M^.∫
+ó.!ˇ;ÚKÌF„ª∫ı√F∂∞øqËŸ]åú`-ï§ÒS>æ≠$¸uDø⁄Ô	≤Ö¡Í≤…¡Ïdåhn«ÌﬂA≥˙©è•¡k†¶ä°9òµAEK(Ò’hæ–'©ÌÀ»E—'¬∑Tï≥$|",€ ∆SåfZIÙÉ¸ıÁz„®<˛=0
+qıv(%t†Íz˚ö9ü,	‘ä‚¨NÎåòÂ  Zm‘í“oÖW›Bë⁄é™}{^◊?Ω>5mÌø¯<Pß÷ÍÆòS+@Uƒ˜Æn6R .˜VS]Ÿ_–Úéh©‚=}∏©¥Sü+Çmöe…˜ûöo?ûÜ›.öŒ÷£i√°øãÜçw^,4V{o*?3Ù´Qj‹œBeEÌ"TVqW◊§¬⁄#∂œlÒ·1%’ßˇ$õÖ«‚zj¸œu=Ü¸˙ŸKÛg∂&[ø˙y-Ë#è©Û©_≤á·(§˜îOBÃÕ›EÃ°€gè$é/õù´{ºÚ¯€~Âu√üV©±ü´‘IÛOçV‰Ñ˚≥«´üöê¿üSàI¡Á EŸÜø∞O˙€OÑÇ^0ËOÇàñU ÁääÆ=Õ/»®ø˝dÊø6[¡˛Úeã˚uüÉpIm≤˛Ú∞ÒÛ9
+‹Å`~H&8£àu˜¶‹UMZÎ§ΩA#Ç…(æ}sò≈ö_8I‘AÕFù;ö¶XÉ¡3ŸZ§Üª≥Å[∞ÃÙåä „Z‰4Ä[< PŒF€‚–˘¯G O}◊Z\næÜèK9®iaã;†Û‹
+√G¯ŸÅFŸ˙\7º¡[Wº$ﬁ1GìYîv‹h„·gSdÒ¥&aÍQö™cÌKU«§∞ü&SNû'ö<¸àôcx≥·.Ã”d2jsYó±nƒ'?Í'‚˛ÃQõÒ¥Œ'ùπñ›Vì¶ ∑°~	√ıùÕÜµ∆∏¯<Ã~ß£™◊ﬂ∆j¢tûGLay1q®¿.‘æ”Ê2>Óˆ"n≈G√≤≈ex⁄!~Âä°;"EÂkÛ≈vËÊÂ6+¨Àè ıv'	Pı&Ew¢Â`ÎÓ€√ëït®y{34˚Ïn'g‹DMî√k·qSÔ€ıΩÈ¬ï»”‰…¢ÎÓPth∫Øπ‡ÓµpÅ—»|"ıâô·¶Z¿ñ	>my/OŒ‚∞πÈbF°Q∫PèprÖÉhæó©é|÷ÇN\Ná˘ìÊRsy«œ'⁄iÊëq‘”Çå4É‰ß÷x´«”|øÄ˜ì,˚∞»ˆ£…ic∏ªÒ"ãÀ°ÁŸ›}jØÃµ†wıÀ–ÉmºFiZ-Û‚Ï\ÿZ£ ·W=Ú¥º_Ú!åá*;ËçÑ˝›líL≤EÇ9ı»Râ&ïNZ"o∏#g¡Mê´á—"–ïzÇQ1ÉÒ„Æóæ±Ç94k≈Öb^Ut®c’Pj∞`Éu¢ÙÔåÇ=–põò’◊ÆUiŒ6ÒRO$ÓÙ÷”À"ﬂXÍW«ØªóTúl‡B»≤π‚ﬂåÒ-‘^[Æº≥¶	÷ôX◊ºë**.é;<œ¥™“ï§¿*◊ù&hgÒZBVƒ·ã«˛tqO·©õ´Ú¶ªL”íí§ß›ÇG#8ò∆Cå=&GSÿΩ-@7«≈Y†ßB~F? ÎË∂WAÊmûv´Äi¸3¨””%»€Ÿe?√1C≠ã¨ÛÓ$ç&:’ÉI„h$∫T∂Ë⁄“cn[RS∆3¯¿BZI[◊Xµ÷Y{û^ø—?]psè√ﬁãﬁÑ)^ ¯®
+B¢öù"$K)<4B∫nKoû)ØˆŒK$ΩE’YÌt∏•<∏œ6]∆¯Gì(˚t6rÈoÀñâH‚KŒŒé$óöM3 q¯sögW ˚f€:”ÃyækßŒä8/G<ûùâä˝(∆I°øÏ#Ó@$Ú Ω9MÒ∆|Éßã)QkfÒ—ÌÄ©N¨!DŸ—ÒS”m`À∆ ó‘"+7Äd≥·÷/»Ä¨Áyñw8æ\d…Ë©‰ÄΩÖﬁÔãóßˆà°	æ≠ŸM?É:ëú<Çäu≠¶8|¨ÜDﬂ=pA…ë¶íDFΩ≈N#-ÃSÑ»çu‹‡±Úy6B(|øs»!∞øwpÿy z%$Gìkvã≈x?°S„§à◊ ıŸS5=êÎ%¸Ä)Ç˜Ô£)G\y:Uÿ±È9∑W≥†ùóã´)¥u+• ôG&∫ﬁ¢>ÔÄà∞‚n	Z^føé”)∞ò
+«ÒÑ#g∂ºd®Ωt∞	l†Jíg“Ìq~ô˘ú≈¬4”&¿œI|…v{Ñ–à¢◊–5»1ÍC/ ˛wxÔ ı*ıß∞œ!ãtL≈sæ¬4@çØŸjØ?ÂΩÚ≤˚(˙J«*<äÆù¢≤•Ú∏úÂéª]˙‚Ü7è?†™€˜òÎñM‘çF€—u¡á+of
+ Æ≈>âÛûvœÊå
+]¿‚≤tøò¶IŸÌ,©!Êy‘1Œ‚oz™£ùé=Z‹íûΩÊ]’≠ÎV˙Íqè-±’‡∑«™åÏ∂”/$,˘ã,L	é€ßèºTœÖ¶∏Ò<è˛ê§I4ëÿ£ ª°Òﬂ&ÇiAÊ´ Œ=!-ãπh¢ tª¨~Øíﬂ+«eÙ"∆yò©e%ÓÅE$!œ‚ç}—„?e‡y˙yÃEøÓÚÔ∂ó;tî2oø@¸/~õ¿R¬–#ïË,≥—ãÓj†rÖuwÂ–áU√.ò˙ﬂ?yÚ≈ç| R€≤õ¸∆Åá∞ãäÎ…–@X—&ˇ©`ÿÕÅ”ú& ›Ó7OOõö~FóQR:dŸ©_◊€3ùø5òMùù≈˘Ó˝RÊº¶t∆/ÜÉötH®.çT'Eù‚%MIqŸIFnßüg9n≤vbv;Á*16Ï ÅG'PbîÂª£Íoq±À˜3ÒYÏ^ú ¡
+øÍ£÷QÊfªıH29Õ~7˘›‰+°q|≈æ∏@|5|·îÉ~‡@¿/»"∫!AKN
+zX‰◊YŒè~i}R¸@„zÒéAÖ#L°∫.ì´àÅc∞‘˚ßBÑçuµœãXô±€?x8ŒáIî,M&b˛E‘JA√ô:Ÿòπº$≤nTÂìﬂÅÔª∆6}ÉÖæµÜ»_ë)Ë™2ê†üdu>∫@ˆÈ6Á÷@G«=qÿŸùq,òıgÚ 3iﬁ§*"±¸Ÿó$œHí+@ôÑΩˇjÛ")xÃÎ◊ŸEƒ6KµÅ.õ∂Ú$E_!nÌ•ˇ∏»æ4ëUN@Ü∏˝j·wì∑„ŸÖ>;Õ6‰—] wx9bsn∆"`Eáˇy≈N˜-Vø@9ç.≤µÉŸxMŒcñ°s≥2Jœ„ÇT’oActÃ∏cçêÇ(µ™qÍ˚∏ÄÖ«ﬁJGU•JË ‹_l¸¥.NÄ‹óóMliN ‹PÊU4ÚñÅô‰ÒÑ,ëJL¨#vÕ˙yñ
+«≠oˆ^ÓÙøﬂ98‹{ÛÓÌÎ›ÌÕÌúÂôÍÖ{f˜åäqñGp,zâ»H;Ìä®8nô’«(Ø^µB,÷=òE
+Ï=ÕT;m–lßú0¯Ëâ«P¥°ÆIå{ˇ‘Èv%Y√]‰´ìÉπønÂæ¶(ŸcC…ˆ5¡g]Ä, @JÔÈÕUÌ•Ç∏Ñ˜’Æ6õ”ŒL¡Qˆ\NôjÎÛ…â*<È2Ì∞r&í÷8NﬂC»wwÇf’‹›Ä>1ÅV»ü¬Æ8y*ËŸiÚ{ºZÚ#ÿÎÜy6…ŒÚh-XxXâÉ˛–]Ω\∂}”'4.«£rkÔå‡ì†}V:€ë/ápUë¨≠ΩW;o∂v7_ö_ÙDº±ò%>bDQªz'mÿ¿€`k®
+sl5–J´˘]¡°©él ØˆR´7q1ÖLˇx÷Ã¢]Ôπâéﬁ¥¬‘z†‘TzûÖ¬∫àÄ⁄˜ Œf„"8nõv˛n?ùÆ]JîÑÚ<~8„ÁN"‡áÛÍj<Úxú`ÿ6±ND⁄4+ %Å‹r †Sç⁄ŒÈ)≠¢gJúÊŒÒØÌ≠4ŒÒ÷w%†J”∆˚¯Fuls2z#;a§!K-J•QQæôMx¥¿¢Äæ¿íp°¬aÄ‹Ì`éwb\Ô®vÍo–®ˆE}ìÏÚ0£VÖê1.ª™⁄≤≠≤.)]à¸÷ckÏõ|(v™€”Êt∫hŸÈE•±í}ËPäóL)‰#Æn•ZzrÍaÂ·|“Æ.---°§¢¶á≠r≈ŸIÂcUíkÑä	≤;˚'†Óvt˝ú‡j5úU°Û%±E∂¥ÍÏôd°¯UY°oÕ–’Ú.h™áÅﬂÄ<8üe◊Thé˛•<DxèO`BcÿÅÎl”"t:fsêbÅã8ÖeÑˇü,≤≠Ωó/w∂w˜^Ù∑6_Óºﬁﬁ|≥ª˜nskoÁ`Q—eÆÈq§°Ó∏˚Ä„ñ
+fN˛˝À◊ÉâêÌ1˛¡ΩØÇˇ7õÆ†ksÏ¶.gﬁV†µ;†∂75È∏√…kõ∞Uú¸á°ñ‰Ó·9Û& 0 ;É(“Ÿ,nJmw¿°qÜnQp≥¸¯OZXƒç;ÆÅπrÑW MRjı
+5ä≠6ÒUÕ§/∂™'(æ™ßYå≠,ÿR∏UO–`y~aóB≠AËµ·¶Öﬂj‰õK£bï¿( à±≤èôdœ=d`ıÑLP¸47≈~ø≠§JJ:÷≤`·)W¨o'6∑ ^ﬁGá˚ã”Í	ä’u$5(NS Õ+V€=ôó¨ÜEÎüö∂ﬁKîVœ]ëTëìe%Xxäq;™ZAOÔ(]∑.n”T4Ì≈PÒ¥¢ûmë´µ8™ÚüG1∞R>V’√ªâò‚qëÑ¸fCº}√∫qûª ¿·√îÙπUàãùQí∆í˛)9tI
+JDınÚhÜÿ˝ m‘Ã/’_∫íÕ„>C{∏4+ÖN)‡DßËZZ
+ÿ≈ZÈfsÔLFa—ÊE2^dçbçÆ£I¶	gº´@Û"ûG<·g"“ÿ˙E®˘j8
+‰íN6»4õjK˝ ûÈØ%Jì?d3X7»@v'jÔ∂◊Ø“„≈∆Ÿ”á”(èÄXa–ŸåùjƒVÈ¢ÚÎüO3Ù„†O¯ò„BúrÉ·èˇ?ëu3,Tˇﬁ¬ï]ˆó}û?üxü∑–∏˝6ØXI≤‡Xt%Wôá’∞˘√íçÿDi®9÷JFnf¿›˝árñ∫ÁŸ'qoØ‹ÕÈﬂ[K•\&cN‘ä∏D-i6+ªïZÊEÆ≥µÕ“Ñ¬-çrUûW)Ï“Ÿ∑Ë‡∏GÏ‘é
+@Ù_¬¬í$PÀ5ﬁ^æ0CÛag10Yggå:zAQx¬ﬂ⁄?˛i$_£…0NqÉÄöûuyMº≤'yHw∂‹T€Ó”≠D™$HoiJ}aÆF"kÉÉ¶˘Vß∫4†ÜSvá¶‘îLäÕ—à[xÒ‚≈ oÓ5®∆ƒ›± I»5ëbMúmß,Õîü	à?πÕ/©;B[ÉŸ…at¬kﬁ4ÔVΩùQTúüdQ>‚Ûõ¬÷udΩ‰õ[˝E_róK%Ø˝˝jW>§ıBµ"Å‚.ı¢9r±ïÕ&®¶∑Ä¬ª±¡∫¬Æ‹>1Ì¶|Ω§Ùñ©UY>jõ4`+O≠vüg°æe¥aw⁄œgÛµk@7â/…åøVo™J&ÓîwjYG”ÄÅ0	“"OΩœ§	b1pWˇ¢¢dÇìà®»"ï3vU0Òøû>éÀHB@˛B3®ÛÏNäaû‘Âö¢=c)S´˘∞ö¡∞*e’'Ú^DiñõZ*Z„πˆÚa4 *ÛXåÁ î¸⁄ö◊ﬁ-‹?+VPëØL¶ô>DÜFƒÜŒ{™C_Hä§Tì€WhØùOvœ˘Íz◊ŒœâòÂÜ\⁄ S$‹“ïnfq;¡„˙‰"N*Õ!§4`ŸgjZu$qè3€≥˜jx3~\ıÒ›õ∑õ∆Úa¡‘´-ôe@pùG6'oñàztΩõ€Øv_ø{µyp∏ÛFjCŸ^Ïæﬁ|Ωµ≥˚fœH…Y]sÓÊ/gX#©π‰u®” ÀÓmAË>iˇ\ŸéònåÙw ˝ñÏÊﬂ˘EÁ7|b´ê ƒ”C?á`aáiÚ¸¯)„Qù’π¥eö°€&Ò‹ ∂KR"Xñn£4ØIï‡õ¨õ›ºrˇ•9yíõènÃ4≥£î!%j∑mπD[7>ï€7>t'"Öº÷ﬂëºí9»ÜékÒç∆¬Vv€íÕ-¥ÈêŒ}∑.È‚5ù¢dSóHﬁ˘;D
+◊t«ﬁãõ:dÂûøKVÒöNy‹¬B∞>'≠ »Â5Ø‚HíÔ%¶rõ-l™” =?»¨‚5 £\h´.âºwÏê(\”á·÷dÂqIî«7UÒ:@ü}6∫©ûÕùü›\œËVÂ∞‚¡Z¨<|Hõn` w¨ ÀÁB(»À∑©*nÕ±+†«
+∫êqdG4v iqõÕΩ?›‹©Vˆé‹ñtëë^X:.™ówo]Å*F√|æayÇ—%A….@>:I“§º6õ
+v
+kì˜x}mW·ﬂ4.`ÿ£q2Y>„™Ëø˛!¯,·’ÖèƒB‹ı÷Ã:oŸ≤~ôΩÃ.„|+*‚nØü Ô2äãÆπ*nÁËFû◊¡π™π+yJ:à’=©›;¡h! sƒ"áõ∂:‘„≈zOC ∞õ†™Z·≈Ç+c78KÃ˛w”ÕPÌD≥™õt∞§à65«\~Y]¢Îtóú¯3òYÒÍÓ¶ÏÔ¥|Guø÷Pl¥]Áª"…++«Î»≤jyÉ[Ib98
+c\ñÿ‡æUã=j"=¨≠€Âı˙R"√≥uÊ¥)I†pÂËSEÊÆ∂Õ∏«cËµ9π∞+ík^cÜΩ‹dﬁ¨õHÒ⁄˝ˆñÑÌÍ)R`. yN¯*gñD©¨’KÓçòn)R_KÈ√PÑ»Â˜√≠¨j€QNp5ÅËjôÏÑ
+—Ïí©˜©€ßó“{
+óuôLíôw:gCÌf°áãLvr8d_≥Æº9Q9	+[—NV¨´A§›ÁñqÁñ-q¢E€Z∞mø°ÀN S˙Ôö©Z_zÏ+∂∫≤|Yˆ£ªwW—¡_g•cúìÎ√Î)No‚añè÷‘}°’|cºπ]±ß?Àw¢·πö˚ÇøhPÕ™˝R¥|ƒOK∫ÊÖCΩà»5÷s∫´ˆv$ÎπaxÑ; ˚RTt–ï“≠X4X0%ÂÍì≥•xÁQ:B§·+∆™iñﬂo3ıH∂jâFVÍV∂§	7t¶5êTè?#´¶ô9Ü˚)e¨t'ù6$∆,Z0¥Ññ}aû¿û$íÕÕ3·Q¯a!á,|”≥e˛ïºÛ|4aÁtûªyp1œöö∞‘‘u€#}+≤º¥[d'ºO'}Q€ßA´g{ µEÍóW·é•ﬂÔDØÏv—üØ„–mÒÛVù]”%¥((ú≈ﬂã(Ì"fªπÇ≈'zX∆√EÓ+í¨πu	ò∂üF≥¥T¢5SæVÆ—+!Æh:tsg©ü⁄0ù”RÅq^y∑Ω§p¡ú=ªÅ†~À.hîZÕçËº§ôJ}á)j+9Íõ±Ú∫Õ¯ß†T[¥hB‰$ThﬁL1™n”t:°Ë¶◊Bôf
+⁄¥ÜVÏŒS¬öå<A3ß±O˚@ñ∆¿≤,Fz9›TŒô¥èm·F]rÃçIÄ+Oª∫æ[Á_Rlœ¶)ﬁ˙ãïp]ÄêfÏ´§≈öc^ElﬂlAKò–ãU˙lôâzVéVií*ïå8¨¨¯bÆk©$»0©D+]Õu;˜Òè,æBS;zÛo©«ò∆èbT£KÁs∆R»ΩuIö∂:HwçZ…€Ÿ∑z∂÷N$†híHoı∞•±òD>ﬁbÜñáŸÇùhbyôm*èl ê°œÖí+UPü¬N`¢G–OæA∞ÛHi∫/∂Ë1¯¡ø‰qDï§(¨	g∆Z‘~•(f‘ÿöÍG»ˆü@2+ªAz˚#‘D•ˇÓÉä∑µa&Ó(Dı›øµ∆∂`#⁄§‡=3∑'3mEˇîæŸ≤·õ¯wZéhAn#ˆ7GlM8haúmÑª¨áÇ¯Ë»¬÷Ï<7PQ™«Â⁄·À<x:;∞îcÅl4Q< "¸UVc~€j=5)7tA—%ƒ≠`õ<≤®C@cz¥	‘5‘:ˆ≤òVÙÊ%&›πÃ éM)±¶_ÂÅ¶˙Ã_ÈwzúÍìlöSÔ`*õL†yË±® f“lû€:¨h\∞U6D™`¯;eƒm]ß≠¸∂]ªÜ|∂á‚⁄”Î™ìÍ‡yt‡‡πÍå˘Sü$◊úÈ÷ü:Võ~UÒ∫ï'lug]µßXıßSMáN5'I≠ŒàO~™™kéå√'@˛	5ØÊæeÕÓ#‰µI.åˆwÏW÷Â®=ê+9ABQªˇ€7ªá;Êc-o„Úpö¬bsË®ﬂ£ÊÛd∆AâRdùù•Òæº∫∏YñH†'√ÿúºòrÉh€‹R[ƒ8kº#‚"ñ˙‚Ápñ£À ª=uÉïªo◊@ú>*Ωìv_ï?pùÂÇW◊È—±]LK§]K ˆ*3ÛbU;P=®í$˛ái#˛¯~∑¸ZëíM˙Œ±dØ∑Å™$)qL8B“∞ﬂ P…fŸuXÉµ9,≥ßÖ+_˜ªnõΩp¿ÍﬁÏê›;øY}‚]Fƒ•
+ ¸÷Nø•Ø∑>g©yøJQcÓãtf~mÊŒ[©f{≥Iz
+4juf)øÃÜwWÙ’$ÅL]f,÷óôF¿9ë≤®ß‘ôGôﬁ&gÜ‰u°„t©ÜîyT∂Gy¡jj§ôŒ+:£B4ÑΩ±—x≤°MpﬂÏˇ±¬EßBë›ñ<›m=ŸÎM5,TÅ§	¶|àNy+™f5°‡awj—˛⁄ï0¥≠i +otg†Œ€û[êÉ7PL§{Ön	yØ√˚‹c≠ò§ÅQﬂvCc˝6∑ó¬Âù…´Ñj¿≠∏€yï∑]=ÇA÷'móÃ$æT∫Ô∆›˘!ÁA1’∫˝ ;≠ø
+-"±&®û†˜≤Ñô~t¿æ∏—’›æø◊,âŒ7œå`˙∂c<¬1sbàìcº+ú»ÎßÄiÄ•?F,æBp‰®SS:∂t˜≠Oå¨ãﬂbíFºÕˆì≥S#ô´]¢O’[ïÄÄN°äÒÙ=‰Q Ó\M3ÓíÃ?õé˘'i‰d;ÚmÈ§G!h≥ÖF^≈Ó‰„ü@fÍ‹C};ì4∫êﬂ_Jsfmq£>Ï	ŸR\xﬂ}9]-ƒ9Ãj¢êYç<JR3*`tòÌ\„¥k ∂à◊Ex«/ºu<ü˛bv«jÙ	ì»∆œò÷~}¯ÍÂ.Ü|€Ic$ZœºyB=håÔ≈FˇhÂò‹¿D«˘`¬~tZÙûác—i¨Übù,€ÎAá∏A7œ.9æ.‚ﬁÙ!æ.åüs/åé(%~Û Ú0Ka=UNç·;ﬁY∆l°K∂(vB®™îïÉ	w?}ú@›v™Õ‚:WÇ˘≠’Êó_b£GÍ˝ÿﬁôıù+≠éﬁ'ñyui¬L?u5®'ú^¨33kŒ@>íÙ#y‚ùjƒüò]^ µ(Ç4F¨°Nœ=Ú …É£ß’m‚‰∏Ì€0˜'≈ñ^¶ÎVè:C≥f°kz9Û~AÅ?®6≈øŸáŒ±1sêB˜…ôq£”Ñ¿a∆EJ··lçE<“#vHâ´µß„Éˆ¨p{öÌŸ©Ë6Bˆq⁄Ç∂ªrÍçÈ%ÎûWõuªM}C});4˘1jÉÆƒÇ©cÕ!°´îòkOÓG8ÁòE!™BN{Ü©z3¥‹e`Ìhãx9YïWoÔÒXfÖ¯ù‡∫‘÷=x!p[‘Mü¬Ô9⁄ïÍ⁄ ˘¶ãÛLı@§:ﬁ6C†˚6_ö∫<y_Áçb~)N90Ü&kŒŒ£îÀ«N—ODï(Ùº	å ˜‹*pÂ©ı•¯êLßÓÂ&⁄Ö0“A\RjK∂Z¥K‚õ-ﬂ]Báö¸€!∆Å{ÒhE~tÕo™c‚6Œ»=uü√8í(´±Ùœ£¢˚˛ãS#Ü•r+–íâx‰ùJÇÀIXÁês>äNª,ÇÍ%‘8w/ôûÂØø∂X˜9ÌNŒG˛/O'∆0bìjÈñ…ê•≤måK∫ 2û¬*aäı^'‹≤‰lÇgQ—Œoﬂé%Áìkd”πÍKçdC8kÀ
+ÿçß[L£aºtΩÙùé•{≥¸;åNÿÎË"9gö_-+0π≈O”¯ä≈⁄¶≈9Ü¨[Z≈Ë∑2ﬁ-º®p∑èØRVú√vπTåÉqäWWVÿÂ“iRí»æ~,_º¶í?®Ä•∂˚å.qãa≈d5ΩæNÏïX1å«`˘;`πˇÑÌï°îI^;TØCïâ≥±Èõ:aÉoÜ‚K∏•gÍœÙx≈®F¢⁄?ÅZt`aïd≥¶F‘vhÌyîÉÃïóﬂ∞"˘¿lıW∑v\Á5»~[≈lÔG„ù{"Ö∑ìœuEÔÊû¿ˇ  ˇˇÏ}ŸnIí‡{E(Q€HVì…KT©ÿ<¿“Q≠©§’Q≥ÄZ(ôAfî23≤#3E≤9¸Ç}òá}X`_v˚i∞∞/ˆU2?0˚	ÎÊ˜a~DdR%UÀª´ä~ôõõôõ€Ò—q	Êˆ°µÉ/r}íêìÿÚßÇN–⁄ R•9ÿWguŸœ‡_kÑ›L	ôév’œ≠lx¶˝‹Œ.Ü⁄œ;tÈo[˘¡˜@ÙπG∆gA|VŒÜ§√ó‘¶VÅ√^ûEûz0Ù®°≠;µ$2¿˛ï–rÿo©yˆæƒè{È◊çV7)T⁄t{!∞Óïı…∞ÿÚX•/8feº17:˜åóH›Ô¸evÔì!µjè„ ˝+Ñ‡s^©±NÊ5YôEÀºRæ/‡.u∏ÃŒ¿?Ëg√y`‹%Yû≥j—q+Ì‰ëﬁ¯ÿís≈KB;˝cØ´i‚&ï£Obî… E[îˆ‹±iè’Ü& ›1$üX$ßéìå~∞≠∑LôÿwÍúM1îª§≠—Ò⁄ÌÃ√.ùÊI,∆ä∆LúÓA≥ë 
+WbB%(´=Åı¡∂3)œÿF∆«±u¶p>ÊMø+.	v±ãX?õH?ÿ∏(ûOgÂ)D+ûù≈òÅ˚b `ZåJXOÉú; e´BÑG∆ÓÌx[t€i©sNps@˛Ëv:)'Aˆ« 5∂x
+∆Væ9X¢C˙%¢ft≈ù\ÆØ:Y«7åpW∑EWcã5–9ö_#7◊ˇi≈ﬂcxÍÅ∑2e<Ú B≥s∫XôîÅ"ÿKôÅòx:$DbPˆ	üı#i‹;ùÄÑmñŒÄıj!(BõÖ£ùˇìˇ*OgóÑá\]eÁeÚ±√π€XÆ∑ŸµØ∂…Ωã·y±‚˘–Â%ü9'xú_VÛô<Ùµe	/À	≥;Åp_Vìl«ﬁcK„‘≤qJéöEwcïÙ√8ƒ,ÅCÃ>—9„¸dxˆë…Ïoù:´ùÉ4∑	—ú}¬D”˚¿¯πrÌ◊G0ç•ã©ËVÖÅ$üç˙ªÙÔ∫:áøiÔgT›’ï2RrÅ/ªÓdm;Û(ñÌ*¢dBhπ–Sp"æu —u‹C◊vo∞Âlx {æEáîeœÜ˘∏Rå¡Ìd}∞Öt=Òêö*ÑYB°…bO ÇFT‚˙˝"£^À¿üÚ¨¯Ûºú»0&	ê¬y1ÓºŒ')L8éUu“ıÔd1F5Œ◊’¨(ÆäVìÒ¢1¢ë Fv&Â$(õ$;™»÷‚˛‹’¢ã¬î±Ü˙u: îtr«Uæäb*aoK%¨≈x±1¢‡‡J6rä‡†q¥¶
+W.u}jèBóËË‹ÂõñLÉˇ¢LG9.cÏ~¿∑¿]=ˇƒ≥¥8Åˆ¨∂ª÷f|8wbÊ9c?‚ve['3äÊÀªZ˜®k`Åáem¢z¡/∑l∞"¶‡l8H©H»ÚASnÉâ^»Û„bàAhg√ƒAÄ—mze¿»?=jõ.‘‹À´ìy=≠ÍµIŸøjå∆øö–(a4£xƒÔô}RÛ^	÷óÿ. -¬í aÅÌª¸‰§òÃˆ;Ωã·Ùb5Éˇ`ü,•∆û˚W∫5hòu∏¨Ì|ÑH4t›o›68∂O˚µTyÌÅµ±ïÄ		{„~u>N≈6c.‡õ√'¡DoT≤ùd0‡®„â∞Æﬂ⁄˘Ø®û∞ø·Óâ¸ıÊ∆‰‚.€3ôO‡`™ó—1åhà™ûS"_NÛ:G-ò’ÈØ|_`õùyÔô¸xZÁÊ√‚tF 5´à¥∏æï≠Q£sπ§Ã…a{V"R|F…ÙÜı1í]1 ¿.Í}j»òUsf©◊Îı∞
+‚IÜõƒhà¢6›Bp≈≤FWöê”∆"íê–L»rìÕ^#õC‚-uJ!u2üÓÇ• ©ß˝êGˇÿi?ÂÁ9ò¸; r˚ﬁ#KYüîÜ˜!%æXz\ß)æ⁄NKw…∞%wr ≈WYwåºﬂä#€´öP´-çÛ‡eé^‰ˇ‡”Ωuˆ¢1ıeÅ`”π_c ˚§JS®ÂZ,˚ÖÎè»Kﬂ≠íêòâ·ƒßäÂzHL}|m€à°öÜ€FzÆ_^ÉÍf*@¬Ì£∫Œ/{\√`a¯k#“–^&Ÿê)Pæ´™aëèWV‹S"¶ßf—7ë›eÔ/µ∑<˚
+vÆ ı√Ás‹XÏ¬)˚JèÏú∂≠Ù,~÷Æ⁄?˚Õ≈òõ©u¨ ¶SœÅÒ3Ω√œÊ@ˇï‹ÑÊ¯s†ŸÀ•◊óN7‚OÌ≈ˆJ •°qFmãÂÏ<TcÆª˘ J*tÁj‰ÑÒ&Ù’
+wm\”hmz5óé>À◊!äõbR$áÙ|m$ïÙÎπ-≥Ø"8¿ÈﬂuAç(l¸zXéQΩ	N„ó£âsrÑ‚◊ß‹æyègÏpŒ¯Ó’°úLFç•˘L‰€⁄Òì·â¬.ë+∂^lc˚¶-µπØ~%ÌÍ∂Æ–K*à‘Ï‡G–¨‘–c9Ôòï)È€çJ†b√"voT±h2®-¬ê^<!/®*Cm¥ΩJW˙%]âºÌ2ñÅá¬ãÔ§°.ÕûÊÙ™ûO‡¢ä°ß∞§≈•aXøæ∏´2'Fq è<ıéôe<ÔVò…:ıtkdòé˜JÌ≠yß‹ˆ:ÿ'Ωò≥5º©∑pË’Z∫`EπµàXvyFûh5i‹à^ÑÏ#SqYˇvI¯L«i(áF y·!Ó_°,Ä◊™sÖ◊¥kˆ3“Ò"∏≠zñ∏Õ$;¯Ìó·∑~Øg\V˚¡c
+Îµ,≥M{P˙i∫Ò›:‚j g˝ÿ°$
+ÌPúH≠úï˘Dw^ãﬂä'Aãí2W6#"8A—„Ui≠û«/<Ø‚ÑˆuãmÄ◊¬£Û∫Öáà‡nö•]
+èRS`7Æ(b@|∏\ãÔœ’|"Z.çòÀÖ#s€wòe€·"3ı$∫¿JÓfæg†ƒ !“D¥“Æ{õöJ#2âîÑ±—i‡ic€MIù™¬√‚…RÒfb	T±"{JI£äo™ë@o©	V±rà6≤Ñe$3âM#öî5>	$5kª)Xa≠%$mç4ÛÉŒ¬"©[#MÒÄŸn[h◊hc<æ6÷ö∆+V@nﬁVB2W¨ ¡ªyÉ—îÆ	Õ—ÖHCÀÑ¥ØXÒ‰⁄	tîñÎ+áHK¿o2ü¿$RÛcß·œí›n"2({Ãı„ñÎòÏä'ÏEÚ˚ﬁn∂ÒémQ∂©yì∏&∫û>¸;{ Øo	s†;óRøñöøovå–cü
+ØÏ\1(—3ú$Æ≥X*à^÷˘t∞≈úoRµ! ˝Ä˚ÉÑåoPó„wk∏ü∑\PÇkΩ'`¯8π\€–‚µPÌØ“ì58y:‹ÛR©~ÂÙÃˇcI÷1”VEW3ÏÿZÜÃ–Æmml¨ﬂâj∑¥
+¨5˛Ské?·Ì-I+p„ü>ãøÎ‹UÄ•yÓÛhì®w‡2AÌXC)c›–«∏>Ô˙êo˝wÛr4ZÓaøz%§6ÓÙË™∂<‚L®òœ+ã^-y&/&2ˆåÛ◊•ı∫^)êÁ—E˚;ÙKèË˜>Aÿ´îçˇ∆´áçΩyÖi8/÷á}Y‘4ÀZ\8	9N˜∂VV¯]˙û^üXÒØM`,!Ø‚ñ¬JS<a•!∂àÆ‚åË≈V∏ïU@feˇ"`∆Jàı≤BØÁHS~ÒJÃuÂ.˜§tXìÄ 1X*¨9î3ƒ¯BNﬁd˝}$EN9à}òÈö™ÈWp˚^·$6Ÿù◊êπwÃçÏΩ[zíOûïc¡Q0_\˛!Ñ ≈T+p˚OµrŸDÛÊﬁ»ùX3√•¶a‚w¨®?¸K’˜¯oÄ@_πﬁ√"2É=¥Ω:•7˛4<0X9xøŒM¡J0t¬ïˆ˝√rDºnV#’™YﬁÆe_≈áBö^π~Î¯ÁfÇ_ˇ:{RÃrÍ1Õ#z®ê°∆ó¬¡ØÆˆÕ©w Èÿ=∑z?ç≤äh]ËÕk•µÊÿ‚¡(i¿ï¿^Fã»§iµwóQ+§`$X‡,v;#”¯0€Ï6(WNê„ÃF ,I$HH ∆ü¸„◊ø‹
+®ùrCkb◊™ÙºòŒá3ñ‰(BöÓ_ÕpaòÊqS≥è i≤å¿.Õˆ¢~±(íA˝hõÿB.^â·›b÷ÿVßò"õjmXÍ¥∞÷¶ë{7Î“Ujñ˜}HÖÒan–±‰”JπQ$ÛÉKõ3~ƒ*„ó√Af?UL1oö‚JÍ5¡Bl\a˘µŒ>\	lZ∆¿"ìŸß>¡øÒNáb«üww√òh9nXµíÈ@z0%¬tﬁ
+„ØîΩÄÁ?,á‚’Ñ÷	l√1.éÉäÏ88Â,ñ'AÜˇC1ÃG*°gA°∏Cf∂íøÆ'÷_h≈tTE°Fu-ìWdK∆¨œÏÏôOèÜå^Ü ñGÀ. ∞dTzèXÖn	U™∂mgY»íän∞be¢<ÏΩûË©âCˆSêí6#Ç.Éü∞,§N¬]ôb◊H¯Ö#ÈÖøcâBµi0‰∞:äy´h&≈Ø∞CΩﬁ¯isrÒ”˘ß>;Œª´ÙΩç≠ï7ô⁄ë±ÑnbÓaÖñ•«	nªÙVïöÃäî—…BZbªõ§D¥5KÁ|ÌN6–Ë’ìH¸ß≈z8Cíó©1≥AU‰ˆNÆµ«æ7O÷ª¨DÉŸÏåïÌ∏Ñ◊K⁄∫˙Æ—„‰…ÍTú∆h "ûùÚ˙h÷›à…qVµYı
+ñø/π*Å˚a ∂™^Ç*Î”‡Tj–Rß’¶˙»H∏≈w/≈K´%_p—is.Â<g	i}7‰nâia¨ØqQˆ[È5j≈Õ˝ía“§ccy™n`é…hÍ?≥8_FÏÉÙb⁄
+%ŒoVùùeñ¯£Ÿ<*∆'¬∫hï
+1iõ:§≠¯îqÏÅã:"sL.©èvcß6£üC¡¶t#'•}j«óK%˛ÕπXÑá}£õgâáH%	≥5$‰Z‚dì¯\ˆ])Ÿ>t∞3ÀÕÂÛ‚œÛº.ƒ=‚v–2E/·£ò’SÎNπZÍi¿™Û,ØgÂI9©Ê‘Ω‰h/ädnö⁄qÃzQˇ2ç¢i”XN-[}47œØ77)9Ä¸∏1@íÆ¢èdH:\k„]ˇ:{¿ég=`£ƒïGÒ°/ÁËA[FÕaDÑ}[ÑMÁúœÚ≥|öM‚.r ÕDÄvævnπÍægÂŒÛgﬂtﬁ@(z|gf&$†.9}GmQê©4`Ã™∞Ä¨jì3
+z>'ÉMï\Di%®2ü@|! p5Hqü)Iö¡å.X¥®◊(·Ö ≠M5Æ¢fÔ”Ê4;D•äO™¥<ã“¡ÏNG}o¢H„†ﬂRLRE¿ñ´æX⁄ﬂ—§≈*EsQNGMwîÄ¯tgÒIïD)Aî¶;∑9©HÁˆ™D<çO”è\Èß˝‰ÉcÂÄ≠L/ÃÊ,√¯ﬂWó≥Œ≈¨?"{«OaÕx˝Ì’ÏŒjvw5€‹∞9}wP7Êﬁmxw{ŒM˘ˆ â*1Ì%≥Ï∂ªª∂9C˜ds≥`“aÛA"^Œni∆Ìõ!√Bú¯¸&Só¸úﬁê°(óƒΩ§Ìr®ª-è…ﬂ4ãoƒ‡õÌq†'!_ª4gÌ+∏πôßy_®s_a‘4n≥bóQ9ﬁÔl6™ë_êÕnÑxË7w©”kìuB√Öo·Ì¬.£…P¢˜ﬁv±Ç¥RÛ†Êª„0€h±£~†KjΩ_ª€e©Ï´Ûj√∫\∆µ zãÑcóFp∏Vª≈àQ∏I3|l
+é‚L®q'@(~ã¨nœ§± dXÕg‘g\ç=∂·¶˛√ó∞;\åtOÁ≥:KïDupõÕ“>å2°ÑvÇxuË!ÿ∂ß^S˚g#–—oõÈø[π,Z&—€öI¥ﬂ+∆ËïûK‡œG∑àâGäèõûÏd:!ßŸµ)ªπ–Ãrl#CÚÒnaûzÖÄ£öO¸#Ñ>{ÂË,à]”˙dˇ
+†∆‘|8€øz˚ê|ó} …~óm˙|{¿–™<Àhu¸3ÄÈ†ﬁÔuqZ‘5aC9è]ô•ZèBÉ§aœg`… Ätêë>œoD¿ˇ§¿“˚yr„œ˚ùüéá˘¯]Còx5)∆K∆U
+ <ÂxZÃ÷6Xíœ¸‰›˙Ìç¨ö‰'ÂåÜekLÓO≠¨`¸q‹@I¬£ÌÚøêJ"cT{O;ÈT &!Ø∞û‹XÇÙsπT≈–K'ïAöà8.…2Àû≤¡≤\¶æ˛q?œ–L;a8ˇÅß»@/ä`∂hÑ~wœò.ö/À~zÒå‡ÊÇ£-·ÄpéFL‰g·,Yiíêö*QC"√kCGcÕÂ(jÎÇjN3Ø¡.Ü…†¶V$3‰”§ ŒˆB∞»¨|a'ª∑Ã∫JËë´Â◊Fôv'ñ2≈±8˘&$L/ÿ÷å7Éè") Ì"1nµ∑æ1§º]ñ*	Eo≈HœF Ü„4‘&!	“ûî§YH^íPxjˆF≈∑ﬂ∫l‘.o¯ü†ú—Êä‰ÿ∞◊&í⁄lmËƒe$vÁPi ˇBcò•iè.÷Ú9ëó©ÁëÜí€ﬁ€#;§Úmü¯‚w«Ú%)è∫ﬁ0ßõ<„˜r≈òP3BK	Îô“	z`]»~$‘ò¥B›\–ë!,ÆµŒ7Æ≠òΩJÚP≈-’çR{∫…œg˘Ò∞@N/,¨Qq*Õú™Û	öƒfo6 ∫D≥⁄Á≥∆õ=vßÇœ;—Ñ:t<¶ﬂàbø≥! ™s¿=ó◊3“ao}6Hm
+håßYUX£I-ë-*Ωé!Q»π◊jÓˇÍ9y^chÌY‰ΩŸq’øƒjö9ÉµÊª≥â'»Ä¢#ä`Û»'≥]˛–aò;à©.ŒêΩˇ¨Ô¨`P%à5ïEåïX,1ﬁ_Xg9ØÏâá«h≈‰ŸäXEÊIò AbîL—w-[≥Ë\ã∆Áj°´eåÆ÷Q∫"q∫ZDÍ bu•FÎjØKW+(OÄ∞∞SöG√t•ÿ≈¯Cu-u;Ñ˘r8∞Iz(ß®Ê£uß,{õ- iô4$†Xa%¨^a•Qâe©ZX	·≠≠v	+]%”r4¨Z:‹◊ál˘m‹·GlÉP‘∞“^]√ BJVw{]0ëöé(…Ôv±îDjHZ¢Døﬂ∞Æ&àJôñ•™Aõk´∞Ak£∂¡j®º·çxU8‚˝M ä!]ätÁÀ“	ñ•2CAiìä◊KÕ•añ((dä’gãÇ“8cî≤FAIÀ•aˆ((éêP'≥§Ñ§*M3QAiùç
+ä»Hï0:_“™Ñ™±<À˛J$œ⁄XÕ∂ÿ ÀîÖ3]AiïÌ
+J<+îFYØ†,!ÛîñŸØ†§MlIY∞XSm2aAY8îF±¥^…ä•ef,(iK‘ CîÖ≥dAiï)J⁄îñî1Àjj—¨YVs,sV:ƒë‹Zçx°6˘ƒ5B‘aè˙1e+ªiº…˝’ ";X;ê$hYi≠#d%,KÕ`≈ÕbñÊVyŒêNSrù˘ªm≤…‰<”:lü˜J´‹gP“(Z£hPñêJÀ\hP“&÷:'îp^4(r£—ìÌ_¡ÑUßﬂ1S£…õ7ïª9ÌÊMnP	g÷|Å\È)÷Ë◊	˛M-ŒÊç”≠AqÅ^}ï´©Ë{AÔÄ¯ú yz 6˙yÊ-Ô9ªnﬂïJSk⁄ﬁ{’.ˇbíè˜ØvÆç’L≤‰·Õ|ˆ<|0©V=¸Û»utkVñdÁ#∆Í7Úmé`.~ëO1K
+ÚLtÃ«Æëaª{Ur¬Ó‚•£ç,/äæn,/M ˇq~ÚÆ_W —5ÿ˝®K{0ÖËû≤ãs¶^é		 á˚WW¬D7€XÕ 2ëÒ6zﬂÓ`Ï'ó#2V£÷¶¨µâU1/|ô7xÂkÁ`ûãTm!^-f¥G®=X{˝Ì∆˚¡õ,"63÷"L÷ÓÏ°‚ÄÇô%±|uà≤Xv_™∫B◊ÉFê±]ûÇ]VÔEN‘}’óŒ.ƒ.Uÿ∫0söß~i∆Qrè…Í{æˆ»<~ö‰MåL_«ÙéˇsÎ3EU›Éõo§°j¸b~<*g˚WLaø∞©[(+"ú›Võ„í±∫/Áiü=™‰YçMKcÃGÉ∆RÙ∏§íó¨g,ciˆµáÄ”AxrFØã?…{ò‡ó˚cqq4‹JæN7Øb@”-;XÂ/ñœˆµÔ.8¡ƒNx9ÄÉà,±‡‹[Ú‘C¡pí}p±õ}7,g!CœÓZWWY5ˆhLH‚lNµïû¥¡!Éb*FS÷Ñ∑yÑ¡‰,{YN*cHË>p,é‡q‹≈¡VC„‚?•4∞ipãh†u‰¿b®ã,‹øy¡ø˛A¶.ß˜æL åΩ¿é—=’=±ö>4!€ºMÁ‡“	˜Ëfu√ˆﬂXı%|€§=7¥ŸDpŒÀÒ…å≤Ó”	£>>¨XˆÆséÈ;/x˚œ"Äê—@ökóÑ‘B≤ÅM∂/‘öS1æiB:ì¸∑«Ûy–Å≠cBÉ∫B‚™â„£ƒıº\á¸ ¯TÇ‹ÅUäËˆd€‰,^‘≈	U*4¢MEöÿµøìEˇÇáÀ&åVh-∂˚¬d±s î	]j◊ûÅz%N!ØúmÄ§L~%∂EÅÀ”h8∫[jõﬂì˘Î˙Ø`+1cCûYt–a4ˇ00¶ÃE˙E4t–†]Û·,ı∆3ô$¥§‘∆=-ˆØ¿:Å\]‡?£6Âß)1ªÚ∏°](	t+∆ÌÒπIﬁ†&'êˇVÁmÖÓp,3πL£˝äˆ»!!î›‹ß+µÎÊ~¶0Úâ ÊæÚ•ˇ¥[äÀ‡SÒπ·1Ûßçƒ‘ËÙ´w7Ñ¡®Í≠Kü°‘2wVé¯Î†'ø¨ˇt—SZ¸M°gP ˘òZhÍˆãÎúôOÌç*ù˘±ı3”:?´Ûˇî3ùsÂ2Ú‚##X<nUÕ†Øº.|*≈#Rµƒß–…*ë⁄È©‰Ó¬Pà;7…õ‡húÑØO≥?ìEf¯·ØŸ)°ﬁ»eàà–Ë;Ñ›±6≤ıÏ·˝ßŸÛb:!á˜}_îmP˚	9ˆó/B™Wv4ûÓ_Ü˚%Ù[BØÏL/ÚC&DÔQôîã˛èÄo”Ä;ØGØë‡0ÿ@†‚.^1j¯{òΩˆV€¸¢$P¿≤iDG&‘¥∆+öiz?ÛÆ*Wæœ◊‹ÉR;qTSïÄ…*hÁˆÕÅõ87/˚+ÅîÕ¨µ”≤ûŒ@ßî.eèz€C˝≈Îç7TC=Ì`í‘#⁄'}•zı66,f{/f¸nÜ^_ÆK¸„∑¢FÅ¶‡}`X†ñ5Üµíp˝R,pá¬nPƒ˝â—uÎ{î®n∏êe∑tÏí€UøÜT®ae
+Ñ0’˙ûØt∏ÜˇxH]∞t1∆Ú›·õ;±ª{í4±Ûƒ—IArEÊ≥bÓËPe‰Ü-è—{6këC¢ûoÌΩwWÜ &|Ê
+∞(5`@V÷'¬Â√·cêQˆ;/+µ≥´˙Íπb¶∏˛˙€4ÅyRÃr0Å¨“≤ÎuA±l"4wH BÑsx“\g?]çQÁ‚vyAS>Ú%˛¯ÃWàŒaÁÛ÷¡äç®úÆ?€≠(ßio∆d∑¯/€±≈v‹ÚbMK•sknõôÂ*öÈñg¬X§W’·R	√ù8a¯Ÿ≥˚%‹–‰Ÿ3ríìπÚ/‡ﬂ}˛’ U'dª¬3Ué!àõH˜≠Lˆ£,ÒŸ–G3»ÙÍæ†ä≥ì|Hç˙™å∞O÷≥€É’Ï˘ÁÓ lé77~¨«Ë˚»‹tVL»Ωç@F3áa>]Rÿ(¸ƒRËòÕ5†âõ;=øâÒ' ¶$S£ßıáÇÕ˛≤ö2TËWπyY¯êO|Î¶X˘≤qŸ∏œø àø∫ºÕÎói ˘ıãÇ,m)B’p,êq~‰◊∂$¥Dë«!$˛’€v⁄Öˆ˝…†8yw\]¯◊â~QÙı}k˙t˜ÆøJÓ>´õ‹>¨‡ZäF}b#;'»3 ˇX€lÑY"§ä≠är©ª'˙g≤˙Æ)¶á-•Oﬂ‡Ã®ÓRdÏàfË£æÛ˘¨.èÁe≠≈À∆¬”æµ†ÏóFﬂ˙∑è?0ÉKr»a·∂ *3á˙Æﬂ!ÑhF(ÑzÖÁÙÇ‹´\a¬ç J6´ÛìwÄ»Á%–:"‘Ñ√Å:hÖ5ŸpáGÉã·œïZb˝Æ‘àqº*J≈@“!Ehâ}‰¸÷œß€° ∆≈tFÌ!ﬁó}xSçLÀà√9‚M·8)'˘–",7ìãUﬂF:8 rZ.‘Õ6…∏"…ºKD/å'<ªqRXvY≤0Ä≥"|sÃäæ˜∞(Ç…NPƒ`·z;!)„à{åƒ{Nâÿ√
+cÌÏÛîP®‘ìCüVJ2‰ÜÅ{Y—÷.9ë˜RèïfK»Jb:i6C.ÆyÈ\ª8åœ5n˝aónŸßTˆi ±6Sè˚Gâí‹V]êÛL∏I ÔvS{ì∂ÆH≥í.©™‚	î*P*≠ôxh5˙U >oêò@qrÙ·!bÃ–#¶‚ƒÙßyæúP`\JL&ØxFÚÜ‘íÆ¨ﬂU¡‡â<Ó“_¡‹êfa!˜ô;®I…ıîë_îhöÛx⁄(Ò∞iq‡Õ°‘Ô†‹€!á©ùÜ¡ƒ,°óÂ–ID+(çQäÜ^fÍ—TLÇH‡∞ìà.PPJ⁄2Kièc∞6$«Ìº>öu7Vz≥Í ÓëD7±œH6„SñéÀË<öè´EO¯iÅg^¬O∫ßw⁄d‘4Íjqï„OõiJÄH(±xõ¡å 3‡∑Î≠á÷	´˘ûR3È|…n‡òEsîdÔüL≥¸∂>y:Åêñ˝õS˚©0T>‡‡vÚQ¸#5∏y˜b÷Û,iƒtW*do}p€)“⁄+™®∫!„è,{¡}≥H‹»mJTØöz£øS¡ú°Tx‚••∂j$Ÿ6ëhrnwwíx{“Ó˛$3!-õ◊ﬂ¢ò˜(·’3¬#F`vòΩ=öœ™—áøJYÌf_]Å∆án†{d¸≥Î∑ëàXBocÉ¯Ìa  ´Ê1†=Ö“ÑSKÉåò.ã]…Ú¯*@S«U6%L•Âªô©E4u-x‰/G^ÖyÎÁL`ç@Èü>âmX˛ë˝à,ﬂFç»¨◊. Øó †˙»t∂•)ÂÚ=S˝∫óá4sX7ü}¯ﬂŸvˆÍ˘„©O–π¢Z≤~¸nQ#ß4wª„Å?S(G©JÊdcøæ%3áSÄÉÏ1R5˚]∂ÈOüÖ3t.πaó‡ÙìÌgØı7ÖTD_ì·øi 1¸Ä'•£É
+´çÉÍ‚õ∂}ˆí*_ ∞Ò5lL‰ò“∞”¯ Qß'D∑ Ÿ÷A¢ˆ∂ôm‰3˜E>î±ﬁág‚/ëñ$=h∑$˝E>|A“·bâ«b†°“èŒXñÑ`¥t|oà‰m?ﬂ[WˆÕwX∂ ıNº‡Â«]ØÛõ”˘òMÊÅÌó˙cYúSyÅBè§∞˜h ∏¸§*‘Øj¸≤ ß3ˆÁ˜≈ò@Cd|Üg‘8G}=Á~⁄¢Ó¨ø‰≥È—dOé´ŸΩj|Zû—è«ÂüÁ≈´1Ò´jMÍÍ¥´øπﬁÕƒ(w≈,ƒ$^S¢@~∏KUÏ	<y"≤Yî’—I^±w|*ªYw¥õMiˆ’lF>&|rRLß4ñpQ◊U›°dÎ}UˆèL|ó∆>Ö·8„2Í1‡¿h‡yø?d√°∞"/¡E¸õ≥ß6ÚEw2®∆ÖÛàå5?ìhü`9RNã=Ë˚‡˜:®IﬂâøÔÄ˝P¥¬˙Ê¿7áEâ˘Ò
+O˜qˇe1,ŒÍ|Ù¡‹”Ú$ßò∂üÂ”ÀÒ	gc3˛…hl˙ß‘ÛïœÄæ∑f5f>Ã∑‹&V∏e £»l<å‰ø™ád j÷=QôLﬁQWeΩZ>)ˇÆ∏ƒÎ±wZ6—ìrkÜ∂àº’Vg›éÄ
+ $"õÕ‡“ˆº¶Ÿ:TgΩéd+˙îÿ^û’óF§Ç‘C⁄ÖIè¿o‘ï≠±Ôkj<§ÛÛºúeß≈Ïd–Ì¨ìiØìA¨ëïæ∏Ï¨jºyTÃY§Œ≥ß/^jW$≤ª™ÓlÚ Œ
+B£_–!ïÚ	Õƒà∞˛Û¥k\´?!Q nˆ«OË±e/O/ç≥ü±~<ÚçÃ362∫ã52œ5"ë°±Ö÷k]Î?ÿêÃ˙⁄Ê	mTå_	Ì‡òÎiÒZûÏÆ›5°˚ƒíà5Íº‘RTìÔ™wÄÜ∑x›'U∫_Ω@AJπt≤Û0'ªóH«›≥ôDO±ıPäh3ı_çﬂç´Ûq∆H¢˙VéÙ:+Ü≈‹°¿nxkwÉòeT⁄dΩ~´Zb»ü:ÚZ◊ÓcÛÎ<†„;!úÚ‰»N$NìY¡àW‘~∫¶ÿºûÑT^ıhD¿Ú'»èÑ&øò:ﬂÌ∞›)Í–DÕ©ï	´•=–ÎÌ1§>ËÇox>5ô3ä´µÚJí⁄Ã¥8õó4uª>Î°∑± låägîÄ.©µwœ}˛Üõ&•åÒ¥ˇ^kÏ°¯ï™_Nüê6áO'≈xïeàëøçUR	cxE.∆q¶º™Âå·èå!XºõpH)s¿∂¸π˙éÏˆ<™gûˆÊCdñØﬂt_ø¡Z∫ßÇiçiœq®qÄ≠ØgO»Re}»?<Pï≤:í—ÃA´«çÜ˝$ü®z{˙£E
+S÷,á3yr r¯∞ôÄtıæ»^Ê«ªŸ∞$˝ΩüÇ¨WìÔÛ)!Pì™¶…—Yç)ßµH%:ê#ÒÀËΩÕÂTæS“ü§)ˆºÇ∆˘ùv8z6º'ÙCpdú—>î?ÕNOÚ∫O€ÜVHìÏÅéÈLSªw Í?)FUW∑ ‰ÊêGuù_ˆNâ®'»<9≤f/äYÑd¶Q`vm˝û¢+¬>Óªäê—|ºÈ3ƒ
+sfµ“õíÈ3tΩöΩÜˆﬁ»Öa€ÓÑπEÓ˙√˚?2VNÊHÄ¿ÅIÉÿL∏4#–õ ˝]vl`…‹eıπ°:‡îL‡quN∆µ® èA”õUÙ3°0˘n9Ω'Lâ_ı{Z{ﬁìv∆T·+çç;¶T¶ÈddÁ ∂≤C(9+h—ÿ±èT€—OÖùõ˘•3qÚ„<éˇóèXÆ£Iá˙n¶]¨:}ƒóù¸˝‡Ùî¨•±| õòDVÒiÑZﬂˆƒ˛íô8ƒ™ˇﬁmC#Åv3n"S¡ÔKµ∆°b3ç;©-BDß"#"yÇŒ†N ∏‰¥OeTB.µSà|˚R°˚˘%›‰<âü%µ”æT`Ôx4°lC?”◊t0˚ôQÅ‡;˘¶/n†®U-u˝,˚:€‹ÿÿ™—]œÁ+zÔ˝ÚÙÙe)‚o±ØWz0]Úê`—ö>>ı‹nÇ√‰I>ÙNáë˘d√ÎYFEwG˛kÎˆäâˇ≤ç=äıd‚—Ô-iP_ä£aQœ◊`¿ÑBë[¨à;Fä_u‰
+è3Ê»Êg£M4†õÙ´É˝lsGÌ0ﬁ†í∑á≈˚b∑Ñ:ú}¯Á1°öúM®_TõMæ}^<”ÏSx5jDJ>$'VÌÈÒ≥©´´)5Ú· J˙SÍ*ÈØªÜÅ]I&}è∑®æ—m6ØıìØ>ıof~D°v∆p|ﬁÿób™U˙jd∂ÏÖ6_˛@ŒòˇéÃôï4ÎÌÑYÛ5L]kd∆ó≈pXù#3Œ·ÆRõ0˚-ÁÀ~F¶À>ÚŒ÷öñö5;ïuÙ)©	ôﬂàÈÄ W>Sâ¨u˚‰M√>Yüá3·â»ø∏VƒÉ–˚?PO)|ø¨	…=‡ÈiŸlPp©URñ©Ò˝àù"ï⁄¨T2 †Ïµ°Âc ”µCLì¿:Ω_ùt˚ÖÔ=}¸¯¡Ωóèû˛¢˜‡…≥Á^Ω¯ÈŸ—Û{=?zWN+∫Ó« fª™wµ»‹“˛h∂K=¥ä2©6ötÖ◊µv;|é‰_<r»-≈¨’aó∞ŒKÖ˜≤6úı≥ºí’k>–9„M-~Œ◊3>S˘œ–√ïàE=¢q;Ö: (Ÿß#ˆwÛÈI.ΩuDÊ≥ííÎ†uM¢c<t<˘^≠jN◊mÑ£È"ò,À‰–∂Àßhñ.≠Ü”:óîdÛÜ⁄¬j_üéW¥”Ç¨ÍM!Ûí'57KØ!˚Ø¥˘i’h
+2≥ä”ç°€ê=!ö|≤tÈÃ&»gHuß„á˝˜√§nõã.ÿ¬k˘1YjùI4Lî·<u1äïµ>U‡3_òp2ﬂë©∞c#•âRæ«bÒÚw?üé+r‹›mf≈«∑˚dgÀù	∂«ÏNõ¡Ë›§€Ü"íØ]ø}â¿˛æóêÀœ˙Z˜ì·U›=–Q-∞„=⁄ÕÉë—⁄ˆc»Ñ˛ûÓÂ„ìb∏»|DÅN~»+ñﬁ±}7<ákƒ”›OÁÑtßt‚n¶‘µ˝¨fTΩU„¥r®ıÔÍj¸ó¢mÛ¨∂’æ≈˛_‰Ô≈ˆã›ÏyëüÃz†Cz@êr∂˜áóO”_√∂ÊÅ∆Æ
+îáèÓß9°&oÇ˚eŒÚ‡ˆêˇÏí°ŒÎö‘zIÔW\‚ÀBU# ¬Xè`-≤=:JLE]ÿ´ww®ˇ¢~)z‹hVí_´ºOER]»,'≤ò/ú&ªx÷—‘[B.·ó)9ï3Õ*⁄+¨&‹∂ù“ÀW≥öx™Û‹ﬂ+Ú	÷R1 Kß.}à~ÕSF:¯s¨Œq^) Æ¡ûbﬂü|ºÊ˜Ï)ˆ˝∞ø{íO¶vÒÌCﬂTNW˙K¨∂‚ˇvUıÌïàcNg‰⁄á)-[›Ë/}0yë(ÙVÀïØTàfy!OErCÓ˙wifnÕ]ÛßÏ7*˜_ÛÌ îTÂ ﬂ≈Lsƒ‰ÿ7t	¿!P!Œk†úﬁü≥ÀÂBàÚS2BIó∏</è*∏4NIñÚZàŒ3⁄ÇN«úœaØ4IÃYrÑ˘„áøf≈hfêÑîé®∞9®’3˘Ç 9Ÿÿˆ`~®Œç5≈ÇvLQì∂WéJ§¶÷5™‚x†OC˙b˜*_ê√‚9÷#kµV8ê´k±t& ÕpıbµGYˆˆ)…¿|E∂oôïêÓêÜüóπ|Lé¸π
+]\µÍ_]ÈxÕ"Ú∞jÿÚ'9m"á=h§_ÙﬁöV“VIl(¬ºt˚€ﬂLñ⁄¡C”Ã»‘œEÉÈŸq} ¶Ω%√s∏]gJ´0X◊È@F58»€'A@Ù≤£HÏX¿ÿ[?>hüVõÿ*üÑ Ì9æâVÍÏ˚hrë›CB°qúü1c?Ù˙Œ0ìçGÑ±∞Î; Jœü>~¢˜˝É/ü>ˇÈﬁ”'ûﬂ{tÙX˝Â¶;éVˆn–ÿuç9d’©úéç oËª‘ù#EÒ˛˚G„” îx≠/©∑√ü∆_√u™ñi∏˚5Ÿ7∂hå∏=`©]åù˚ı9´Q]ˇAH≈)∫ﬂñCŒr+_ˇi¸ßÒ”·áøÆf_CülÆ¥øØo˝i¸ä¨1TUX≠a~d≥˜æ∫‚P∏Ü^û–üÊÔ´zU£ }¡FsÔŒ◊ñ√›ı∂gáæÇæmﬁb…»fvçnÁ◊M—“CtÒ†Gµ~î¿+Ô/"Nßñ≥ñ¢e.J∞ÃµU;vh∫
+ôœJj†Û[≠Q—à”oﬁÔÉ`rRπYCÇPb(÷©Áö#ÜdôºA®”Õà5_‰ï/Ú yEñ/Ú yÂãºÚE^˘µ +JAÑÀ+R›©[Gk—¸•i˛,ÏmŸ º˜ÔÏñ‚aI™Äµ‡”±Ä|Ø®Èµ¶?êﬁﬂ?ÙÚÅzQﬁÔ\£qÌ?eNx|°„ó˛l‹˜¡Zª_Qfñ◊y9ÓWÁ=Í†Sè∫ù˚≈¥¯ô‡’≈…$É8&˙>Ï¨(Ë
+.Å(‘ ª©Ü∂ÆŒ˙◊≈®z_ˆÛûæ˙®Â6Dä-ﬁ”π¡“Ã"ª± ó‰™Ø”ª,?≤&æ•ê.ø—ådL”t∂:µµZﬂÕáÔÏ≥÷…µa7bõ>aZÚKk}ÂÏﬁJS∞[_s"çGTÑ3%xMˆ8<bœâ|Û’ïw$◊2˝'”∑” ï˘ÙPJ√Ãê“áCêƒîaPü∫ÌPl®U◊DÄ≤‹ﬂÜ…!ñÉíô1§ﬂ˝Œ%B
+Qﬁ~u•¨ÅÉ¬Û√øÄ=êmr qÙ÷€(Vkñ∫puÃ˜ÔÓ©	⁄è
+ÊÙ.FîÇª:Ç>∏†n˚ôk∆^–W˜ëÀhjä/Ïå§Éªf◊5Ó˝ÏèÏ©2	Ô~Mø—.,≈G/Â%%| Ó≈€éxm4÷1?÷."Õ<`Wê-ΩxîœÈ•‚á™¯;~«(^«Ô·ªM4õΩ«ÔÈ¨ôYäÒ˛Övãg˘òÌ»Î@∫üwÛ≥]nSÁFüuó„wΩ†dﬂä˚JÏ3veßæ£ø≠ÂÂ[&ÓÔ*^√º7kIﬂhuÈ◊Ÿçô[˝\ï„.‡∏∏û{öaÎÀÍ¡≈I1Ï*‹]Õ”ô˛$ùƒŸﬁpw√£ëÿ“lÅ{PÜè Tbπ Û
+=R¸ûˆ^oºQÙ˚<Tdù=ß?¨´?ıó,~$&c8çòDVö|ˇòÉ´p∑ÆŒ)1YÕª‚r™\°ù®¬˝‰¸Ô
+jº˝Ù¯gBØh-h«wb#ÔÅ^√g¯Q˝"07dﬁ8ö5∫˚ééËr£I⁄6üö˙KË >…—êt˙Z¸~Ceà¿@ÜPHWkÛü¬Ç+kkÃBK∑ÕC}–pÂ_∏¨ºûÃ∫ÔÛ!"´©°ﬂ"»qY∂Høwñk»=ÖH%Ó#ç{	â÷˘˜ÃHZá©˛4ì±@’¬∏`%õrh˘¯h7¶f‰—èq´§4˘“∆(üŸçÆ¥V∆πD[s°g@˝Põ§¸Pü">]ˇ2Ú/»˙Ö–Èò ˚ô"å˝J˘◊›»ÏSÕ&Ç€&Ω†®gÇä{GB„v/EÂù √ùìÑW0à¿Îüd–'˜#åøXÑ¿‰-Ùë9@¡á´q0EM√XÒ®Õh¨clˇ^Ÿ`≈∆Oﬂê°&¥ÿDå±/¿≈¯J≥I”ªÉl˙y~æ8â∆‹5Ê,ﬂ˚BìºﬂH ˝Õ®oêv0ëdDCƒò}Æ÷¢≈æÄ“õNÜ%9¨v‹¯^å@∞†[|p»Wñﬂ¨Ö‡7È+ìÀ3+EéË≤≤Gw{&åÖ' ã	QföÜ6ghÑ[™1l 1ïX õ6N´ôa)©~≤◊»ö´U7ü*ã îAà≥Ù®Ÿ\¢Ω’p÷]ˇ”˝ı≥U ﬁÛÛ¶ê¿P⁄àL3ŒVÉ„¶ûË"”3=µr”œ¿2+#–îô…Sm]ÿâ ø·EÉ•∆§Ë$ÿâ⁄ñ÷•!îÁÁCÈ9Ãî·i†)› 4&ÍË	=F£…ê∞LXS∫µN≤tvÜ≠´ÒÄ}≥‚^4eâ#¥æPë‹1∫¨Öïa˘*»Â±∆e˛Tñ¬)–RÁÛ’L7&N^!Õ7π?v–Á
+C›túpÌo≠T=î"πÀﬁ≈$6\∏ëVˆ÷¯\Vl3…bA∫z“?W4	:N1Sø	o¶Ô …ƒ~¡≈¨1ÈèU·.4IB;mì]Z”Û6=¨`r?òÍZ9∂î=±tÎ”” XˇBãÙ']h1íﬁ üvµwˆQÎÌ«>Ò/dQB{≥Ûb8§MﬂpÈ
+\Ù
+*ã`}˘˜/ƒ“‰ÌWW¢'M˚À2›ı9_dé‚≠|pùïgÑ¡gΩ∑7Ø53íñWºÎ:EÒ´)ª;_ò◊;2Ã+ö»NË§Áÿ—ƒ¶g⁄6¬ ⁄ı&k€æ∞öz<NÊñì”tÔªy9Ïí∏ïM	Gÿø⁄∫}mFu‚R∫1|˜[N‰„-#Æß≥˜[$Ø™PIfR%i∂ø>ÿ≤zú∏y\eD`I’ÓÖ_L√ùı˙©K∏) jÒ˛√?èÀ Ót É˝≥eû®x=#≥—dmSèõ:™ùƒxW+S°∆HD*≤£õF≤OuÏƒeFúV$Èíä£$Z§WÁ+ëäa4«›È»L!åUé¸* 6ã%…ÊL{VŒÜd!ÿH)Æ‹#ùö]:Q]Áó’|ˆ=$Åa€hÛÓµ∞€f¡hà©èæ`¥◊œa¡”8^ëÉêcçñ •É» ERÇm4åœt;èY=∑˘ºà⁄ÃÕÑÜ\æXªs#qóëƒrä‘iÉ¥ ¸l8ü
+é≥·¬ü´ßÜEPn¸ztç‹ Ú*2àôÖçÕòã¢MDn6Ò`ö˙ΩW0b
+ !ùÒ#.Ÿ`¸—@Ò,N7‹òŸª.?9)&≥˝NÔb8ΩXÕ‡?ˆ'*öª~Ëß4ùAŸÔVä]K|p"Î7é~Br4›ﬂb´≈bè¨l ±ÔWÁ„îue3ƒ÷’ElÉÙò… ¡€À¸8{q^¬ÈØ÷2∏°≤Öè„ƒü◊EUg}|Èî]6%C2vy8EÉ^XTgrLà%S∂ÿ8≤◊CLÇPì=»êäcÂ6äª“b›ŸÿÛ™]˘=ëid[S‰tX◊7Î“¿†Øıˇ˚üˇÌø2~≈Bt11X[xñ≥64ÊÕ.Mê1óçÓ”^µˇ˛ˇ„ﬂ˛tRÃ‹Ë„-ú—ÙS]>màüÚ"22¸Ôˇ¯§DŒlé»Fî÷Ã”¨KCÊ”óP_ŸQc@’·§	riq◊MO4∆DòÿFœN„+Yê-“⁄£1ôß;z#ΩÑç≠W"7ÄreËıGÂÃ<Añ±ÁâÒtÇGP‹Œª‚êCŒçc∫ÉÎÊXùSéB¯r‹/œ*ÖÚÍ∑[k9hoï,ÑÖBB ùÄ>ÕûÍìLëWd«ñ¨“E˘3([1∞b‚íÑñm¨¥ÍÕEõçtı÷K]a7∂Œ‡ÁóãÛ„i5úì—A÷vÇî≥j≤∂πæï±%•#π§Ã3∞çRàÙÿ¡c ¥n∑©gÜÍ–ÄbuFVò^_Cí(·jQÕ©µjØ◊≥[‡©°T¸<˚Ä‡$Ö2ÇÔ€…Ò«ëHiH÷-õ‘B≤◊˚Ú)Á‹ì˘t.~`∑´"Ë#D'ñ„bmø∏<‚ÿÈŒ"ŸÅ7≥QW˝‹Aìc©“ÇI“8Î@ïÆ∑ì}i-Ÿ]ü=<Q⁄≥RwuHS¥ Ñn%[¥1|Ò§ﬁ⁄nÖ+Ç]Ë(a„?íÏ©¢I∂˘|y¡ÔooùΩãV“,‘ﬂ…’C¬ÚKJÈ#êˆÑÚœ‰ ¶eﬂ˝)–˘!ÃÑ‚M$÷'∞¨˚•Ï
+$éd⁄Ê@2v|Œ{$Oﬂ#4X‡¸;π
+x@ˇì\âˆ;`ˇ˝¸—WÑï˜˝KA`#∆kÍip~≠H{e¶]càso÷O—MÎ9øñ–Ωˆ‰/ú„â}£q”C~>x´Ï≥ñ#áXÒÇe´÷gâ∂U\πr2‘0Ãù¶aÓTbÓ‘áπh>Ò_'Ê>ºˇ„RPVFÖN√UôÎWã§vÓ°f‘Ã˝Ö•ø|TñÖ¯8≤.Yë°PÆp˝â©&	i3¨sËñyΩùœ¥üwŸ±¸r6]í.Ütµ•†Œ>áÕ¢úª^Ö©»Fç[@°+&Å4àÿ&çlı•3£¢_Œ];%(,ÛªsØ†Ü3IÍXYasAÈ¸fXPÆdhvıë^1“ãdøÑ!Ë*mg˛¥Ï`|ÂC§ÅDÒËI\P≈6#l∑-©oB÷wÛC≠˚>ÇvXåä:ˆÈv—p3„¿Úd∫Wj
+îL∫û!†KÒçC˘UáÍß—xÁû‘Á7	Zô ß`uıÕ«≠˜ÈìÉ≠»/’gÖfÎ@Y—ı'UîME¿jË˚>>hµl˜Oã™;õ27Î∆cª1ØìóÊ\Î;`	m≥RÏáA˚ãÍo⁄+0^L¸<H*…≈∞ûˆS±ƒ56*ü∏F–_f`π™¢⁄≠ﬂΩ∞+”ΩÊ`ßZ›õÅ;÷›‹È n<è‡"º gÿÙL5~3∞Áã!=¬“{ÁÅˆ,/!ûÕd]ç≥g˘∏jÊóÙ43‹V»≈3ßìâ”Ê5&^LGªÙÔ∫: îog˘∏“üÊ˝‚—ÿe9¯ˆôÈ@#G€Zƒ¥›íèW„≥É@∞5≤î¸õN÷q◊ö[+Äíí´uÇı\ïÇ®<•åÑπÜå Ù|-üœ*	ŒbÏöbeØ(~£(V\”(<\Üı∫>Ñ´Ú6{;ôL|ö<Àzg√º2Wº;í8„¬v˝b: k∞<°W)»>≈|eñY;aî∑5P #áÑ}"¡§Û˘ ¶y…ò∂&~È<≤{‰Ë6]÷&¶À¢üq#tˇPﬂî~“â/I
+ı\π∂)Áûì•‡±≥Yuv6,,⁄wç≥(ö≠£D©YK2÷è8ÏÔj\9[˙IÒY«˝*ªBÚ^É—ËU_P`™;‘â#Hx\"Ï¡ˇ0ˆG¸í†0ßiÇÖ˘¸°	F:dâìÁ%≠≠∫8˘ÇàüF„ΩÇÏüÀnó¥·Fb·
+2Íîï˝Gt<‡ßmé∆ç≤,z]EÎdV(V:üÏñ5[}‡Ë»=cGù∑ÓQ]Áó=»Z‹NˆØ!s©E„„ô#”l∏Œ≥Î‡’ì±+•∆^≥nπõqÔ(»%≤GπƒÂ|k| QR†xˇ8˙ªëÑ®ŸØ≈‡2B8 §uÖªBæïÿ©êuøBIŒ [˜Æ	u0MeQﬂ\2ç∞t>„oô∑IÏ»o_$ŸKeÂE`ç¶$,ëã¶Ç÷ıå«T?+fRÁI-˛È(‹öVR^<Ë>°7èl,ò®ı‹eE◊/›°±Í@∏çiôÃ£Ä-˛sÈEs«@ﬂŒHìL⁄@„d ”ƒÛÅ„˙åW]◊≠o°¬¨(kx©âïâ=ÁG"Ç	ÌìAqÚÓ∏∫†·EFFkS$Q≈ﬁ
+“‹Ïºwò—˜ÌÏ/d∞ûlÜ[m´¬¯πö<Ùã¢ø•2Õb¿+à¬R–ƒ¯•(8#
+VAŸª≈DEbF∂ë}¯«
+ éD	r—$^GfA¶;ëPE÷…Wo¬3ÚæCÆ(∫g£„≈¨„œ	*»?ñ;≥ßÙ∏Åk–Eπr9;™≠%ù5' •P‘ñ]É=ªù≠’ÂŸÄ∫j8Ê@T1Â5 Ç£!3ù1<µlzÏ•ûPDÛÃ‹5à#,¯ÇTçÎ*cêô8Âd∂@™`µµ4⁄îfCA˝≤øQCa∂cCat_WÇf∂ í7»ülyŸî5@ÒQg)}mxT∫º_/ˇ2ÜÙõΩÈ,Øg`†„ûµˆ€~ù´úá1˝5[øcJD§®Í)∏‰‹tÕ°Ë3§‡lF:oí]Fh’ª5?õ•mxuF™ƒ¥G™$ú•ı‚∆¸¿%KßV$à]Täa+eªùŸ¿MÕh*A√ßJh»:  ∂¸Ná÷◊^†ˆÕMÆ¨ûaFú%öôjo;˙¬ùõÅ∞©˝[ƒ⁄ÊÈûùKœ#Áu>°«AP©ÍÂö˜i≠Ä∆,0ÖdÜüÒxCé°Ø◊◊:ÅogHr	 15g.LÈ`å Ö0¿ wÒ[cù‚Qò’ÂIñT◊ão0¡¢î§√Y⁄hƒŒQKã∏ã•ÎÀ¡ê˜nπÂ¥≥í6	ÏíÂé- ≈Ê DQvÏÊB1Áb’æ´]Ωyïæ% ≈”ÊPΩ≥A#—~Bõ7Ê&a!jÉE`ÖÆîÊ)Bâ,'Jˇ$¸∂›JEˆZ¶tlΩ„≥»Ò=Ï◊ªG˝88”€∏÷Å¢Pû˛bkÑ)äÀ±»Ã¥ñ©_«u÷Ω“µà˜ÛK™Å\πÓc:b≠∑"-ÄjaçîM0‘ÊÒ¿Ã3nã/Yáπ%ÀpHƒ-Ä:æjò«é:ÍB^Ø√í¿–T‚¯à´bñˇˇÎ?˛ÌX+f√"˜É5P≥^±¥Hw„Ã∞Ú∏qÖ1Ï$3Mø…é*	gB⁄!Éd|d	IäÉêp#Ø}«{wëÖ!Á6ußQAiÃ`ó1m§åãqåñqÜëñæ´À‚îjº‘q7ﬁÉ»%ID’¡∏lèX#@HBúˆk`E˛Cµ∑‚´å9F⁄Y6Äö%‹‰2◊ù¥ıåfì^∆™fzuJØi√]=· u|π¢&˚qÖ…o”º:£0·Úfè£8ñ®1≤Ìo´ñãW≥¢üe
+˜æıbgVë°ï≥K¬Íc⁄fÔΩÖ1˙πä€µç®íh	;#io‹¯Ó`…KCl6u>—ŸÑàsP‹].ÔΩ¢π—ßèú6Z©^£16œ+7◊ËÚ§Ì¬õç∏#´µGdX¿â;«4i‚‡ôZMƒæ·.2Á∆ónóû‰ÂpY®d‘ÆÁ„R∑√ã¶ìJ≈¨è0È…≥2ÑKõ6œsµËÃØ¥‰∆Og`ä]%≤ ≈ŸdS	_≠Edh"É¥Â_Nƒø“ÚTYjœp[/µHÆA˘óZÍÌí≤2†„«k=~¨ŸÍ4∞Gô¿øD@X◊w4rFõM”≥ßFºaQs ÓMo'`2o$õËÇüv«òçÚãµ¡⁄÷Ì.`Oá’99°Sû§êxÿôqÈ<cç4™…gÖÖ©óm>∂8|&‚Ôl¨ﬂq"[äY˛¸o≥TCÙb@hiGA¯&ß='¥?Zâ$-iÛJ:`%µîv~rÉˆÿ≠DN$ÌËOà˙§iô∂2B"IYzøjRPíòbR$eå“∑∞˛dPß˚FÉ·ïaÆˆ;?ÛÒª0÷≈pø3Æ™I1. ÷1È™®kø#+I˙'£àßeG“≤Ó.—L<‚&±»A#òª7úÌØ—æV«EÃsL˚ûÓ.X¶ù∑∆d
+Œ•‚mÒWÅ`±®W!ÙÚe32±Kflè\.»∆˘êfWmàct©n
+…¬&N≥4„2À∞¨HB6,Ûg◊ƒﬁ⁄H†æÀxH$ˇ‚hπyæ|ËÈÉC‡}è,∏ü◊˛¨I∆Áæ'¨≥#†$åa37Ô˙{^8vò◊÷⁄πÓØŸn‹—ﬂ\=ËÒ¶/êñÂR†ei∏‘Ô*∏Œ£≥¸xX ≈åÇãS)<@ ZBÿ±Û‹ﬁlP‰}`≥⁄òökJÒºﬁ‹ly˛P,u}€'⁄êQöÊò∑ôœT≤$îö¬”jÖ˘U˚í÷ü˙ÈŒﬁ˙lê:≠Œ@ó≠k—rõ5†ß∫'Õ‹#+í7mCÊ¨nVÌqu©»sæã”´¬·çﬂ£S«çŒPÇ6Å7Bû◊2Ø{∞yov\ı/ıN…jÙ[ªÃ¯∂MÆˇn‰ﬂeY>é™≠6~éPæéBµwD]ÈËí}uú «ıFà:*B— K§I-A$–í•zêÏÕ˙(	 <Ie¨⁄>CÓ\ËÀ(”Ö›YIu>d•ë"+MYiÊé»J+ßDQ’ÁöòT=ÀP∆òµ$+?G˛QÃÉ$—Áëïvûè¨¥Úd%*a_HVbHÒê˘(ﬁë¨Dú2b˙¶êv®©*ÿÎ&ÃiN$Oês≥4≥Î~ìlÓÜŒ…Qo++3uØW3&öõ•Õ(¢dlÊ+;NR*72á“)«4å;E,rB(g†i‹‰b˚]ØcÏÑ∆)≤L…”‹hXiÌ+ a3ßï§6Ûä5GñÏ˚ëÿ™·$ªc˙»j3NÚë%jòî∫sR|gEYxEÕxgËëïøu$µÊúç@”6o√≠€Œ√çmÒÃXÜØÊ≤˝›ÉkËÛ&Ü∑$ø∑‘¯æâQ-√ˇ ≤|‡†¥ÚÉZä/î—J]⁄˚≈AIk“˝„h≥q·Fœ-#wßä7iæn©Ûã	9…~o¥√nñÌóL>õx√AY#fûq)@·;ómƒª.⁄¬R-≠óÂÖG{M¥∑˛’à*ié7ÈöÒM8(í-˜*0,®∑ñ‡a‚z9d—üB@/é5ˆ–!≈}•êíz”ùg¿˛Ó< h9âW‹Ù,Ì¡0ù¥¨™í®ü≤Ï^qãÆÃ'C€7;d•”C:ûA¿ÎÈêÏ±Ë¯<‹^¿Á¡iÍÍê‚Y„\S£˝¨ã%X÷‚
+˙Ò|\»o¢≠3ﬂé‰ÙﬂéKsC¿≥†újkm9-º˝J∑Ø_Õú ≤h˝èb£›t≈›€ﬂ¶†≈Ô˜≈∂à¨RBË©&¡ßµb≈ èX6ûÖç¡ÿ›jlÏÃ¿∑£€‰Ñ´DIùmî`+ñ0Ï#¨[¸æ≠]H∏6A·ö]zM◊[vh∏ˇ  ˇˇÏ}€n‹H≤‡˚|Ev°wPÍñX∫ÿnwµdYí=:G∂4í‹=√¶™(âvU±öd…÷hıãªX∞¿¡†ü˚r^ı'˚˚	ë7fíô…dI%Àn›V1ô˜ååàåå>µKÆπá˚l÷ªπõ8€§ﬂ∞´8è˜°Ò…7=™7ÎË‡cˆ5oòg®w*öo™˙¶'õ‚Tﬂƒ%˛nÁ;Ú<áÌÄDlVÚs}PEóÉÙ°@9F/V≤≤©4,¢E¨iÍBÍË:>”?jzÿK"Hß‘tq%ø›_ì¡u†YyCØÊMFÏÚsJ= {fù,≠]îS‘‹ 9qM=4y,Û,%8iSE•0õ#˚—8IÛ∫óÚ˛¨<Ôß,∫WzÍ[Ã»≥I‹è»Fòˆ≥öË$>ÒÓ |™5∆ù√gí1ﬁì…CR’‡∞2yπp”TÚ¸ÉÆ?Ó≤™˘ﬁZ^ºfË‰”{›	œ©p∑èR@≈Ë¸g?Ç“®òoµszœ–∫1§biV"‹ÿÓ:B:b_˝#ìÅ≠VH?¶1uÿ+ÜuË°˘º–Ω_'ëIâÆ«40πS£Ûpî≤¡ê,ÅÒëÑGΩ”ê›#ÙC¬4(´n4fsq—¨√gqø< µ∏Än ¢t7oƒio›
+†·Îúê –¬ÈzçLÅ6ßÄTevÇÍ.Pµ˜êêQÑ˛»Æ˛ñ∆!É‘íNÄ\Z±ãƒ@u∆ :M¥ºk'≠ZÇ¶ºíΩ£ÄI˚Wñi"\n£Ù‰ÍﬂG∞î◊áL99·rÈ~	0ì	Üq8Cd˜“´ﬂÚ∏rËåsºK‡–ÂxàaaêQ1»kBg%°ƒUÏƒYNíc¬\ı≈Q^q÷ÁÊ0n∆D§Ü¡–2v≥ç⁄”DW—Æn"›ΩQ˜° œ#≥„°}Tûæ˙G”≈[Án!å∆±≤nU?Û>A‚Jq∞]:Lr “Z€ñ≥ÆŸ{° m‹ö•4¥úàç±kµ⁄.∂OÓê¿t†2¿øπ´∆Hv}1]œÖœ¯§U∑hêWaxâª^Á@Yh *Ä„ªa_D£”…0á1Í<ìı¥¨FƒÈ"¸[.ZA&±zπœuÜ[‰fL∑à√xã‹)Û-b1‡Ç£ö4Æ≤ô *J“ˇDB⁄O7ûkZ˜c—Œóƒ3=ú&O’∏0–@≤ıíéïâ’Ã…V\ã:ÑŸã5´†Å¿ù€a1V˘E∏¨Eª–«fıeYç∂»çômqÃe√†7Üä=¬πû!WQC?<œJÖ•ÜÃOvgg¨0ﬂl‚Uıi√ÙD?£ÁµptÓLÏ^bNñµZ.Èı ¬˛Ê—Ó—ª.¡V]ô±^ê¡&ı≥:!^7åÉ`bÂ»w‡dÒ˙Å≈ÏMM‚KÿCΩ_¥yÂ.*µÌπ9ﬂÊπDyB≠1#ÏﬂAéV.Ì÷8_x≤ﬂrÙÚ“65Ñ¯∏åÒÒ2$ƒGŸÒ~÷Ç◊pe`¥Î´Ü∂¨î+ﬂCZÿ__%•zS/}éÜ÷6’q®©∆‡ >ﬁ°Ÿx±˜œ]≥œ—’^∆ºn…+É ê™¿…™‰∑]uyèŒñ∆äÔ§¡âQ†ãæyß§Í”»È{mm‘)º‰r≈Y§ ©‚§ç$º∂∫©=Ø”π˜–åsÍ–Õ4BôBwà∂‰Ô$†πÊ°¢.‰ëó∑v^πmjGÖÄ £˝6∑>¶◊4òñ«gê~*næh£VäVU£´√õﬁ˙b¯DC"áNŒƒa≈cT^ﬁŒÍ4yfµŸöπRdOΩC≈©7≠…I†Ø∂ósT¬1†ß_@⁄AOﬂÄ¯pˇÄ~{ﬁÊ"PuXÒ
+h∂‚Tº
+⁄ºÆxö-˙° Í‰œoòæ˚æﬁ◊´Ì÷∞C¥∞pw@Ys“;ûGq¢§ä3Ω4Çü˝ı¸S )?À¯2µx‚æ	o`"√Åá≠>¡;ïvVg„ßW<í—»TÃÖ66s’24π‘‘bä˘€å5µÛ8¯°`o€±f÷c◊∑k¬Üz≤õ+2∫q=å∆ö∞ùü
+?7—ñ¶Ux«íAıiÆ}¨iºÙ1Òi¢ìâèÆóÈµLwÛÂ∏OE^(√ÂúÛöYª4tÿ¨¢èsx)œâKﬂÕä©º¶+ IÇB twè·("˝@'/˛~ú[L™O¸ ,›÷˘ˇÎˇOY©[6àèü0Õ˘Ÿ¿ùt0{∞3;–’è´–&ıin‘‰ƒ‹§˝ﬂˇÒ_EïøK8”ùÃ÷å1|5pìÓlæ≠o‡Ë˝,fËFÄn˚dî§ü%ºy˘ëõﬁ∂ÖómlﬂÇO≠ç>Sÿπ∞$ã◊ˆÜ¶Ï·0Ü3@∂ë«É(˜mÂ≈Ô64ü°e<¡ÏƒÙv€|¨Îl≤Ò∞ZyXÏ<Ãj9ö≤ù˛]{’Ì^$®›µãvì"†â”!Q3SìÑqö«ÉËqê&ÉàeZÔ„yfË<∞d∂@€‘ö§-*˝G]Ö5™±†éÍ(…Åì:éO÷.‰O›î„0Å—ÇÉ˛–ø≠˜„Ävò™-2Ao°∫Ò1#),eˆ¬¥≈iXZÍ∫MØlnÉ©»Í:√Ú{–B¥ºX√ã∏®µ,C®úobº¿ãG–óÖEÚW‰àj›ù„πäöLÜΩ˜x¡|˚i2∆ãï¥™V≤:LQ–r	6„ÃZ8Xª∏—ô∫dqûdxøÇÔWßmZô%Yf©Z ˙ÁçZ®”<Â¶ãÎ°1:jU≥x;Ø~\<;}MtÁîZ#ı*÷◊SFui^Îä®åó®:ÃwÜ¥æà4pGØÛî∫Á√Ω+àÿ&ïPÉv™ã∏◊ÛÒ.Ì≤„pêEFÃjó/ö®aµe£R÷_Ñvªô*Ÿ®ê9DéUwíGu¢¿fíÄÆ¢∏Ÿ–Ω∏ø÷‚∑·O!áy6&GC‹Bå£>œå7í%Ëf˜=Á©ëQŸ≤—®L≠À™ﬁGÖ\⁄ßF\"JÑUÚ]„ñ^£˜√öX…´⁄ºµsn’#⁄_‘S∞sM˝Ë8úÚü√¡ÄNﬂ¶èk‘f“Ë◊IúF}kC4éè(b;WÙ=,ö˘À∫·e£?·díSÁ´ÆcãÖ≥sE¯‡ÄÍ<3ÑTö‹ÍEc†È—)8J◊Zãã¡"˚øˇ/.∏ú≥~é∞aèCV•«˜¥pVuát‰¶±ãU€ømò≠—TvC-≥≥Æ[MUxZ¯≠∫™txßº&TJˆÔF¿”>ı´…9drFá‹j=¢ñËêA∞⁄a_Ωã+rÈG≈Ô∆’hZ‹è‡MÍM7Ôë_>í?W¢Ìi™∫ V;@?‚!ΩG€ÃNYßo`Gjé™ß¶(ö/tGr©∆PK∏?¬eN÷—?ç?Iì—_£÷#ˆ˜ã⁄E¨ß≤XÖw‡©	ïáaç›⁄˙ÿ%[˝	ﬂˆÛ‰Á0çﬁ9öˇ≤YÆœÌ®Eâc"è‘`?.¶‚˙P™8kùLΩ¸Ω~=ﬁúl°œ“Çıâj&<´…‰ÜòØ´_A¡πÁ`≤#Ï≈„p@⁄"ê¿!D8,ûv˝Ey;(1Œ¢⁄‘(`±Ü πê5¢9X÷>∫åÒæ"/ı€¨!∂ühÔ†uˇ˙§ŒP’Á√ü#àﬁØw˜De[‘ßÒ’øÕÚ "¸&OM•ÖﬂÂ/
+¶>Õz?°~£g∏ÿÃ1ı¥KÕ›Z]ËÎãﬁ®¶«,onhSK⁄jíé˝ÂJv‚—{2J–oÓ¥◊*> +Úõò®DyO)’iûè≥nßsí$¡…†3Ñíù æ,1’'‡¨¬AD˝¸|ı⁄÷ŒíÚ‡Í”ˆÆ>¥ÇÜìaô/p‹ÿÃRŸL¿âõeßÑ™pì˙çd•‘Øná<›¸Ÿ26Tïqrm<˜∫{(v]!˝tÀÆn;úﬁTéfäÔn•ÇÚ¡´›,,-¢Òÿ¨Ø¶‰*˚—npcÂ8Æ≤À,≈’B∆Ôõ©g8Ù¬p∆1è›6¢˛FÍbg˘”$eKÉ†Ã?@≠{ 1fL‚˛•ÄˆÊV«ÜLà€.klg/Íl`'LGπ6Ë$»¢Ù,Ó√<÷Êm…Ë÷|üÚ‰%∫‹≥®]cÈ2`©_&ªc ˜≠`ÑGY2ò¿@üåplœìÒ¬Rgô,Pk∫QŒiÇw<ÚJ©á›~5w|™∫Ì5;t≤˙Ó≈G*l∫Ø¯w «3d3ÿ—0t˘:+0wîÂÖª¢1W°5;2∏ÎUF~kiŸ:E/õ·0§9˝πòå‚_'ë®KqñÍÙà‚„ÏVÒYCáÎ“ˆ‰ÓRπeÄ‚=~o &œ»fåR∆´ﬂŒ¢8≥˘ÇrŸEª¸lÿ¬9†q”A_y@ ⁄¡uJk@€∆∞k=7◊Œ¨¿àÀ!‘¯àuç˝1k∂cWt"h2tS9πC_ππ_|ÿ]XÔ4ÍΩ?J>∫2Õı◊ÍL¡#cÇP#Ï:Îs„˝F"j|–s¢dä¯àÍ|E≤AI˛JÙæ≠¶>ìè≥H[[Ø^◊◊ÔûGoä¬Èè1Ãƒ≈} ﬁ˛˜c‹qZ•y¯lDH√aÇ^§⁄ftxÈf‹’*´(ò;}¢oµP»‹©∆Ÿ>≤V›0@a¥N?û5±Èàj à{óÚ˘G|±ûÜæåAyÀè{û™ÿõ¸ËRΩ∆«8^ÿü&ëNÑ¿ärEÎÌQ¨Âm\À¿f#€Ú(HÄ)®@waÏU~dôêo«Z¸¸◊∏yÛ‚ÈíWAî;:/{Ìc
+lBú8cvƒVƒ∑Ñ"ÒÒç+6´üß¶¨Ê∞√µY‚≤z≠\¥≈z◊ª§É∆”Å)∂ÇπŒQ-)..kÿ∫:kªå⁄ÄôV;^kDV∞àêõ“iìù \Q“ÇÛ”#u˛†GÍDß‹,sp"~—åÀæñzõ∆ÉppÜ1=[ÑÃµ;5l‰~ÏsGìQ£”∞OO*d’/•¨ûV;FÀ_ô ˘Ú8ûå®–ÖlÑî‰ÏG√	Ü™ÎÖ	öP∑ﬂ«Î´,ÑÛfúÃS$¬~øL;…®ÎåÂ¬‘<j∑ò?l^j8‰Òx¿ä=Á/ˆr≤ t2„Åòf}ì∂JXÆ3ﬁ»'ﬂ,z:H¬ºÕ{§ï*∑[Û≠y“
+Zss®yæ¯ìZÅËí^ÉËµΩ
+ZGßCö·†⁄EÅ<∆xJ»Íy~ıºf8ÒÌ31*ÁDdØø+⁄«N]Œ+≥,∫Zù¶2á«÷Ù˝Ãü°è˘—&+≥√BwÍ€£|º†û““¬k˘º§™Y~éñŒ≠ØW:^	Ì…˛OæúX7∞m∫‘Ã…π∆fUúFÊœ,Üá4˛|(1ç—q∂∆0ùk¢É’”ÂJˆ_3Âç´øQêgqÿÎ¶´ù”e•±™H∆ø—*ÜSvíÑ9|Ü?·QLò”î›iTpì™Õí£‰(çKIçé·Ω‚÷Á"“ë8=w,ÜiHÏ±ê™‰‰°\›±˚4˜±e◊6¡EUl4≠ @‹¥Ì[¡«F∆†¡=GE∂§ãAÔ˘äAk"-≤ˇ≠Å òY+ªœ®96l"”‚2Ü·)ˇbºzaŸ}Æ[tÛ“yÛ©∆|≥,ocVõb6ºë—˘
+uY*Ωı	XÁ¿ÔVˆÅâl©›4Ô3(π âÉë†rU@0Aë ñı`T1öAÔãï\ˆ€„ª?#†T8»˝C;˜_uWÚ‡*âA†‰FZÌ`∑+dæ”ÏJ,"êmÒ≥å!ÒT:À¢—me9∞«˝ÚıäWì{»ÀÙô Êæ‰:–›ç°:„÷ñ‹mtÕ¡,´ÃáòöŒ√¬µ1,¥ÈjÂÈ’?å<Í’´›Ìc?‡3æ÷Ú-ŒhŒK•ÌÖ÷ı^ÒHµ®°ÂYM*aÃëEΩÇóBúhS Õ&ÛÍÔÑÜŒ£PG£Yb¯FºH,Ii∏K
+&˝$Ñ>Ü äÑ∞å')¸9ãOp´Q˝ülR‹11YA5‹˚J˝«Ò(TÔô™L¶ˆ≥tF§.∏Ë±œ‹G	‡xñf¯’|ËÓ0ã¶aDv¸Å¶?ÄÂ√?Ä°G∞+ÒßåãBÛ%√Õ8ƒ_0QèWõ=N`,¯˚√iòg·x¸< ≤ÑU |ä˝¬øF√1‚7˙	Ë∆∫˝´-/|Ò>pw`¸Öπ=ê’=—SÄ•@“˙8∆∑aîá| ¯Û‡π¯≈Æ¸Ì◊ìù¯ÑÜ§ß≈e∫.4á”›´◊tl£ppû≈ŸAÔ4F|Ç—≈Œ∫ˆÅ•oFÉ(7|AÏ4˘∞=zırÍÈh˛ó]¢,eó‡E˙{!ˇïÉ¡ObyµèØ®¨ëÆvó*§ΩÃ„K‰+ﬂ%Ìaó∞ì˝<…√2õÙ0DOjnEiö§-J’œí∏ˇìÄ®˛∞ö(ºt)¶⁄ÂÈ9K‡Èíg·XI‚Ä‘%{Ï«aòΩg_$\u…ˇ…Î¶0ï”ø·8Gë˚&†ÆãG{˙Kˇ. ⁄cøÙœe‡Ï
+vÎ2Öe≥¿kàU–‡™ò:.˘…	«X
+*69Ã{ß´t≥¥Éà¬j¥N7Ò™πz‹Ì¥ç nËñ›”â	‰Áêˇ¸©¡è»Bb€»q“ûÚﬁ–ﬂÖLsä
+Ñÿu∆¯∫ëÙ£«Âoø¶ñ‰óÈ†í Êíèí@oƒ“/≈<Ëõº¡¸ÚÍ’—ïG®é“>“∫—:Flµ}‰bÙ¯02 a¢@oB◊ &·¥´çâÈ·Ç_ Æ;M˙∏Âüm“Ìæ∑{pÿ˙â†K «4 "πƒbtˇJ∆Y¥
+©¥5é>ª‰9˚¡@áaRñxºHc8ï•”ﬂÏSÅ`ª‰œÏ∑ÿü=^ÇÊfÍ0{ï0móËxT†∏*ÓÖô…¯ÿ(ËØpUœH,"ΩG?YÒ5‘˜≈õV—yHç…˝Tr©IwK)<ö7 úHì‹“•où∆Yû§q/°kM—6˝®ö˛=é£lYπ∏»ÿ‡‰L8y‘V*QÖ«“S®“c'†ﬁ	0BÄèπé26Dëª|x]&p∫Qº3t.ﬂ)}ìoØ’ß?)^Û4äQ£P:ÉÄ4ÀÚΩ K•WÉì∞x$'Eq‰ºËMæ:™ „s±>öA6>dÚµÃl€hØl«∞Y7¯Y}·:=¨ﬁp»â√k9À⁄2!g∏ÊœÚå-ïö¢-◊A2à{1%òOqÏØ^?™º∂ABπÍıJ•;Üj›‹m£RC≠OÈU.ª∑P†|àÑù°,4çõæ¨√Dù[N_ µO≤∞/ óa2˙NáLé≤^¡±4!ÏdÉ§Ê≈ÿ]åh/˘h∆[m√÷Ó6Pßpíã NDËR~ˇ`ô’K,õâ_a¨¯öÈÿ∂˚∞°6vwv∂6∑w_ª;€€áÎÎªoûÓÓ<[—nYÈ	Eƒ∞÷ˇç¬qvö‰‚v¸WAÿ⁄ˇR∫¥g’†™/*s<A?ÈqÕ¯≈~U∫à(>†7v%5∞\Äæ|€s≈áÀπ9<U°KâøäÀì¿©8ì,/Ã9:'2™íÃá˝2»ŸnáÛ‰®¢Ä¿F'πhÜqôÀ»∏≈5Sπ»(r‰SÑ_ß∞2¨9ÖV´ÒàÀÆç#PÆ™m`RÏZ•\E ûñ∞D@øµ[[¯á≠J(`†ûu[ÛÑU0eƒ»ƒ}”´(@∞='Ó ‰—Ó»ò“Õ®˜#ﬁ.Sv>Íq˛ÖÔ∆n\Ê9; 2Àæó¨õ8á»i¢qú√I~∞õ≥M≈ûUaA…2Fßr1Tb◊ãÙÈêRÜ∂RTQıÖ™<’yß(\ØxŒXJ5†˛&óÈ±H°∫Ò2π[ÌuÔA›x—mI`ó∑tÇ˜£cl%È’#úyQ&P˙~c¿>4<√&‘RT;Ø@&[ÆÑ|’ˆ–æ£[öc6tÃ⁄UÁ¶»≈áç
+ÏXîû¡Èˆ!¥8ÿGŸã¸¯[®Ω ∆•1˘ˆBå4„üÄÃ–û4xÌ∑l<‹ÌπÑ@ ƒº«Ãqr ¿1l]oãÓ S∂H‚sy	\<ÑtkÛê‰ äU66ù‹Ÿb´∞M-WFåìf'a"Ü¨hc¬úÙã”’•≤Q_≈»b1hiØ<œ‹0kin˙g/«=è˙q»k–çUî∞¥ƒ
+ò"5ªÜÿ: Z˝”·ÛùmºÎÿD»É=™h$P·…Z·Ïﬂ≥«¡´EÆüEQ&Íhì15¿;FÚÅŸ¯ë`w∆˝„V±drˆv…qxñPÊF1.”_'ÒYBˆ6üVóÅh_JN¢4Û*°‚86LË–ªl'>¬˘¢ª4¢¸vã~XË*⁄ôÉgÉ‰(¸í§Ô£tóÉÙÌ ÌAUoÖ·_Ø?zóΩA2ÈOΩdÿ	ﬂÖ;É¯(√Èﬁeùo/dÕ∞33®Óí~bUÄòÇ·ªÏm	9Öiû?ô €ï ﬁ”©W>¥Kxjïyeõ∞ºÄï&Ìc†´U~9åŸπMTG=*CÜ∫ZŒõ¥ÒSÈK?¡ü’5l%MÜ{(CÇ§Ôøü´Sc¯¶ˆ
+;Ñ˘€±Bz9µI …åÚ"7d√Ïá–ôˆ≠])ÑôYoy˘Ä
+ﬂœÜ?9*Å-ÄoXÁÇwI<j∑HK©é˘{Xﬁ-,,êΩ´øù¿Y	P]|I ·_Go…˜Ekﬂì÷ø"E·»U_<éÕiüiœ§$*»”0Qq	˚FùLÍÀ8ä>»í≈`ı*øó⁄•/è±c–5Dø∞ãåoW”\Wˇ—Gë;Yg∞c§†≈lÕ ´61ÿ d®
+b¢ûOvﬂlÏæx∫˝ˆ6P‚QkŒ,Z*MIWô ïßˆ!r
+H®ê∞[ó é(>TÈ`0ê§0/∞ä±0"≤—cùIh–u†]√˝õVS¢e¢Lo´î	˙ÇπÉ!ì≈^æ≠–(zI2¯ŒÄu∂µ‚◊G@]Öﬁ·È~/çŒ‡Ï«¥Ú›†«Eè,H8@5ÒÀ"àc ëö…"f+SEL≥E˚Å‘‘Å9uñî—ôïºbÇ5èR9ç - ìoj◊¿Ôc2!_´Çí≥ÀçßîÊjC˙FR‹Äﬁ'føƒ˘iª4:®ÍÁ"∏—z\d4Çs''∏ÙBé6°ª⁄ ∏È.Ï«g€CÜ¸€«|d])#‰2}˝¯¶(Ú|mºÑNg≤ﬁ(E¥ús·§ Xõ⁄ß	*π <SÄ÷≥M†Ñ/˜w⁄«¶,…à≥YÌ9*Év?7ˇû6ÈPıÊ~V™2⁄	GëàC(©ÊgoŒ¿µ[,C´Tø(˛|˝/o~Ÿﬁ<¸‘poq—ûÈO[€œ˛thŒÖ¥˝C‹G/⁄q˙€îÈ4¬¯£<{˘©¨⁄çÄÀ*{ƒÛõ¨≥‘\rf3.ﬁËwk `;ƒÿG|ƒ@dÊj¶≤NÉ’Æ{…õ§Ã¢πü¨aﬁM>›"f…:.5øGWÀL°#É6Œ
+œ#€3wâÉc˛Ÿ)Vàß∆Ì÷rø
+Ç8=P¿4êÙ”€ .Û≤˛£=úêQ0ó‡MEWÚDÏZé˛∆£¿`ã¡√˚ÜJ8ÊhÛj*9¨.
+“ΩœÈ&u/;‰(ø„Wï˙¥˜K*†®ñ¢ïîâÆR”xÉ"FèÓ^®•.çòÃØÕÀB¿U:â‡U»É{ï3˛OCît…‚e[îûõ%)©nWÌ-ÒèÿnèÅìÀ'· ˛+Úç≥„ë¶á(÷dçNÀ-ÍÙ\Â+,!8T††,⁄ˆ[cÕ.»à
+ßZ∞'ÈÄ˝$Ωê˛‰∞≈Î‚∆)≤æ≠‚]c/Ö∆Üd0%◊UtäÎRà~ÒWΩktDã›î†‹åvè±´ )zJ?<ﬂ=˛%äﬁCzgı√ÖcÌø_ñ€góq≤}ˆjh_N„ÍFx∫ÿ°§∏&≈á„xhHeŸüá˘”x§Â-'…åÎΩ∞_Œ©¶ï«¡4Lƒ0ÿõayúOJ«¶Ó)Ç^®«–qën»{≈~≤f≈ˆëÁæ¬Q≤é˙öqí˙‹Á›ßÚ\}1‚ΩvUëÃl”†'X≤â—˚…ˆ¡Ó≈’ñç1 å√÷‹´≈◊EπßÒ∞Y!>èˇ˘p%MQèL°ÎıNŸÖ/OæTO%b7¢‹Y›ç¯ÆÌ∆™“UuCˆPâáœ0À>$i_V∫a¯öÀ6µÄ[é◊A}x…çß&j•õy·ë¶[Èä<uÍ…nÅÓòÁ¢RhZ√ûö‚:%óGƒÁ_ŸÄ[jäVïÆ¶ºMl^∑–[zZe ⁄duÁ˙/j›<IÎ:Os-¨Z”˘jÿuLÑŸd≥Ñ!∑/å-Õqû˜©ræÖ·A4å«∆™,_duñÔ!åÒ]µ®uïìd%Âaxı „$jÈrí,]˛ ≥ídœ“∞?	)πQÊ≈î^ÃLı´ßHï&8d¢2µ®a›ıä_(	Z•*éVyÂ~åÎéB]Ôéb‘±wë˚Úë’Uº‚0&V≈;Î˝æäf∑ïüõ»-∂PıÍ&∑Jbä( h√¥MÊÚPH&w$·9PÏ¥‹bºQ™»†\Jj˚âYm∂ï‹ÍwÖµ.Ì∏j9-ÉR–∏)´≈ŸÊ‘Nó˜†©„zΩÛıÂ+ôLÉ®Ø∆íUåƒ¶Qèz˜%äØ¶;
+ñÛh]î«‘E˛ë*îË˝t+æñÀU±ú£≥ñ: —ÿJCﬂÎ*(e±é¢ÆcFΩ∂‚O}%i¥Yï’î’î≥È@˛|Îp˝ÕÊˆ˙<—´Dçı¥Õ—Jë§»‰πÀíÕ≠}¬‚ÏœŒ¯TòUoË∞±Ö˝>Ã°Y&57Ø…Ç ®É™Xn9BÌxWkÊÒ KEç#j–¥7'ƒ¡º à¯5qqE¨J√´u|≠„êXıeŒá◊kJ∂rK¨¶2ƒk2%[9'>ã&.IÃ£ÌõããR¡∆!)™»É2Ê‹CÆzô–tèd3
+VÏ6∆V©<çÏ\Ãó¬iiπdzëUr`ZFûÍƒä2˜5‚üüΩŸŸ~∂æ±ªu Qc—ãiê„üü,Œºµ‘IÒ1pŸ7Ñï¡ÕEÍ£V<éz·»b‡ekµå@ıÍµÄäº◊ÿé⁄@¶‹èÃÏ¬∞%KÜ eÒáx‘O>‹º≤›⁄å˙àÎ8<ÅNEhÔôF'1¶* Z/„m≤z˝´nb+}⁄#ó⁄M 0_’ƒ€m”5ìWfõÏ&fõ
+Å"<í=)fzû”[a:£¨Y4mÀ8ƒ4g/∂ˆa∂&à"î≠Ö‰⁄°ÀW«≥4·/≥	3¶.à≤}tâü¶ÿPø 7gÎó@ô∑Vh9≤£èΩ¡$N—‚∂4 ¯Q⁄1Pü—?FKgÿLøuÑˇå4KéP4;éÄS
+uT˙∑∞∫§~AYTíìãB;ıõæΩŸWÅI}ß‘&¢≤GïLA)Ô¬Q=ÕCT%Ÿ‹⁄Ÿ:‹Røø˝ˆ¢2ÑÀŒ∑Ë¶¸≠õT…õ)æb⁄MÍ%ón˛ÉFé∏9÷C°ÚX≥ã¿õ÷qg˚≈øÙk†§ú1”\–7õ∫›0◊g⁄Gü>Iù∂o ´!»'Ìï◊eﬁl¨?rœX›Ma‡…ÓsÌ¿Àj	J¯öbÏ‚*MI˜ºw6≠TF6’£±úX´7P|¿û√õÓz-QNK=DÛâ)Ræ√ƒgä{LQ¨—]&]ÑiÓ3Òirß©Œú«>mïXW>øı∂r◊äk£ŸÏ[Q{”ù˚twkc˝‡Pn]QëmÛ>U|yàÁ€WŒJÌ˛9ohãÅ{ÚõQ≤ó∆Æù(áË<ôMyá. 6æG««póéOı>]dÆ‹©´ì3≈~ì`Èø·∏™ÀÓ7_ÿ⁄€YÒbkø|XQ¥qd≤Té,blFÙÆi˙(∞d—¡ß™Â√¿≈•ÈsÕÂ˝k≤†LwËS,Ë÷˛ˆÓÊÓõçı=jÍhZYÆÁtÌïç“´ﬂpîÆ•em9—ÑUÅ
+≥UQ¨¨5≈Àòí-
+UEâr˙u@Üœç/Ã<°ûJzÂÖﬁ¨"fïŒ≠ƒfê/‹…>c}ÛJ'Y¯H◊Y¥	’≠Qc	èK‘EuâÖè…->FWR•ïk¢í#Ænˇ~∂_˝Û¡ÓãÄ	‚„s™Ë;œ¥»Ú‹Îé—x¢´€*æÀíët¨62°
+«/˜w∏
+˛ÓjÀ¢Œ16Øe
+˚°XΩ08M©Ö1T,R˙…añyËxéN“]™7ﬂ^¯ë∞À GÒV‘⁄É¡Ωò†`ñúúD)™á[dÈôFøY∂∫B¶ûÔ§^ÕÉ2ë∞ÀÅjÔaHùˆ-`™£0E˜æ™è⁄ãW
+ªrA›.n>‡|ä?!IHV0˝Öd]ÚäYìÁ0QäªkÁÍ7hCZ·w&RÑ3£i)"Q€ÚÁ\Îµ óÀﬁhéPä=e…¨W§®i2L≤πO€øÉÁ÷“O÷Æ°¸Íÿ⁄`@î∫iâ»”´ø8”eôØ8Ü1wíª‹):)ŒìTÈçä?¡Íˇ5Í‹…§O>g¬IP—;~›ﬁ˛TqA•Æ∏·vv=·ÆäJΩë©∑‹#≈yS—#Ìr‰ˆ˚$\X~ñç^ƒ}ÇNq?ZJßs⁄ˇ¥ò@˙*∫ÜU„ùÖp“x˚ùRá˝:,R—√‚Ìwãy?+:ÑÏå\˝˜<äoô‘‘”FÍ5MÈ™∞à€A„•OBs§36çÏ@ÍÏπ®iÊ∞‚WÆËˆFÒâàoüúlr˜{
+´¡∏Òà†»!GWˇf«}ZïØE¨ØO{ﬂ‰‘ı«≈—Êtáy‘¡ƒ‹sáëáGïò≈¶ÄI4Ñd‚R¥d¥ÅßÒLıwÿf˘—4ºzπ‚îpÒ÷˚ºÍ;ù∫lgßáQÚ!«ewÙﬂ^hMß°Ëç]]∞Óî≤†˚®ñ%b˜˛>Ï◊á]Íí"§â¨ +î—ùÍ¸ÚÎµ^æU'LwhNWÇBêößóiN	¨§z5ø–'¶87ë?˛QÖ’åIà|∑¿j5“‚å˙uT≠âû)ﬂM≤¯GQ˛!äFZî¬rdÄ”ï™Otœh;¯–}ﬂC˚Jyî‘ÎÔúÆîZ4´nUÁüπO®òqõ®A≈L[Á⁄ë≈‰<ª¢?f•òÔˇTf0…\ÆYºª…Y"ß◊Ã¿r¨Í’øG%¡C.`ÈÆˆy,:8åoSçˆêüFaﬂí&OKK%∑∫q…ı∑A@⁄m£|ÑùãØı=±≠vÚ”f•∂–^Ûb{Oõ:å`Nì—Ω‰uä~ÜÈI“ºÛ∂⁄º‹:;OôBjZ®c®’]N´ç `L,ú˛√üÊeëÖÆ≠–ˆ¢ç‘ê*B≈¢WFsXHÖl˜F∂0£≠*…S–N/$i÷ö∑û4P‘GZÑ{)M2¨¢s—R∆é…˛=Ô[œ“£D”àW!ªÀµ|XxHN1∫ÕI)VL%f≈H’F˝„Ø%bˆ1sÜáı≈3Z–;”ıºΩhç ÍåJ?ó√ﬂxSUC\ΩpEAuÙ6ò]”/@êlß#T^©Ô‘©®πÛ∑“~o|Ly˙C®Œ[Îƒ¯}8ﬁl7ÏõíE∂¬“håò°G;|ïcv9`µ¨‹¶∏R◊™®>º›í”5
+ƒ«Ë‹>CÏübGrNö∆ÒƒC1Ú8ƒC≠˜k±kç0Æ»ÿÿÅXpæ-`Q¢—ÈdÆvÿá∆Qÿ≠¥¨‹"w~)·`tÈé†å9\ı÷ˆxŒDô¡ÍM·ßÎÔ	î|¬≠ÄÕó˜J∞Ü˝dYÏâÊõ·Ç]≥·fÌ˝›ù≠.ÅIõ¡u*¡:≠ÉÍÙ j†˚+Î‡EÒ¡ññ±•%ùØ¢´˙jiq¸ÒµÈDfeQÒël™s¨‰ÒË€;±á	î¢aîÜÉ~QX$`y{˜¨+ÁB∫íÔÜN?$ÄÅ©ot(ü«gâï~∫∏≥õÑoN‹LP÷b/ûíú∆çÕ,æl‡‡ıS]π≤ó·ô∆YHs+£ÎÜöûK–$nB¶Û˛ú )äMê€fpR πÄ8èÛTŒbÃß‰ ËhœÔBf´ˇùÔcÑ(ÈÅAî§d∑®Wr4Éí]‘ƒqf≤Ã¨åÖ\:´#ßô^Ï”;é˘ù”ãu,™πu¬ºï… [u…7Êr0.°)Ab¢[´Ê¢æTÉ“›k{≤HtìJDJÒCe%"…Ÿa'î3¯”È∆fî1“ëR ÒDºÿ+™ëïªóeıÂà∆éˆb¥ÂÎ÷U∏”§:ó‚∆ëQŸxímä∆(â÷†‡)◊√G‹‰OàÛßDIáiòùﬁNöBBd◊öXb»á¬⁄ÚmΩ[páªæP<ÌÈ◊n4ô€â?¬&àG@á‡8"â«èã(%x´‹Oì1 S‹¸W±Vl86∞[´√;Äˆ+√èG1:Ø]\êx≠8?ß∆FY/ƒ3›b„}«é0xp§ïZí•ñLEL˜ç¸vf~\†W≤Ü˚G∏\æh,’mÃœÙˆë∑qÕ;Hˆhîﬁ≥ÂõHûÓ¿/n6á2òu-7Ä®SLB∞lŒøò£\´C∂Ì|Àû_ECE…Ë`r4ås!˜∞˝63ãÚ√ÉÍ@[õLıûz°ÁØÌH•:§Bg‹†çEiùkŒRÙgD-ZDõË•ª›¬¥÷\·⁄FÏ©¯∂\ò&˙î¶riöËS∫7>.óÖ$üí®ﬁˇ"J>ÂJÙØ^=9œ¢Ω¯c•;<›ßé®ÚIÀuàtü:éíúy¯*W"?¯‘"ÖŒz<Ÿß&´”ãcZ}ŸK3H£	g–E¸N*ˆˆwüÔÓÓøŸπnˆ•OáUîGe?@¸ŒPÔ§¯†v‘‹#3r´ú:ZÕŒE/åª◊x.aDqØäç®ŒŒ√PM çhRV∏*Ó,i#èñ¨≤‘(@e∑1pôâÖw¢[:cº1™Zc»…z—Ø¿DZœI}Ü~fíPuu\7âU]£˙åE=À¨ı"y≤,⁄m/&UÙò…"24oCÜÁ„∫,S/¥„⁄ı˜º“{OI{wL{fq»uó©s„Â∑‘VIÄ˜ÕSªπ
+ëò√»KüÊl‚ [∆@…ß0ÂQ∫÷Z\\¯ˇvi˝Ô“(g€èH¡cÕJùÈ yn•znÄ˝˝ÆºPÂC¯QÊ…lñõù?Ø!-63,≥áµ_œÃtJX¨Ω∏8G≥°±œ‹˙!Ÿ^'ÌÁ∞ÓÒ¬ft˜¢Ÿ@^qŒj}≤ËßC%ÿÇÛÏ˝˚KK?äá¥Êotı√(E„c∞Ä	W§?¸Ω$	Ê.ñ›Ò¡å]˝ç$¢#HNÑI°aÀ…8$$ã!Û0$„0m2	∆Ö^F“¸a§Œ0∞ …¯NÉ=◊"Ì=5—≠ãHá<›¸π∞Eöf8Üÿ>≤Ç∆ª¿KÒÓfˆ bs/≠weı¥%u(Ñ'uZ2U5˙V£◊S“V£Eï5ˆÓæ„ôÏM‘Ùﬁ¶·„“Ôπ3€É*˜œÏ©å´1ÃªÎfâÓ≠∞i“9≥¬ä∞&‰˙h.µÈ4+,!◊π	sy ÿãGÔﬁ\ﬁn°õ†∏ü§oÿÇD˝÷ ù5µz“"”•ˆÇbF•{vY"{∏´ìWŒL–∏n3Zóª∆^¥Æ8¢˜F0>nì‹I'°GıÒ(°_ù§&ÔÎ¬å¥ëR¨¡3’áOı7µs}ágœF¨ﬂz*ü©RËgA2vÿµ 	IdÅ¨≥0ÿ»VfƒN…kâ∆¥Eﬁt|≤CÖ7≈‘¸;/–=EÜë∆—√V=ÖFkµƒ…∫Ã÷Õ	˚ìÚÖ ¡õç›Á[˚€Î;0µçK;4pk6¯qˇ¨Ÿá‘*OltÒ^≥›1Ω!m˙õIÕ]jr_8ÿ¿ª\≤∑˝óôK…≈•q„Õ.JﬁŸ¡∆ﬁ”yvy4_àaí	ü≈ıAÊWˇHcãZÔ›+·ç<iˇb\5>¥úloŒÕ>§B@c¯%ÔåÑ…47≈%&Âœ®“éπ≠Íÿ|(ú/¨‹¥˚%ßÊÌìi…3r„ŸùP0]Q„Îz|eÂƒR“‹•¶ñh
+⁄K˛¯G≠é∂Ÿ6BŸâó™:›ı?¢ù¨LÑXñ°ÙãÜi/…`7ƒ—?Ë?°º6lp‰_E/ÑÌ›OFì<çˇÈ”8aVŒñö/Lm.?ïñ&m‹°©âœt⁄ö¯L°±âœÏ¥6Ò± ⁄õ’ﬁ$ä⁄¢”…°ål–ı¸0ùeº∂óúúﬁc¢⁄†±zl|∫Ëd®¿ã©¨Kºh÷7Â_´∑@™À⁄uC–xﬁn‚(B*¿%g!ú?p4Ùx˜≠±1ﬁ¯mÕ¸º›ù≈(&—E}åô≈¶å™o¬5ç∆{ˆ…jufU’^£©öC«o=_Í∂◊j√ù~Xöq@Q≠
+0õ'ó@U˜^˘f¿B1ÔÅ›·ÅN„\∂)´NËÓ|GvŸ!o©K6„NOD¨a7’‰ªéSdcQh.ûBµY8í˜0lÙWu.ûÊˆâ¯(ëΩÏœ7£íµd›iürô`çNÚS≤J‘î≠ì„#¸i◊fD…1«D}òPBi:ﬁj£Qíë§»£©Q‘
+*iuÃ|}÷⁄π'Zp?˚siﬁ<≈CΩôQ}YΩ0üfuuÎ±‘lc-aä∆µ1X0É„(Ôùz-A'«Äpá-å?,0˝]ØÈÆÔ>√(?M–√„ﬁÓ¡°WΩÑ†Ûß(Õ∫ûM¿(Pﬂ∂‰FlkŸÿ◊=ó~Ÿ–≤©KJ>ı}˚J„¯	"*P{V¢l·ne?˚V"nö∫û˘-7Vﬁ•aù™ó[æùE‰ÉÁ˙1Ãw/áu•≈"-⁄b¶˙a«(Ê|ÚyÄŒ‹OuË¢ºüÅ≥ê{Z$»o‘SgAç™œÎámØ˙D°ÿª,j´ΩıËñ˘AKEÙ°*lf‡`DÂËçˆßı8,ÏhÅ œEÒY‘ÔzÇè:6ü„óaûS`î?¬T™mxuÍ±V$»&Gµ·ª¥º8¿€∞Ìf Àü√ø¬y∆ß„˘iö|†6[ïöˆÁÌÆƒ4HVìtîLËQÑïë‚—Ÿ’ﬂq?$Ì?>ﬂÅ.}{¡fÁ2Ç÷\@∂≥,°ë9LA+È%i—{îcÏÙ©+“8cõÁÓ?WX°ê!¡âI4I#õFz{M£!…ì\TM„ß¢À·>áûBI1 8·Ù1Ù˙Y28„ ∞º’ z°C0õeFõ»>œítûLÚ>@íåYßZ[LKkK£ˆ’cTãÑGa¸1ô'øáwıwgˆˇDFtà$""^Üê°ZŸ@ÿ–áG¿K¡bQˆÕ€‰ZÓá1±e îˆpn¸6{& åŒ#ÁIìCA?‘BªxÕ.÷{/¨·Öú«N$Í°U [“è|A("ıÍ´KcF´5TÉF;˚]«Qª‚¯zèPâßÍ—ß¿VD”Ê2%z~©Ü—æ’” %AÈŒ`‡C¡Õí„Ä©æÁwßOM^‚0+ûö˚€±∫ﬁU7’ß*–XA°&êé™ÁqLîw=¯ÚÉ‚¢XπY
+Ó”ÿaË-ç·G‡k›˝ß=“ÅTöE√∏êÖbÀk$°‚1√e}Ï26[Gè“(|O}^<“W·“´2ΩL°2‘ä1(aúüÁI2xÁ≠9üU•›+≠Ï0GßfyG+W◊’Ï∏~ÿ%95Vı£C^~÷°!A≤«‚–N¯Ãiµ∑(?nD¥£d}o˚¢EÚÌR√¿l%£ìGœí‰dëmæå‰ê≠„jáoR'0Ω8i‘y ÂÙQpØd±ﬁIXsûımíIü1D¿#„<ÜzU∂∞…QRró»q–}ñôÈÀèˇZö\∫·?(.&Ÿ∞K#+øÔÛ-…ÁÙ.a9∏Ô ´6KÇÍÉÒ˙÷Zßy>Œ∫ùé8†°0oêå—Ÿˆ	]$º;D1SFeM•}ŒÛ‡göÖÁgqÙ·1]Ë^ævÇ˜ó	º-¸`)Z™sÌT<Ãi≠ıÊhéﬁ˚óæ÷%0åº4ñ˘Hµ›Ê•˙(KèÒ(Z®ΩÃ´∏Ñ⁄+‘'#ıbﬁpÁ^\’ÿ…uÕ ;.ç?æˆç/ÿ≤†Å4›'Ü8√dOuHª¥‹~áX⁄º”v5w¯yoà~DC`‚DıÔ-Ø‘∫<+û/c_ú§Q4“7K˙≤vÜ‘’nP∫mÜêOæïjúÊ7ŒËtÏÊYœ\ç√≠”¿Û\Gœã2ø¿K{*Â®±C˘N…ÊR√+¶KÜùÆﬂ5˛*äG”ê€åOpìjj	Ì·’o£xòh7ÄKLı·
+¿Â€êzû≥ÅooÒò¸‘ñlüØ-
+q™*l`
+®¯Ï^V_(+ÅêòLräèGÀrÒ8>∫µ
+dûZœé¯‘´2OéGÉ®øvWƒu›D!≤4Ò7QJÙ]ñ^Q{ ]±ÁXMÚ!Í◊´∆g^zúƒ‘	üs&Í ﬂ0µµÓGÒa‰èiaç˙I~¶ﬁ)≠›ã¢4sî\Ó˚&◊+0UJ·ív_rπZ€bE´wôZ®Ω∫≤îéó(≤¬+WT∫÷s£Ω6z6=¡√iY¸¢DgÚ†Ã’:Xqv
+àÎ=~—XÃˆS∆SüdR≥ıã>õ©©ã=dÖ2˜~™
+HÔ≈râ∆∞dIcÿÎCÉòtYëì.7íí:Âo¨¡MÒ¯Í‡5;;iBÓ∆?•ˇS·!òµ˛Ä∑ŒÅr°ˆvË™û∆‚ÅÔIÚq≠µH…Ú=¯ØÆJŸﬁ£yÛ†πÅ«öÎ°˚’qòü÷_(–vwÄyËÖc4áeØÁ’äRÔÄ25,ˆK‹œO◊.Ä◊≥P˝µ÷Û•eÚ„ŸÚpë‹;óÜÇW¬À“J˛É∞‡˜pñÉ˚ãÀ¿è?xY
+~XY^XŸÅÉ‹Î-?¸ ﬂVVVÄx„=˛{%∏˜  Ó¨+˜»“öç–O¡“èÀdÖUDV˛zmû
+Ä÷ùe?¢§˛¢.@N/TÛ'Bq %Wk§ñx≥ç*˜gI∆$¢"^/âr')ÛyÅ˜È‘ÌH6O¬zi∞ê+◊Ãú·n_àeK‚⁄∫ˆS_˝[ò¿\GË“;ÉÅ£b∏:Ÿ.y5g{#ÅìQ1∞>*ú%Ω´'„'9∆8=aJ@Mìè®â‡¨NW◊¶ŒbÄEST∫Ò≤≠lŸ∫&.W3Ï¡ZÄBDWˇñ¿˘ùˆgh¬UÁQÆqî–8ÌLØaÍÈríB˚—^Q/^Ó23æBª6Pî;îãÀtR7gúCù˙ÍA¬ö?¸La8’£´øåpó@uj˚ı‘PHÑ¶on*cü„&;j≤lÆAI€Æ2Ó°1Ó°«˝!Ü=˜!†öG©áBÂ€MÄ—w°«BJTXkàA⁄ñØ‹2˙q≠RÉ[‚QØ«·ßÇ»t!aP}—K∫aÈ&ˆπ-'˘©èzÜ}.nDøºâñ¸ñeqÈÚ√˛Pıô¸Â˝µô<Ür-M¶©Ù}¶Qÿ·{ÖmîO≠∞„¸Ó˙Í∏™$«∫ØÜ—˝°rôàB(ól´$…“Ëó8˘ ô\ÑÕ≠â	n¯µ¬ùÿL≠≠ˆ¬÷b•Âøúkó,âc%æ˝◊'˙Û5¬IµzˇSXû°Ù&"úl+p…Ug1N<o?“	∑ÀØ#‚™Ç˙†(◊PéÅ‚™Äπ$∞ÜºAj]Ux•x‰…≥d`∆>-ã≈åãUÏt»FÙÙæòã¨À/P-@9t¶BÒp<&(%9Kbº8·Ádí≥≥µ•nzÍ›†6π€…„U{¥78Eøƒ˘)eT◊Ó’≈ƒ»ﬁÆ◊0≠µ|ikiyÂﬁ˝Æ–®6¶ÖÇŸÓ1Û©∂>æ∫‚£Pbûø†ÅxÏl›∏¥ˆÇ√qÙ·%,◊1t ÕÁ¨V¬‚Üvﬂ'h∑”c⁄gÕ5ò⁄e°~⁄Œ?|ÿÎ(Ö˙qÄ@€7
+Pmõ©3µèU°øÁKß9≥ó1‡ıB8›L#5¸Qª>˛QÌ
+»FÌ⁄Fµu…x°î‚€ÛÅıazÖÂ)2;fé"æ˛zﬁ•@•á lY«máI%√4ÕJY¬*q˚#{4%‰æ˘q<ƒ°W?m≠[êç‚5#ôzß‘óµM`+$˘f“≥Sç>|ÏÕìç›ùù≠ç√Ì›¡ÀÉ≠˝ÉyéÃSØ”ñ…n√Z{(o	 £"∑‡∑Í„∞ü¬Ynze•f6÷ñ÷· H?•˚«)vß‡êi °7à¬ •{Q†í›Iﬁ÷∂•’›‰µE˘˙Œ¬9êñå¥qêŸœqÙaÆ€rë‡^ÇËe¯À±ÀôDÑeÂ/\ü√ÒìÂ•?õ”ıZ®Q˙Q„πÖË(Ã†ÛÃ*®çkÿ°Dx!¿~Îü/ƒ£`ÊúíÎ«§Eù3∆˚›’ﬂ–ƒˇ‚≠è≥h∑8!êßRv›@‚T#g≤Åï!ık¥µŸF[˚˝F∫awfmfÑ3?ê3†ˆ˚]ªO	Ìk8≥ s∑¡ÂÛgˆ˚]≥O‰k4èØ—<ÓN<äØ—<*æFÛ†ï~Ÿû¸Ôz4è;ç„k¯çb,_√ohJ∫®ƒL4Œ ROBõˇq∑—Ëlˆ¸MDE¨µuo~œÿà∑ﬁ–È;˘FB^+»!π~òCü@á◊Ÿ6Óç„÷¶˙/¢∞L	⁄nÉhè∏ÀçÃào$à≤ãıömêìiB)€£Êﬁ-8íqêfHu!êfΩ~ü«J‘ƒ!ö·˙‘Ö ö:Ã>wkiﬂ1Ü6ËùS±rñ·ÖäoêYÖJ
+√aM≥√#‹' √ÉÁ-]mxı9M≈k`¬2¨]∞øó‚ÇuÌÇˇPî)eLçl†Bwfjà}ëç±W÷ ˚=}£õqXn—bmıPC´|˛åÍ√xÀiPF“∞«P’óiﬂÉº√è·$OJX ËüÕ>P]5j∆ıuÉE¯≥ÁlÓ åwŸê†|?:AãA™Gè˘…¶9<]EÄ1ïÔßLÒÿX≤Ã{òTêçÛÑße√XÏßŒ8´§…lñÕ1q.^-&[«IäNÃ9Ã1Œ}»xvõhèiÉæC;¶µ¨ìΩDSÒ-Ê√"¡ZéNk©‡yﬁ˜(πQ/”˝§\<<*¡nD√x\Ó∫ûËÓæ°Çg≈0’»°xVÜ√°ûÖ‰8¯õ{ jËy]ô¢ÀjAŸ◊∫‚ÿ…√´ø˜Fq/·Ω<åËjÏ-∫ª™Ñæzï,:¨ó=ˆ™ÑB¯’?≤Ögiÿü0√kÁI∆{°œåµ –{W£¿æ©Æb¯’x9gtG_ ﬁËEÉ∂äCÊŸXﬁ yC/NÃ>∞ÎqÄVECÙnﬂßå±d}DbôiR\·©^Ì*w’±ÔíO *#O∏ô|íPz—πáÑù∞©´.‹SıÃ‡ÎÍÚ⁄É◊M’sa˙Àqu‡€CÀ¿ùÁFŒP—“Ã;áΩ^4Œ◊Z¡«Aˆqû‡üZ&€∞*óp™ÊÑ™£Æ)Ñ¿˜ÏqjÒµK…ˆÃ6W6)¶Ûı4MÜl'aôy¬çnp[’\ b@VGÑF ãˆk©cTˇ¶+HrLXıÆ{ªz˚c:P®ÔUôÅ÷Î9Íœ"M,Ü/‚·ºG“„¶@uÆ} j(’]Ï©<Fóºò†{ö6-_bH^œ91™x4÷CØ∞Ã©x÷h‡FÙzç|ågÂe>•:%¶¬\õ∏û¶”·™ﬂ yOÁA™Û!8ˇâ0V•±MMán¨± Tyñ≥/’¡Jn«¥∆∫tŒ´ÈpçUX2ÔÒ™\ça”ó9¢[ﬂZ±ôokå¨ı;:œF¶≥9¡«jC¬¶Ëˆ˚h}å¬ÄI*∂œ∑◊ﬂlnØœÕÑ_„@¥ÔøwÎùVuö>∫Ÿ òR√q’¡¥ˆ%1˛û¥`}ôò „CÇeÃæiÕﬁ&¨›∞õTÓIZ≠ü–jq°ôª2≤⁄©®ENlîáñƒ,Ê¿v˘Öó|}òh≠∏¸g0˜≥"£Åv« ÜQ{.»ìÌÉ]a`d„Aú∑[á≠9‡Ìl{CÁ,¨€Øƒ0XÛŸ kÓ*]wu¿;Øï¯::"âï´ıô™ƒœ—¶§Æ6Î3U)ê£M7;◊€/ßÎ[è‡”üçNîƒã™+d~>Ù;Ún†˛‡ ΩíÙcs§€!∑t≠nrãL(Ó‡ò÷DÎ˝>ﬂŸó&…∑AéÏ÷UY"√~◊Gu≈v…W=¨Wè÷Ö«aük?ì¸ó∂¥"4†SŒŸÂuRÇñıÆãπÏ≈£÷wv/≠é{¬⁄≥ª]È‹itR8(ÁÎKe…f*Î©LP"$Ç¢˙yNJD‘¢fUÎÍ£t[π‚s[Ÿ»Ò∏În”H¡Õ^>Ló™G£_úêFfæ Í<4;j)7]Ô—Ø‚‰Xπ:Áûçç˚—úÙllΩC?ƒ®ñNÊ∂å+˝“–'¸N√ró~pô∫‡Læ˙*c1Gæ∑≤ö¶í:›nZöìﬁ¶≈TÈ∏]”–äm<ıUüZÏ>V∑Ï¡*‡ﬁD˝Á√ÕŸBîƒÒ JcAõ-nÖyl\|*ò*›€‹
+P}B®ëá˚Ÿ¬érg“|'ìf´i9ULY…T eº…ª)∞2&õÉ}\T_Lg‘˜—ymR§\”t&†\d{ûÙ√”fÆ)Aoq†ÑpÂ&<Œ;Kã∆í!0K-ï0s¡∂Öl∫1Êì´π–e(cà!oü∑íLÿsÓ<JïÊ/Ië3»ﬂjÁ–£9èyçsY[Æ—|
+y≥ÁD∫≤óf0ı„ìDÃ ´ùAWrÍ\ôåsf/–h≤8ÇqNU+‰⁄%P7ü©‚Jºf™\ΩëSÂ dú*{ÅFS• =úÛUy{ÃÿxíérsÚ∑zW◊•≈’Â4#9w© ÙΩÊ
+X∏ª,Ü´&Ø§ÑYO–r¸¨uwrOKbSˇSãS`E≥üœ{&ÔV!à%,
+GlVE|ú\L#]Ìúﬁõ¬î©$Zôçeì7Yßéw[ÌıQB÷ëùçìté|gÎ–µT¡ô®gDô,ª6wmÿªä–Á[∆0Dm ¥…1m
+˛y^ªÆ^º≠L¸n	ÿ£éúYÂ ^ÀÀªí≈ä´º√»o÷Ê,7Ôç'nl”¿Åù¥ÖÍÓg∫aÄ}Ê;FuÀ(œùﬁ2Ö*¬uQ¬œb”8Ä®≤ü$∑Ê⁄US ﬁùŸnrÄ_7ùÚ4µ3á8®∆V≤©?∏m≈‹vbû!ÔÈeùheéΩ£Ø6¶jπü2LöM∂Vo∞CMv¬∆ˇ^±Õ˛OdQÓ º^F:6±ü˘ªj‚¶™)©NÎÉ’
+Gﬂ•ËYNÎ¨fñYÂnª¨õË`2ÿàj`∞ı'X£´§(õÂÎî¡B°ıaXv3b4®™ã#&cü–&CC8ú†rVó\®A4:…O´6]„2DîJì.ó»h:˘s
+*’ùœ¶3:ñAQQÀ.ÔVÛ”(Ï—Xûñ‡L^¸⁄A¡Ã:(gt}ÜΩ"…BK¬áUJXÌ‰ßæ%¥;ÙwDç‚F˝}±≥løËxºTƒÂppÜ”sá:î√±π ∫Nk/ÔnªC\fÌÍí.JæùnqA∞´[[Îõ∑”üK3]û{;˝‚M'4ïƒ¶3Ôò*ºoÔªÙúqgZè÷{`´ “SSg¡ü´˘Q“?WÏHn·ú%§©ì€:ïË5¯^¥∆é_5uY|≤üÅÄ\ o≥vÒÉÉ>^xXÖ∑«„-I‹kÓ\à9ì –
+;F©<ÈØ-Í),éë≤Ÿ”ÿ˚õÜÓ≥\ê%iﬁnáÛ‰à ﬁè®VZ@›YFËy;L£6SU≥∫¢aÚ{‰ùj,∏ò%Tû‰ÎÎNwöXï¶"‰∏óπKH‹£øsfmÛº⁄ù∫WâäŸ©C_Nbä⁄ô—.üÎZπcı*‚?9eEø"SM¢–˙˘1\∑◊ŸrØ‹††ˇåô55ö4ÕûµtßCûNFÏñ'‰$ ŸE"√áàvyú¡◊BÏuñYıºa+5—HÛ¥û5“∆˛u	ìgÕ≥{DˆRÎoóÜj¡’}Ñ≈‹¡dπÉ’Vôw))’∫œ•Ì≠“ˆÙ:”$ãöV®U eﬁ\:÷èWÌÙ'óªBºÛõR
+BqﬂT5+.áÛÎ¨,˙èèK¸G…yôπ1¶¬DRqì≈åíi8v…∆ÁBöæ‘d‰˚IZ2..vÈµu—§fáJlÜ[÷¥∆˘¬ì˝ñ’≠∫ï À’…)±°@YôYÖN∞;µÂ1liï&õ)Ø{‡nU?Gèá—sA—ÌÏvg  J÷!Í2›§æìQ"√b{Wß£vêEcΩëO∞eç¯òí\€+sc®¡o)}*¨13•YÍ@¬ ßù8◊§›∏^π}tvW˜Èl—÷]ıù∆N”"ñœ ¸Œ∂ˇÁA™gÅ>èëﬂA4p„3a'~◊ó‚‹’1\p«á|ë@çwGC—zèíÍÛI∂˝Ç¡g¥ﬂUÏ]›≥ÿÙü√∏Ô‡Œ˜Òíj(ÔÈ§U}>	∏i®¯åAÂJÂÆÓäôH>ó¡ﬂAî‡Ì±ÿPIá«ÍÛiƒ≥ íõ∏	ë˜SÀãäáßk£é™©p˘%Ïs¶ZÖlj}«rµÄyÆ>ah%øÈ¬:Ô|7ø˘4˙@Ú“q˜ %Wd˝Òr|X~™é©^ë€â¶Rÿ€¢§xòõ,yÏáΩÀæ+˜	æ’î|'N'5∆«‰\—≥ËuE›&_çF	kÉI1÷7ïõ”«)'h∫N(~$uaSÉi—kh&U¿ßÍÇÚíÕM•·<›`\z5Só¥¡â⁄¶\ﬁi⁄.;œ¥ù*ö‡µ¬fCôñØƒ«Ï≥sZT2]/Ï>Åıß”!Ω4A˚ëÑFQ$Ÿ0IÚ”¡πWÒÒ®ü|2Z≈a‚M2ÚdÏpzZ~é¢”,¶é;XÔj5ãÿ„7	F˜®ÂG„/ñ–\n9∏ØlîÏÌÓ/™Ò5 ÅŸ2‘zZXZº_∂¥„j·.•0ˆ‘sÑ∞ÿUı,â5–H%gsÊÖ«ßh¿¬†j°'dp¯Î%£„8˙ñ"§µ	¥Á]H¢èΩ¡$N…8Já·ôπ!ç(eh[gQBÏ	~Æx—Z.œyÒâ±°>ÃÁz?DyÑn◊ΩÙΩﬁ$;8Úùˆò|æ7´Å+c6)‰qËóY˝–'>¬õ{Éé¥Ê¶‹æÚÍ∑~xYÉŒ™nª$ù˚Éﬁt„‹Jaå@∏ƒ>[™…Ë†Íä&‚GGnÅäHïiIEh ù†"lÒnåå8WY‹á~õ){ëÚ®π™vﬁ‘¯÷h‘´&î¬ëñÚÿ£ì˛z≤üÑΩ$™µÑÒ‘Ωÿﬁlœ€⁄È∞Ø∫0Y3WºØûhæ*fc›üƒ0]X1;§¶≈π3ıÂ≈K≥m≥K∏*¯3[”–‰∂’]ÙœœÊ∑;-pƒ’À˙D≠tr∆±9d;ÓËˇ  ˇˇÏ}ÀrGñËæø"Ö—¯Çn|Ë—nÿ2")ômQdTwO*§"P ÀPpUA¢ÜÊjÛwÁòEGOÑWw”ÀÀªÁ‰£*≥*_Ä%+£€"Ä|Á…Û Û@%TQ’D°&Ò8Ñ›0íÖAÑ ì`t»â1A«yúIõ˚Y$•¬ÿHGõd!œÕWË‰~põì.‰v#iX\=]‘nˇ¥ûy’±[ÊÖÁ ã∫9,ê%gµPñÑ¸@⁄xSñê'A∫í<ûP˛Õ*øç∑0WÇú‘7]B)C=û. %¶i¨Õ˙\/ø¬◊ù(HqA?÷\#Äˇi·€ä1?5M`kVΩ8h√(	åΩq&◊w÷˙Û,H2èZ—ƒ]´õÌÆt˝À)pSÊ
+;ÒŒ≈TÅ«oDÅ!z++BåL/ıPÑ>ºº˜mh™1_¥tYdKπaK˛èÎ5ºÕ‹Ω#$ú¿ü˝Û∞ˇ„i|aìÅhùpPBó9„–é& ˘¬îûçM¿ÛNÀ
+j∏rT…'·≈}£¢î±¥≥ÅÃ3ï€≤ä’úIU] ◊+é i›ÆE‡`a(1ÕGs@è@ÓÄ@7pÖ⁄√‚TJ97“Ú´U+!·~á´¢íÅê*Õå√‚Ëa—iZ'¨3|ì‰`±„?ªµÅ5•ﬁ(¢NÃø[B˘øãT4Í§—Öò’hºXJØ‚÷qâlπ¸™&ºëE.(™,Æ©¡« ˘˙2≤˙/óƒR∆A9!æ\n(KYUÙA¢Y⁄CÏJUÈ†¶Á=≈¶¸{2/œ¢4ΩÊ(O‘€RUn
+∑%D†§Å—:‰≤P◊?i€ˆœ—'Û)V¢O¢†N†π∆∑˜:ó≤Î5t˙SèlWÅ‚nwˇ6∑ÎÉÄì≈(È
+.y_—Ìä˝YäBgTCX"%˘EIZZÑ$ãh·….P–≈òıßt,Î[eu&ˆªIºkG)˝ó-ÀÂPª9…Qk∑à£I3»€€uJÌñ∑Rôí˘J•€@ßdÊö–¸v·>ñO5∂uÔb^∆⁄ıu"L;üs-ù»¸…J.=öîA“£	és¢∂2ß_P«2ø%ˇd¿\Ts£±üñëõG∑"»;0›{1aƒwıÕ˘É€9m}ÃMÊ∏µÏAsáZÕ©˜àö√7Ê6Ÿ˜8v◊i”„ﬁ^ˆ5Ëh£‡ﬁúa<:®˝Mﬁ≤YEÁ,|gñ$@K^§aÚ"êGd¶Û∂ÙÌV{æÆ¥õ¡OáI<å@îzD?•Ì!`ÇfsFGöa3:u5F)Îã©¶√¡Q¯”,L3å"∆—D|∫Îf˛§°J¯qGöO»så“ÎJ]©jpV»6≠ã#í}`fAÚ»ª»íôwœÆilÌ…Œ_’ác¸NXS;ç·ˆ™ ö~îw◊FTVﬂ≤‰˙◊˛l4»œ?W⁄7çHÛëA¡8Ù”¯ÀãÉ3,Éz	Å_U6ßT_øWO·\„Ñl!OhÍ÷Í“Lj›ú∑$Õ¸œó,„ËÊiv›÷¿<#«Óô¿ˆJwi¶·d l◊6`ﬁ.L˘iﬂ{ö,o“N≥ õ•l∆á–n©Ú≤ª¬EŸÍ≈¶”˚`ÒÅªÿQ˘ÕŸ<p˛ ¯pÖ˝YjX˙R0T·5(íj1l€‚»∫·g9Ñ	sæ‘2ˆ`fi)_N>åÕ∏({yôSö¥ûÖ^‘¸‰Æó´—{®04≤î`üJFbõ#ìNkõ>+qk∆˚ZkFãqÆ9ßú˝Og˝∆∏LÔWÊ\¸∂ï5≠bÊÊÁ=˝1ã-õ„(nnΩ¿•å=ñõ˛#Äø≥$'9¸±OæáÜ€Q“Öõ3
+‹˚Å¡P!&ø98‚ïC!˛Ì	Éc˜1Éü†¿¸ñbπ‡ß˝≤¸Ì˚zô§É’ù§ë¿] ßAˇN‚∑Ü'K`ØíÎ)∑¬úG‹ÉöWŒ¸tΩ^9YÈqÓúΩE† ıÑ2j˛∏˛á&€û8©Íã'ˇ≈ıÓâ6
+„¨µﬁ~`úT!íçòLÉ$ UQfœÅ÷⁄Qò“Æ~&LúÇe≤^«¨[¸mç˛7HkûZ \ÛrØO(∑Mh*#`@5,ÌCgiÎ≤Œ‹†˛-≤DÈ¯/RìyÆÈ…Á§qæ¡ßÑB‡ëeI,xâ˘p©–°◊˛∞W¶°˝â…°µ£œLCk]Y£óÜYèJ0l€apü∑©À◊#◊í*ÓÆM˚ûJ„R˘ih’ mëÜú¿U≤qëËß∫»⁄]á4JW¨‚vÚU%í±«´◊¶m3´ÕßdW/ŒcoW˘˛r»®we}ò·eŸÍﬁ∆1≤Çû.6K›ƒtÖC¿/Á€o{¡ôëØL{%Õ+òDc-ùFìíÓﬁ¨n7Â2.≥:ªKù	
++€AíÑg¡dìT°Ì∂˛ı∫6;ÄO◊MÖáô@ï\ã£“øÁ€W ^ÌyëˇE∑©ÚH2ö»GxùF¿‘∆ß$ùÈ_Æ ¶Ä!É”hË	˛«àÌ[∑{ñÚŸó]oµÎ—ï…∆G¸n¥Ù)°¨*m¥{5≤dˆó›í!Õ0wpªÅ˜¬§_ÄÊ©!0 gÉWo«—tÅ÷á!p7@ÖÁÔ·OõE˝ ãﬁX¨ë\›0R:{á]onÒÔ6⁄(âë≤T≤õò_ñ—ëeººòé’ZE√Ep~Lß\Wã¢ªïª±=]€ı˚ñ∞’{X90ısîvπ≤Ç<"º±^ùm·ΩqŸ”–[Œå˙ıv»ÙyÜŒré◊í`À⁄˘.Më∫∞HJAÜëÒBÚ6Çª∞≥≥∂øøˆoP<¶ƒZ?N0+ft‡Ï–§€À¨Ñ>ÈI˘ªêøâÄäØáÉv:EY≥—j8Õ¯¥©LòÔ9⁄!ß˚˙Ó%mw≤˘ÚjM¸Ω!˝Ω˛ÚÍµ≥ü8å"«Êëã+? *ñr•	ƒb5Ñ{P3U "©⁄DxŸŸ‘¿$kUy˙x
+Óﬂ∂æ"Á…EerÖFŸßµ~EÚuÈ %?NÈΩÌÄ∑⁄˝Û ÈfÕı7.J„Ö∆n_ª/Ó)yUÔö&é_wÉÍ&Ω∑…ºQ~Àµ´-=÷!€Äõ≠Èó≤*|ÆæâUyπgEfùs√¡+¯0YØM®+Ss)r]R≥RG≈∞ﬂ™oëã8ª¯nn_¿‰4wT$Qò>f:K¶#âa‰üˇ`s{,óN°Ÿ…˚°üº{1´_‰‚kóÚﬁ¯tÎ»ùŸÛ”e®ù˜¨≈j:aœòﬂX.eVL∞Ω4 Òﬁ˝±ú±≤Ÿ¶¯bgdpøåXÇÏ˙7;∑õ⁄Ÿ'—x©€∫(LéÉã÷[*%&≥IYréò6J‘ÊA·‚≥˘%¸AÃΩ6∏Á∆]}˚´Üõi∆©Â¡å‹z*RÂÒ·l„ÈJ!Ã÷§#ÃX"GˇÏcM*R»æﬁçƒ¯Jûéj-H≥8 ˚a?ì¥
+_|¡ÕK∏.}ÉkÛc”.%}ˆÛ∑˘˙Z:…“™V7™bπƒ%Ô<‡ ñ√8°ëç¥1ﬂ¥cUÌÅ
+N˛®·Ωô¥Âph’òúq∆æ2îÔŒxêõ˜Å% 2π?V∆Ûñ»}RS>Ωc<≥¢æ∂÷@(¬”¢BÆO≠tòÉGΩ∏¡z”YWÒã‰å≈W6$%@·‘j£0≤SºErj!ø
+k]GÚf†éÍ∂/?\2ˆoKØ-;•§¶^¿;ê9ØˇâÉ∫÷X€Uﬁ/®€Ω¬-*¨¯∏Ω`˛∑E@úùŒçÇ∏∑R…Ï%^Èr>›õ7˘°ó$Ë"i&≥|Ô¨c	<M≤ΩG\ßapwÀ¨:ΩâüÙÜ’h è8msi˙W+M≥ü‹i<ﬁâœ8’_›`új.üﬂ«@ŒZÎÜå\]œ∂Rƒ˚yL∑Nä˛º$ÉÜ&≤3˝æNgﬁÛÕqfÉ∏#8Ûz&±:ã≤Ÿ»xôêqà †	çvC¢I⁄ßé—„ É/≈ü›~0Äø…ï≠ò∆"]ì∏ãpAΩ±ÁÔS˙Ãﬂ~ë8‘ˆ®”ïX’& ¥Úï)»4É©¶5÷Çïp{∂`®Œ |∆X{ﬂ'Lò{1L¬˝+£˛¥aC†‰Ì¯˙Wº+d¿P˘“Dˆå!¸å¸,·˘î»ª≤›=<Ó^ˇÁıê«/»·—no˜˘ˆ^˜Ÿ|–ﬁ–1WEx?vnmvÁu0ÎÿO≈+<v˚∏ö„ü‘é[≥Ã |¸€7_
+Ù∆≠öH :<˚c¯léGµòñB‘¢ihÃ’®™ Ÿ¬„OãÆH7ˇD√˜hZkPö}∂»Y8Áj™TöiqDjò°EÁ)QÎ\ªìòX+æß˘"˘±NÙ»T°4A
+—|~∫=ß«CLqˆœ‡ÄX[øàGóºe>ÿØ0fπ•$ó0~g´DtC¶·»µò¯¸æwÇá?0∫`“˙ÂÀ†;Ø7t?øÔ„Áì3¡4õ›à5$mÂÂ§ƒdÊπ∞πoÔyoõ|iîá,·x-çqt2√◊	≥ÿoçMãÖ0ã@góôsÚd
+|/äÿË?ˇƒC∫¯'Ôƒ⁄ıª	&∂¥ç+md=ç¨˛4˛—Õô5!ÏyDû”h™$Ÿ* {â¨(‰ﬂZÛD⁄ﬁóß%t‹Ù>πeú?=Vh[ıSgXp&Fºq•ö5ä#ÙGÀYX¢IôY•MV…öx√Ï≠bVe}xT∂ﬂ=&Oˆû∆f¥º'l∆‰Áœ¯Ï”¿gBÚ£ë€Ç—∫€›ùœ(çñ˜á“P¯ß}28ç©u?#µZ!?VäwßºﬁÚrKË¸Î©•ß¨,(á‚Ì˛†&±“fîfﬁÓ‹<€’Íhë*~ä˘n‡mw0ÖˇäÄÍÓdŸpvÀ¶A≈r…ûGôæ´sõCŸÖÕnd•®÷≤˜tU·5O˙?ïòô}Q¬Ωòèë≠ëø
+"©î{3ò<∞≈*b∂Êœ‚~0BsÛu¶§ÁB-ŒèÚˆ–.˙˝XÃœnè‰^ºÚVK!–LCº	∫xcëéÕF∑§\⁄"ˇÏjDlÛ&ﬁAyû•ç§olŸÉ,mÅö´⁄ËÔí"x…∏r’7%«°Îˆp›>∂OFÊ¡GƒË€¯ h€d7FÚÑÊ }7ÈLg…;+Sº¢ƒtπﬁâ˚v∂ ß´d˚‡Ÿ≥›Ì„ΩÉÁΩˆ„É˝W;{›U¬ÒÆÉπs1®q6 ‡™‹°›±O∞ÄVÜ<û«ÅÀ¢5e2Ó^JÛAÆdSÛ˙-ö^a⁄ö$¥_œ9≠+ÿ»¨Nöaíÿs[äÈ7vì$∆ÙVM~ïê7Qâ)må2]≈âÕ-›tãj]Ør∏$C2nOÎB@ì#õàZ:è˝òÑLrDÄûÃ=ôèÖkZh≠{^ÜovﬂÖ√°rÔat¸Z˘ŒD.ﬂ2¿ÒÇ(;åíq≥±¶·~á∂'a
+..o´±b?f∏e@S8qÀR∞ã#ÚB~cËùN¬q¸Óp€∞Aæê‘D∏2ŒVÓ•ÿ[∫Ø˚h”X,rWãî
+ 5)¶íÑª()<NÇÙ|AZXWˆUø¬Ñ˘Jo„ßp  °¥–NHÚz≥Â≥B¯+-c ÛV·±K9´™a™4≥À÷këDIÿá©|≤&®U©ry&®O¯ÊIF®OÚ˝zCÕOÛoÍò†Ê=ﬂ¨™∆mÜö◊4!;ñ…lÜZx{”¸–Ñ:,Ø¥≥xØw¿%…3Á∏±r≤nL'ƒΩõÌÜÀDˇvºÉrÜ°J4—ø‡ZÍPy,Ïü4M2s≈ﬂûÈi©ï∆U@UyjÁ(Ìu¨J8ÄA'GÍ∫;sßí6>Q—AÅ4;ΩDì”¬`TågÃΩW√`¥¿ ¸=B|± Ô˛ÚMFU∞WmoÉ©à<ππæyø≠âÙi2-}ÈiΩ(‡ z»ﬁ‰˙◊æ&Ÿx}†aj~Óu€U§
+Ñæ4¿2 ÿ∏yüÏ‚>o!§Qµ‚-Ñ3 ˜7áΩr~‚∂!∞€ ¬Zú4Åe™nÕº@b6^®&;w;–ëÃ^Íç>£%®;¯≠∏\4∏&I*ü¡m1$Ws∑ËTYÛv@^Y˛˝¡oQ≥E‰¥Xœ‹”gqœ∏Md∂ìH“NU÷¸Ÿ:∆CÌ'v/%›,z≥„WJèdÊt4ÊÙ˛â‹	åi ±ÎÔÛ N®1Æ7∑sÔ7∑>å4ª2O9'2O„%0ÅyÊ©=ﬂ∞s7}LÁo|Ù<ÊiŸ•⁄SK}‹c*ÉI¥@|yPºêº‘Æ§ù∆I÷l´‰îj‹™jkè–H*‹é«” 	õßÙKm në`h}´˘vì>¬Ò#C-BÜíDæ%Î∆äÕ-òX≤¶4^!_ÿT¨?â.¬As√œ®CÎ∆¯¯≈‹úúì/8â9Pt∞ÙEúS∂"‹™lñœ∫DAz¶46Ê
+ &ÈØqÇu'xøåÉhÇ√<ê´coÈm≥Ól1€oU¶k›‰Ü5&•;‹—~êù∑É”¥…7oä~7.ö´ÍfÿÉf…i‹bg&{ñÕëw¿ñq†N∫≥ﬂ—ƒ@º/wÆìÜêXîÈ “π…8%O“|"Ö™÷<ÍKûgÂV√{ÆúZ6ùà£I≥±÷Xπ∫lG†ﬂñª e~•?ûÖﬂ¿î`8ﬂ‚ÑªñoŸÛ
+«aå~S≥ÍÉùôcxüÿœ•úåõ,v†ö	D
+„Ã•xŒs¨ ›@	çAì0ñw ‚wE/∂/ïfßs∫˙W˚û8É⁄-L|R^—âó	Ôm∫[ÇA≥Ó™«§¨£î`∞2„ªóÇ≈˙ñÂ%lh°´∞[s√ìcŸ|º˜qﬁîöÒsWk´3›M°o˜õﬂ+ÔÀ30¨∑KFQ46LCg¢-ﬁ–Gı©f‡¿8(ø ∞Úk¥Ã¯∑¶Oí9ø‡◊N~tíâ•_kÈ	A"g˛#ÀJ‡2™ÛÈ≈Ê Rîä´à◊¸∏;âW›™À…≤foq3ÂF=Uä‚∫∫eÔïáëy}ÉÍ÷F~ÊÏEq€¢ãRÀﬂ•(:€Ù'Gª€›ﬁÒ*∫-”ã‚õ/CÚÖz9¬≈ÍSØ€ÁÈ&Sî◊π)Î›À·“<fjŒ⁄ﬂã¶(5◊ÈrªÒÌÜ9,sÌ7ÖïñÎ‡Só´OQ<ymñ÷+»´eœ°¢∏6’çÅÂ˚‚Ü%«#îÌ≤\v_ÚÏŸµ∑Ü^†#î$îº•|Ô¥Œ©J<+l˘ﬁuèZæ®Õü>÷ˆ⁄* i§'eí|≠r¢„È’Uî⁄˛]’—Ω∑®‚&Ä¬ü^‘§ﬁ{ÈìîbŸîe˘ÓhEÒ‡wUµÂ1ºŒÏvIﬁñ+¡pò∫¸ÜÃ⁄úKÙ/õéÇ…$L>
+˜≤z"zÁ2ÍÚu»]⁄”äuàüèÔÏÊ]dﬁß#L7„˘‡5pz#û0|€Å◊≥†˝Ô”a>«k”"»˙Ïπ0L=Fì§ Œ$!Ä¬OÉ`Ç™‚ÙÜ·Í&±Lê*˝ˆRp∏±D
+iΩpLÍ A
+n_’£ÔÜ√oÍ¨ÛnﬂaÎ≠§¥ãlÙ¬3(h√(—ÁÄJ«ar˝wGù?œÇ$s÷â&Æ:=Xï´ ı/ß¶Lo<Óæ)ño‚)eX®…‡J œ‡ ƒ¿]ÏLæYc=È⁄UC0¯7bÕ\dx
+Ù‹÷gõfœáGæydUg≥§ÍiÛŸ¨π<∏·YHœ\ØÇúß1Ú>üÜô-˝¨lÌv≤@?—¨“œ÷ã4—ä‰â÷Û QºûìLÒ	∫H´f!Wº N<ê6Wyi“9)qõ€¿Ó≈¡∞l—
+i©øùJø’UdË¡Å‚©Ö€Õ<)yûZç<óc‚i—Í,’hcÂJ˘òv=ìáußÀ∆	Ê·∞ó5ó•)Ã≈&î-2Î∏>ØsΩT¯ÜkCcg∏6VÊPÓÎ‘˙áœ∫œüÔ≠í©üVﬂCùkÚ˜`5u¥¯vç≥C!˝î—]q=%¥[mp≥fY/b|2†E;Åﬂîô{∫¡’îb÷î∂x^}2€–πı…õãÜ\“Ömæ9M≥ÿ ˜¶d€ªåàKº´BAƒ>DÒñ≤¥hêvÅt4ªf2¬∆∑{ì¥üD\t“ÂtddW«êË÷˛=d™1ÖòbgcIQcMPcÑ≈ëö¶z≠"jEÀ¢-ËΩnñ“M≥–ZıZ*ñ¶Ë˜¶É≈ ÌòyÌMæßﬁd`N¨7˘¬ ºË)€Çˆ8Ë5˘S›*»F„[∂Ú¸~0´ß8⁄2å‘ˆôÒ?	⁄ßâˆn„EñÁ˜∏»n?‚s{6ü‹o Z?r≤Éy¯>”˛„á¢;x∑Ò+¸‹ÂπÂπ≠ [ÃÓ7 Ø5hœ2-Ñ6?ÑÖO	j–˛~6Ú3‚ª∑Ùî†øEÛ†y£JJg“‹âÇtÆËÖ\g∞`à(Ë‚vYÒó≈‘mMb∂%qZí,√éƒ¯~ªDXÑ-<òıπæïÑ&≠ßÅâ>Ì¥¸.∞rÂ«eÏK÷ÑZúXçôv+ÃI`ëß«∫T5,‡cñﬂ n¢QŸª-Ü∫TkÜJg¸3å„GÆˇôÖQôB≈≤c	Ä1=≈¢–%zπe†•.rï(s˝|˛ípª `›‹^¿˘ ¿f˚ë¡Ä”o3<èP>6zSŒYo9B6∫ç¯jõi¯vèˆv^mwèª€›OK>ß1^n≈ó4y[ÚŸ‡Ãj≈w„6|VÉº:ˆ{.Î=Û}0YÓ›"ªΩ∑ÁAñ”©ß·ﬁC√ΩOI¬ﬁõd·Y¬S“=éA¬:zzøzN€B·H6Z’ÖüzÃÜ
+/p‡~<ÜèÃeù]ˇ˜§$H≤h¥†í¨Ç¿=‰˝iÈ|uuh†A¸ B‹∆PˇÃ†m˙VÀ≥ÜM√˙‚ËıUüN…QçﬁÔH≥{∏áﬂ¡QÈ∑EÛ™]Æ˘MƒKQãK1·)≈Ô<À¶ig.Û¨w≤5â[	[QØ®°ãA8f£Ï/Lß{gx⁄≥dd÷Â>Õíú†Üä
+D≥∏æHF‰QIˇ⁄vi‹¥	%Ê›~ÒÖ•ŒV©ù¬¿Y˙◊(;o“≠Çùj¨Ã◊4•mçÌÙ<ﬂä◊¢´ªóÏª´◊6jY≤}ƒ;271”O‹U1@„ °Øpü søÆ¿BåYI√Ã…©Ë≥øø⁄>x˛dÔÈ*i`ê¸ÜÉCqÒN∞¶ﬂ+´√®[G⁄ˆ˘˘g2F©3,(ã18ËfåT DÈ8cÿ˚Ò¥ÈXÖ#|ﬂ%áp¯ÿ|¥∂JÒ6  y5éˆêŸåEÓÿ¯µö1ìº‚$Ω±ëR¶…áYu»›K°˚ñg·ï#B†G`$€öøyO≥Yı=≥Ía‹ü•Å+ï>‰±?„Y6ä&!‡ÓIh3¬6º	π‰°ö≤‚â;%Ï‡sÊç=‡±ìÄÃ∆•ØS¿ÚaîÄ<∞*Ã
+•.d∆l.‹$|G≥ (CT πè‡tßQ≥±L£5∏ØŸ,µœ–∫{Ä@J†:ûÍ“£]#à„⁄ $ƒ-çÉÔN@Og˝>‹âπA=øæKªºO0
+zØ$!¸ßπ}p‘[;q©+rêÛS”~F4ò@M™{@x&1‚YÄx˛T∏˛Ö¸4OÒ™M5Pdp˚QÅx√Ã„‡Á/öZÏ†>|nÆkﬁïÇò‹4âﬂ&¡‘'<ìúyÃ`õãâ”,´öÕ#™2
+7}(<å3#ŒÒ√Ë–â¥)-n¿pµò$ÒÄ¬P3ºËh{º’8úA´ˆl⁄ñx·ï∂vÅù_µVBQdü∑∫œ‹2%Ì‚ÑôÌÛ ∏ÿ-.¡L√…–†EÕÉ√›ÁG/éwè^¡ØØæﬂ˝∑∫¬çYVaí VÚñÆLEVIl≈IÎÕF´›nÎ´õ‰í8_`ÏÔ√wñµFÄQƒNk
+*ú°¶-Å°n∫¶ª‚‚≤ÌtÃó√^mÁÆÀ´Î˝≥#Íyπd+€ÎÕ![hÄŸk+hÆX¡HSel \ÒE2Œ•≥Ì1Ì2£›7Æ¢ˇÌ$πÊjø7€€¬uÎÌ∞ñ@ˇv˙˘ô\ˇ»‡$~ ◊√ÑkÍ¶–«æã®xÓ<@Ù{]máÕ$ÑqØˇ'â‚îÑ$ö§≥qúÆ à&¡õÎ§Íô™‰pœﬂ& Ä˘zÎ>c‹∏‹R“DtT;Y∂êıÎ∏Lö>r¬˜´ì/#ßËrí[t+7çÏ«“å>£wéOƒKìœT+<ÓªÚç∆∑=Dv:ãMnÉ‰´yéA÷%õÌuÚxæb˜0(ÒÁ˚;ªœzÃdmlÄ$«"£âö¿HÙÉ≈lLµfS0€\u/êƒûê˛∂"	≤Òy@~Ç+%∂p HÉ≥ìûR§pÅÆEiòä«.Tî~™4NR‰¬?«pgI0&MÆ|Y∂åg~ç2æEUÂo™f'o¢ io¢4Æ'f|ë∞f|¬X∫ 8«KUÈE•iüÏß"˛©kÛ{eπ˝‹p£ºûInöîÛπâI}¶Ê@XSîï ËOG!Hop*·d0çÅÊ ßÖÿç≤\ ©·—LP‰“v'õÍˆ–i˙ ’OVÀŸ'ÁπÊ¢B¯.Z∞-`à>†z8øÛ‡U“ˇŒ¶a˜ÂØ66ÔÕGÏ>
+mßn≤ü±˚§4ù\ùi∏K∑Ç‰)3¸L¯> ·Î‡•cL¬Å¯∑ü0◊Ut˝À¿ı@ÙÇÒiÑR{∆£ÙM€ciìXºﬂ
+¢•3„˚añf—]Îîô—´ÈíµQyg™˝®ñ‡}eqXxä/ûˇEyâ@˚ıˇ¡ˆØhwã&ãÕ}†Qk'|ıCΩEöŒÆ‘≤Lõµ¢€‹æ∂±ΩŒƒƒe˛·a†_/á_„8ì~òd·ø£z_P©5ˇ‡£˘Ò¡N∑á™ÖT@?â¶Y†;DüŸ-“§|n‚LÉ≥ ı®∂ßö˝–x¡M	I√E≠@ı¸πÖ.L"£é∏ø…ı?À«Èä#ÁõÕ≥¿ÂW‡ì!–`#Cw¶±Í}xfÁÒ†CáΩcg;w~eÔ¸{ç.fÒ»˛ı/gQü⁄©·¨∑F@Ÿ¢7prmrPe$Ì0¶§œ
+πy
+”4	˚Ùmpá@ˆ≤Ÿ¡‚\5ÃˆüôÖiÛ“µOs$8Ùﬁÿú@ÛÎQ”bãg:√EºGåøY¸JTìûËu)òÅàT´Ì†âlÄ]®ÅÍë?‚H(G˛ÕCäT∂s§b¬N◊_dŒ–8L£wø›õ¸ˆ≥}∏7£&r†ˇ6çâ‘Ç™	QGq˘é¢√˝üzœo|})"óÃfcÀ¶x¬é+ŸÿâŒp+cA3êôbnâ1y`c„è¢tÊµç„"ﬂlÏ¬"lÓÄ.üœ∆ß¿=¬u¥ìê
+«ÕµˇΩ≥v∂ä"°˝^ûÄu‚√î˘î<ÎÆbÒ',yÆ0
+!Yπæ'Ë∂î≈bèÜø  ß=Tpl !ËÕ÷Q∑Ä%gÇ˚eÚ=Œ§1Üéj’@&›≥Yê†|3:õMêg¿3»∞ë?Bˆ…Ôú‰⁄y'}öÌê“{“?˚?í`àÇ∆=ˆ}`ˆΩeê5Í@fl÷KîÌõ6zYñ‘¢‡¶Ω}ÒÌµ'ü˙‰√Æ0GEk˜∏ü¬ï«¯jï‹[__ˇê¨WaQŒÏ¨—|Z≤©n∑€ü(3vñÄÃΩ(˜¿:Yî}¯=KﬂúQ€πÿ≥1µA©Åˆß»wµﬂ•®q‡é§ƒÅˆ(úúeÁT!ªN∂L1n4˛§„rX$@{Ä¸å*ÄÁ·‰ò¡l†Ù⁄œ˝@ë@HÈ˚–8¬§ÉÜa®˜ÑP*:˜£q†Sc
+¨êéi±ˆ`ïÜå¶eã˝'YÖ⁄#@{#‘4OrR∂J¢…0~È…	¬	‘Õ>¢“ˆ0öÏ»¢9≥Ÿce÷.®´’èl!µY—0vNÑ√ª≤v47ß Ÿg8qe”ÿÎ‘∂§ä‘8∆Z[ˆƒï@˝t´]ÚKˆ˙ÒµÓ.ã‚ÃæÜ¡ÿ±•‘˙'ŸE∆dƒj–EKÍjåH[ı⁄÷§˚êãÚ¥öGE°Z“∂Z„úX˙ìˆhØÈ¡Ù6…‘ùyu
+ò√˚dË$L§¡9€ ZT˘ïŒ0à£«Õ∆ì Ó,"ÊIª‰;ØZé¬t™ÆÃrßÈπÎﬁ4ëCÕ⁄}®Ê&*t…l¸^»ÛFùl<¿-Û^ª2OfëGö›Y˚qæı∂ƒL*5˝⁄Tã;TAµÇ4:p2{õ»Ïm‰Ïﬂ€÷=Â≈lC˚|∆æ”<¢—‡,˝gÆºıc»Gˇ¶Í3A¶|P+5£/TK˛Ùè{ÔmNÆ+æ≤bQò†»û≈=s ePø	4:uÀ@Âb∞"®›≥:®€Œ#ª¢ZÍñì◊Çiiﬂï‘Îó~òX-ñÍŒ⁄©—Qãó!Ô[í¬=D{©°oUkŒ∆¢X‘„EÒ$˙æ’úús,æ∞<Ù*˝!âÒZl1ËÂÎOn≤Ó´‘ªó(mµπ∂ãñbÛ†‹Öü{WÁb|ZµÌ4àÛã∆qÇæ6Ek˛ô7=˘œ¸…¶qı⁄Á‡<yyí[Ì,~Å‹”6pOÕ<Æ±≥€<Ù›ÓˆﬁŒÅ5Dü(˛ÃÅO>[QÊ k+äGhΩ¢‘{≈óÀk√ã>{öG’*˚·∫{nyËÃDÒe”|ÚÙäRó™.¸D/ó∫zzπÃ°≥óã[/où©\^ã'?˘º≈[ª∆π◊§Fsk„ÂRü€RµÙµ	˚¥˙r1©Èπ˙¨^wµ˜J√U≤·V‚ÎáÚTÁÀe>0]qdU+Jπxj˘ÂRgè<k˙’Û‰¡*A@Åt1@ej.	çúﬁKπïî®†~í\e#µ´“nƒË”ãßb¶^Æºô3gxQ”Éß4?K»E√«Âºò‘8Lâqï’S…ä÷íGeú¡A”£Á¨ÆFw©¬siﬂ∂66…9˛«Ã`>îÙ®îÛ5+9˘«`çq”Ÿ(}wG·(˝˘ˆ["õ˜ΩAƒW—X}42%Îvﬁ.
+{IßØ?—‰áêΩ≥”0?Ï.Ωâ0òrNì˛A®ºK,mÎbZN¶œòÚ◊Á3 2A√ò+ﬁ38çFQF„ZΩHCxuóØüÓˆæ'œ¢…è %‘Õï?¥i#7TñÏ≥3^–P6ã(7p>∞?≈ˇ‘≥ÒÆåÏ©˘-‘ÖûÄ>À‚÷Q8Ω#ÕΩÆèºPCj[≤†_O\PÃiñ$0Ÿ.ã¥YáKm"∞1èÔw+[Ì(≈Ω¶[Õ;€⁄öø∑`é.håP¶)Wƒäµì; fXﬂ’≤∂F¶Y4é‡rÙπ~’ªqâ1oNìã:Pá”m∑€ÿ∞É)Ωñvjä6|4©ázÏ∞ıöÔ~ΩÊXõ≥ßÚ’ JÄXí!ãœŒF·á–"‘.„äöÑÂÅBM}¯˚–ñÏu∑°jKF@X–ÈãˇT‡Ø-“8xNï™Oû8ö™Â#ë«È⁄¢€ò[,ùS˙pÇTÃQ–ˇ±ûÊj	¥a.Í∞}XúB®·Œ2q√ºù’D7°ªÒ≠(ø—8tà"*¥(ãzﬁz@ﬁ∂˛®≤™Í+Q% ÆÊ˘˛Óe”É42vå][·œD¬¢C<
+Â*œó _ÖNùÁ¥ÚfÚ=dŒ[˜–ÚÅm˙{®;ògRë∂≤®∫º≠£}“Ω∫h=†õ'≥·Ω{ﬁ™˛™-Z€ﬂ∞…€h«kÔ<˚ZPÍ`Á‡LåB{Wî‹Û\º≈÷%æv;û◊ù}ÿ"Çõ0ÆaL„X⁄|M~Yömπö‰ooe*%"Èokf:ÙÔ$~ã[5@µ≥-ú–	À~◊áG¸CıøÀ◊çjp√ü3≈ñßaN˙QH∆◊ˇe—tß<.^™Fb*Cóz>ãìHßÄ¥EY–ÌmÂÙJ	ü…Ù¥µâßˇÆsÕ{⁄O‚—Ë4HºÙ:ÓÀÌb/IÑÂyîf0ˇ~2)Âﬂ}ﬂa®[˙%¸w“!ﬂ|GÎΩSﬁML7öwçqÁS©€«¸3Ôq'»öæFó∞h©√ß›Cö\˘˙ø« \üÇ85˛n”:›£0=ƒÎI£<Å/◊Úo˘O¢Qx¿T{?^à≈oÇ~óvÜ<ª˛ıßY4äA O∂Q^≤Ëñ∞•∂îÃVm$µzá,âôôY*Î≈Dˆ™^ŒåÜˇïÁ∂;NõlA¶›!.˚ñæ5-ª"\Ã¶lØQC+)5ô"r$oë'ÉÚ©≤û≠”B.U^Yˆ≈‚Éä<6&É1ÿíWÆS7>ÎU“jõ˙7é—´áÆ¿◊ï25¥Ö˛+õccMıYÁ‰¸íÔi0©Nà.„UM¶’Tc0óJ˜≥5ÖH¢Z]É5åìÁò€2Ò«∆~s.#ˇ%Lö“ÀîÀ‘¬<wcj2}1¨Äêtv˙ßêvàû78√c¿.ç˝ KÆÌœFA1ˇÄ|o™ø7@Ö¸∏;éŒÙ}k8u6\¶ññ}WËÁ¸õ^¶∏^˚]l≠e‹Ü
+Yw\â–œ}}*úÅÔ˝yY©“F®Ñ÷!ö∆îb„HùëÄU»ZU6Êåáh≠€'ˆ0«Uπ)yƒÜ†K’Çâp˜yõ|ñ,|˜∏ç=0Àf´óŸ;ÑN¨ù√⁄∆ùºdÆ•Mz*¿m.≠l˛–	Ú?{Ã5y˜í|ıÍÓ%Ù`À5…óüûACÕ¬Ïæß’ÁÛò+R!˜ë¥∆∞ÜŸn!¿~yåGË1t<´¬-é˘ÙoÊŸik2â«aá›"[µ(˝Kî`å≈π›õ´^Íﬂ9 –pÏ·ÄÖ¯,]çp<EV*=·pÒR7Ñ⁄œ>Öà±	Ï∏µ≥+.\ê±∏°Ú§:
+ò?Ë6BøP´-Âëòî¿aﬂùî∫“~)*ä”‹mçö≤=»9¸ÕJD»<ìú››«˙{∏gUkj€÷—∞Mq÷ß∑Cv›i“Và"vE?!#NgÎ“ÊôT>RçÛ˚}Ài…çUâÀ(y∫÷ÙoekbRÉCIy~ﬂ1k≠	^Mııe~sY¨à+Æ,j¶+d•”xr˝Îõp‘åaWˆdéCrôízB5ªá4Ü≥‘ÏÄn…·#
+œú!c(K∏eQäl>Ã”q
+U˝Ç¿ƒıWΩTsﬂ)yz∫„)Ÿ·¿æ-•#Ñ£ ’Ì>ÒpK**|¢Ÿ∏f∞‹BÎ≠ÍNlJ
+«ÖÙ»'dO£"Jq1Y∆óÇ≈sô)i8a†H„¨ /AïxbÌÍ¬˝∞Éπgbñ˘ˆ5œñDyRÚ{≤·~.Ù€S}äö¢ë™∆RIﬁßÒ™ü·‰úì5cr≈}ê∑Ú®\¡`‡Ìi|ÕàΩ$˘»¯;WÀ.’˝Æ{‹Îæ⁄ﬂÌı∫Ow{~ùx˙E˚Zä0Ä£Gﬂepi¿ŒˇÀÖ…ØiÃ®⁄K§òAæoè˝$ú3Àº(^∆$^&$À"gXjŸIdçºÁzö∆‰ÚÈπÒlSieœÊ&U?ú2tnu∆áô‹|”®ÛY∏»|ùxAíÓ_ìµxòñ©ºâ3>.=Í˝cÀÇC¯]Â"›™#éf©p°Yw∫–¯°X(êïG∂s»©µ{Îπ≤xñ◊ΩÂR˜Ìës sqã‘˙vzﬂ&˚ö˚Ò
+ydÕJ√çÉ¥·}E ƒ5d<Úå≤ÑÅb–HÄÅ´{éÊT5•äæ°zÍÈ)IC 9◊ÊâX*58òåÄÛºSpR>kÊGU\åÁ=XîeÑ∆©cy?w8úöÅpÍÖ¿Yß∆ä;˛V≠¯7óúøgÊm&Îi ;G/;YO[πî≥ l˙H—’<[>÷rπ„x¸®ñ-…Ä6◊FM˝Yí∆	HÊ2 Ò€–êQ´ZÜ_’Õû„µrØ¿=J$∞ùÎˇFÈüb… }?√B‡^¢”¸’À≤ñ–J{ıˆ¯[¿€ØF‘óRÃó∆ÓE4ãy;∑~Ø˛û!Cﬂ·g<,o<ÏÌm‡%.÷ı ù‡3˚# \Ä4?óU;s⁄Öı%L_¯Û∂ˆm‰Ô∑UŒ(ûÑ„É∑}CØ‹ ±jå≥÷.›± qJA70∫˚F±aÛ÷∫ä¬=q˘}$<,^÷ÁJDYè6Út:3G∑◊Fƒ¸…}weq‚ó*x’kÓ:ÿqz∂7®€(ö¿1#4lQõRµò´5h]æ∆%aËtô” ¸º› ‡xÚÇ2œ9QöƒobúùŸ∏£¥†°‘FyáŒWÂ/B¯≤˛8hS≥πai;7%]k|Á—˘÷£cK°bﬁî®Fò5™˝’˛‰ø@ÆŒ°»ø%] 7¿ø˝‚ä`oøB/ísE¬Qzû¡ú≤o-éÎΩ√Èºº÷M¿˜‹`9o÷Zπ,¨Í(Õ9≥îßÆ}ø™zñ≥ˆΩ*Ë≠‹ãCftE∑[@ŸP?±^÷ú
+˝∞K≥´±JzàVI+.ÆÖí¡eä‰V&s~´˜”,HÑ°˜ΩMèß ∑—ë6Ìälœ E,sNTcjÄT∆·d∆ÚßàQ„˙ÔÏ‘—_à‹ÿ‰∆ #”‰˙o"Cñb—ãÿ πdK;≥weıÜ]ï∞yQjÎÅÆ.ôŸ§pêidòm	éqí≈•êV7ÁÉ…cë›á∂cÊZß¿H-üÃ≤?ÁÇæê«≈v‚•ç/;=ŒÂÓ∏“#@tÃhI„”Ñ¶Gõ$ÉƒürêO¬aÑØÇ¿«¡ó”hVJe¯ﬂÎ∂Kìú™∞QÕ˛ö^∫tà÷«&E5[J32>’∆Ì⁄Ü˙tŸeÀ/è®:˙õn´"Eç…w;¯i—Ë⁄…ù30Û(€xÒ˙Ôq∫ πÔ4]ˇö—ª˘ÅhUû"C:Gì÷yÎ‰‰Wôìöê°»Èì%ªì3æ€¶g/Ôl˘”íË∞¸∫#F„¶ñ_†B™‘ëq¢6i’,ü2f<3'éú70‘¶‹<◊ÅëC4ÛS•t§]2sëÛ0©F¶Ù®'úÛc1U3∞r9X≈Ön.‘õÔtƒ-z≠2†D"SﬁÈô≠1àÙ≥ØRﬁÚWÊ…i |üGq’`æ¿1ÚÁYÄ[–ñbW∞Óêƒß?Ñ4‚Ês#2:±
+á::èD\!zUU˙+—â
+e–9:û-l≠WÜ≠áƒü±∂qäfæŸl¬_/D-ê$Û~°g¶:ák|8ÏF*¡XDƒ€tMHÖ˘h|KMhı˛∂&—•2Fâº^åﬂÓ<1v[`ΩèÆÍE`Ù0PpS`†[òOe‘™KÄè gëÏÈOÍ	–r‰§f”Q–ﬂÑà ZóÊ¡)Ëpr~ì™xP88∏é∏à.`0	/Æiç(ÍKä‡\K«'Òó‚iQ‡3xûÒ∞ÚÓó;úóÚÉËˇÇ'Z•±éÑ,(6O√çsò1Œ0iìG˝~8Õ5⁄”¡P˜ª¥I<Nã¶RaGˇF!,„=vù¯5à“‡tïW^≠\≈È:~S#t)_Td0≥–5äœ>K[P∂«c‡'Ú∂Ñ∫Œ¡Üø£IiÔó"wïëE@ ]üÖcLı:í>K≠  ˚@a!ì ˙8©N
+˛(uô≈4_vJfÈÏ˙ó$ä”≈Ö1üƒÆ_9ôMı>eÀÍy¡79fF≠‚Ä´#ãÀV˝Eü)Té «4ñ=“Ûp†\ÿ´˘ÿRB◊%Cﬂªz∆6JŸ¬Ÿ‡íº)öIÓë˜òP·SizÓ‰Ì*±D§ÓÓ˚F—?H∆ìù$8;Äˆ¬Ã¿ƒá‘<6ká	ùziÎ¡=ü∆¸ÙeNœ~õ&OΩL'ó<!„"M£“-fx9¶!√‚iÇ‹uÉy ∏X«¨xg2*#e*n8≠bmı]Î∂…∞wJ( ˝D@û!◊”…}w‚üèﬂÌöîJµp-JÛ+[mÃp˝£˜·i√Éôç{Ì∫≈?™ÃI/¸sfÉ"˜µ/ıïº8é⁄∂ª%à·˙¨¯@Àbzí—¬åˆu¿ö/Ñc-ÉÜÜ˚ÛäaX.K’b¬Ô!é!S`¬∞ÿﬁêæ·DÕôöD˚"`T˘˚ä_π
+‘h¢_ﬁ.3˝ë∏ŒYÃ:ÅÓtì$H©lî∆#¯7Œ≈,‘¨j-ËMé‡>:√˙ÄS$ÑlÏ&¡õSMbíÜ3|#¨ ≤Œæ»∆„ïAE(q¯#W<âÛÎ≤=AE>XM0ô¥Cü?]%:|äÛÔ˝Â)iÓmÚ`ˇ±ŒÚ”?p°ﬁ˛Í±‰!ê¬(|´7ö≠pùz˝î›ö∂ñ˝¨’b÷?/bcáÂ=L¬`ƒDujE¢h?"ƒ4æm¬ï¯äØ(1π˛Õ Ë–®D[ªiìEÆAßa∂ßﬁæ&Í_-OÊ.+56+*≥YqôP◊ÂˆuÿKx)®Y±Z¿÷<+ÄΩ9ôçF÷˙πr;ó7Ö*‚íŒ%⁄M,jöVxËœ’›ö,{+ªYÒªo]>7éFvò‘@9ã⁄lÈxq∂D˜ÿ&Àj9µdŒ[|˜Pg‚´jTË∑‘øP~œ€¨ÿˇñ‰D	’”ä#~ÿ˚Tıê+C*ºXÃªZ¬†7∞j`N˛e}c„˛Ωıó∫H£â¢Íb˘©RVqÊQÙÀ∫*fm∆úZ\Ø¡)0"3tùâ1⁄hùùg,ÍËΩ<5¢xJ]€(ün˛À¶Ãπﬁ\÷…süI§ˆj¨`ÒÂgÂÏÌÌøx÷Ω˛œÎˇ8 ;ª‰Ÿ¡”ΩÁz⁄Ìπ∆h˜ÆEµ'	‹º`‘:√˙õˇ≤ﬁæ
+^mL/V)h¢kí·Áïó‰3dú—˘∂êoÌl<ú^º¬ˇº$ ˜£Ï∆G‚–€¢t N π[««ÔXldõ)î)äë¬ßòÿ˙ Ä *PH4áπä∆gfùÙ…„öm—ÇàêbvàÊÃÊ˙ÚÙÇã}°bZWäß$5>æÎ|„ÉBÄÍƒ@ókt«Ì=˙√:è±E·ôﬁ–‡^_Û/JÅ
+Ñ…a‹ŸªGçI‹_ôÑ≥âíQD≤
+ä`[Y‹ 2L‚q+˝ÒSŸ∆U——Gr¨FÏùŸƒIÍ/l9\ÂS∑W'æ]Nü†
+¬îÁ≤`X%C‰eãûfKÙÄ∫åMùLW#ªˆu⁄$N>«≠7»ù£
+úÚ—wÑıR:R¥ÿ`Ãˆ J;5%ßP"P ¶7Â®kS/)Vë^≈s†eπNÙ´ıuW
+VL Í´YÍ æõî˚«bÿ?®√ZwÔû˛}ÕÙ(_a¡Næ“‰5ê—Ñç]]¸¡nÔxó|˜‚˘ÒÓ˘ˇ õÎõ›‘sôt—‰«¥Œ>€‘{•cÙa”ÛUé‚¡2€•‡EŒ´˝<áYSr˝≤0J´ÂkëÂáZ:µÇIW‡°Öﬁf∑Ë‹,∆AΩÁ·[ZG8 É Jf…à˝1ä˚˝SÎñ®,Ùoà˜UÅ°ÁÆë2*oÔ•14ˆé¡§¸oB`…4Jt¥u¨æBp™†N≥ ≈ìﬁÏte‚Åº;‡^]U )Á‰”qÙìÌ8™ÅÍtˆäâ%Ü)/<	öE@J_Û0vå‘A®|,ÂÑÍ±∑€mﬁxïÉÄjwX±ñ∂∆Óª1;Mu;÷ÍÓËã£gÛm(‹Ö˘˜ì^§Oq;ü!b ÕÉ)5n≠î˜∂¥âèËMd˝7ì#£èp;µàú=œ•¡î∑œRK5j™.…j DÉiÂx÷)PÏ•Œ´åz∂EæÈoB≈mƒöj‹¨≤&•äúøYCÏk#ﬂ+À‰√ì˚L%í´?∏=M*z¯K ãÄÈ⁄ öZ3	Í@=“z@◊JG>ÖcìÌ? I„<Cù©õZ}±Ù<Ω6˜ù≈8≈ÙF6“í:ÑÒa1¨`åBbÃ∏^‚,d?))ˆñY+7%j3M⁄7Gã·449}Ñ‡¿èπ≈Æp°GRÆ0ˇz˛ó%˚õRâk4k˛5l#NÒFH5sÑ=í—ø1æÖ[Kmf(s‘¨"@™ÊŸîE7w†	É⁄˜E…MQK•ºƒwør$›;’≥ΩÁﬂ˜`˚1çÑÒãóƒﬁŒÿ!ãè9»≤éG	Ÿ1«˘&ZZ±I5‰··l¬¨Ç£8ÌÌﬂ®`¨ä¡ı$X.?a≥eÊò§∑_em∂£ço©ßŒı?ÒÂ&âemEç5Á∂ï7≠;Gì'RÖøD·[iíﬁ]Ú?‰ÉúM–‚≈$É0}t©~.jÆπßÿO¬¥Q”˝Ódå ”‹.˝Nß-M%ÌüácúC lıª4J{Ïã+e)»i·JﬂÆRQ≠∑CÒ÷dôÍz,Y≤ŸHªıOäüp”…,EK«i£’ù´Í÷˚åáØ,¿ˆx]çù®ó√˛ËPy›⁄YqE,ÒòNùÑ§ûÕ •]ˇ=P∞Ü˚ˆå•A≤A JLÓ)˚f¸©wú9V†v97£¶ˆ2h4ß‹sÑU:JÛIR≥ÌË,aπ∂⁄ úß6v‹Æ©®—¥¥0ßÇL’¬ˆ–-⁄©Ò˛Ú”ú¸¶`È!Vﬁ†U⁄¥°ëùúπL®Pr·íöæŸâﬂNd´7]Ñ)ñVŒ8H88ÈòR=A„˚´ﬂ¨|á$Y“{Wt•ˇÆT÷®ˇô∑·˝6g∏;Õæ;·Aûïj¿˘ 6Z[#≠Vã:Q'Ò(ƒwö√‡å9c•Ñ‚7¯˝wÙ	`KÀkµ∞ZCßîã÷Õ÷ ;v˚qòv»∂ÙEüPVDô”¯Áê·Mˆ=«ò“wHö°"bïd[“Hg}¥≠iêüÛP"»7æâ£6‰ÿwKÈÍ¢*òÆ3ºò∆IFê§Rå™_FS≥Úàú–st“˘'>’’b’ﬂ]ul€√}òâÔIIˇ¸8L∆´(_ÙÚè/a©óG—l0˛î∑·æcOh.5⁄lW˛Fn˘M9J‹¨ßGËGáh|Àh˝qıw‹öGÃ⁄ÕR©ÛûÙÖ“w—ˆ{õÖ∞œ	˚≥4¸3¢C|€§-‰ìéBÒH˙B›ﬁ4o{f;QÄ“Ñ©'0›§ÄòìÙY1h<dQe¥;¨™'L ‡©æ†˜	\ÅúDﬁÍ˜§qºæﬁ°ˇ´ ıY«ñ⁄Éh8D7mh¥dÁÌ‡4mÜhGè_Ç\‘"iÒ©“r'xóäñ˝05ÛÓ÷H˙:˘í<Ãˇ≥ye”*∞^¯Z#¿óœõ¢≥≤E6H'Ô´^I{>ﬁ!D≈oSv6˚ E5e˘ç’àúç2j€vÚíﬁ>uı^µÅ≈⁄˙ÁÕf@Ø§"“cbﬂ£WF?J∏C„8ãŸ°Â?±Ô¬4˜<åYˆ˘∑V.¶1}§*åvÏN√	@Y—ò:y°•0sÛ
+∆Cu¶·§∞åÜh≥ô˜PZ≠vò˜µ’>¡Q_3ŒÚ=ßU√‰‡Ù∂ÁâH47£Sùµg<ëù˝◊•Ê4"ZÏ—öœê◊ﬂ¨Tf2≥ •$ØKY≠C„íòd©û#Ø«H≤ç·yÚlá‹/æì"ñOj:<À»#©áõ6ˇU \ÕT‡¸"¯Y∆X_+«$çÇy˜åö_@h§_î÷Â- 1RÅûö˘ne¡ﬁÛ4¨È´'—∏rhoÇQú‰–ûÔ∑˙5¨cΩ‹êÓc7õ¡§q¸ƒ⁄Ùklp_›U⁄!L”o‹!u ÿ§˚+r/•Í4Úù∂ÕC•ÕΩ⁄|•¥‰Ê”hc]mı`Ωrb}4ö<é≥`Ñ˚≈èÔÀºUµ~<¿e„%°îG‹õò}=@∞€(yJÒÜ}+_æôzıPk%Ú£>éÅu&êﬁadÜI
+0ŒUôà‹ÌVõ≤qÇüÏ¸Ö4∑„qòÙ#|¥¬Y)–4:Ø"k√Ú?:oOgÈπí∏Ü-}o––£Ü˜òÎ¶#≈k∏™CFE‹¢ü÷‡—2˜%nµ1l mÙMú˙xˆÉ∂˝·y<)w0≈ÔhΩpL˙·%{}ÎË¢‘∂ß_ÁÕÒo«^L¢¨‘∆kâ >'[rùº
+ôt≥Ê˙J;ã_†Ú;HëU¯}Ií–6NA‚õ™oB]y¢I?ö#e∆¸:hµ|”‰üS4ƒP∂Y®Zs©‡õüöRG{ï–0 –8À
+UZ‚1∂hˇGì&F,˚at4ç∞…ä«tˆ OÁ[^$UÓ`Ö≠Ω2)j±RôBAΩ]∑Z_≥rΩa∆rMzÜ¡)<„P¸‡ÆÅìS‡˝P¢À∑¥¨µ yR•Ç•ä@;%¬(WY˛Æ@ﬁïö	\√bXÈ;J’†UπáNAÏ%v$«ã‚/Ò/g§é§Û*9)1∫´L^2û
+XJsh ±"Õhî¢‰çÒëX‚wÍù£'hF6`äZ&%Ÿyp¶∏(“≥oÛÛ≠ºï˘Ç˚M*¸w“ñë÷
+ˆŸÉÚ˜⁄Aoøwm4—mB≥±3“»≈vP-[*˛ïØñ—ƒp`8¯h Çx¶Ò$~´¨àgÒFﬂ&lKº$‘mÀDêÎ≥¯≠@Æm¿é£Ÿ LõÖ–Æ÷Pnv&Ó∆¬I(µv_9˜"-ù+§µ+JÜ7®dø≈|´:tÇ<„œJÉØ5ªKÔè4Ç¨X0P∫Ö,Ú∏‘N3ªÚ)J⁄”82‰“:r£|√8X…¿Ú≈Íäœ|µ‚#õî|%J`èzéBÛS÷Ë(*yj/eÂGîÒ\R|ıB˚U‡˛£ÉgªΩ6‡ÔW€˚ªG€{›g¥Lï{›g›W˚›„£ΩÌœ∫‚rÓ_ˇêGCÅ˜g¯Ï4?ü»8ƒﬂLóeå—3uMÇJúkœø˙!›o\˙“7£:&˛˝MFJ+° i2øD¡° !_Ààœ êíBKv⁄+≠≈ÿıU!´G»ÖÀ  ˘Ü∏˙ØLåÔñπ]≠2N≠n⁄ÍÔîn˘zïo≈$KUŸVÛ;<õ ¨ú„Xç+qm‰ `¡Ÿ≠¯Üp{⁄G!úpç† ˝B&ë`g—ÒSfR≈iW≤.õ•¥≤∆ã2äm¥>qØPﬁH*£≤&KH≠I¢,‹°°™ò+µ/2Ô£Äövª≠P∞A'“˛Ωåí¯9Ôø»^g≤±›}∂˚|ß{¥w™ª}∞€[-vaUöäqEu˛˘Ú=ÃÕ=¯Ëµ-nZÜRı⁄]-ûW£¶;+wûg$Â&|∆ p’ËÁx·d≈*{‹•/ª}*‡7≠FC…ƒ¨TVÆ5ıK âfwÖƒùb^úkC§b‹¿j2CT‘=G·êä—E*WU˜˛¶¸]øÌDhVÅBd“ÆòçÔ®¶
+6Ø+aò…Îªó	”a]ZArbÓI'Ù(qKRØî›˛Ø∏‹Ø ∆Jıèy±nQSsR≠8¨µ¸;»3¥öNºaü†gt^GnAÈÑ†í™ytwÖV™ä;F∑òÆ*ØßÅx…ıﬂ¬’>ô$U.ÓG~ÕhÌ“’+nXô≠|'?¶Á!ï7˛ˆ¨˜∑ˆ,CÖŒi<yï≈ØËOM^WæÆ¥?ç„’Ê¯Õ+_ä`AÂÉÈp+Ô?_èËmU˘ÜVí˜R˚⁄ôK∑Íòoì(Åm£º]æ*˙{u˜2B}Õ^Ô†Gi|Jß£c‰6VN÷_^µ/FÈ≈Î 9û9BÁÎˇ:Bÿ;&,∫X„]'ÃΩög√]úO`ª‚éwπˆ%˘ÿV‡Õø\ÜvÀäÒ†∞¨ÄøU•Aßlk\6æ(˚sæY1=ŸTM]J{¯A=…√≠ùozæHÊc ¬u3$≥&pÂ ÜYòÙCÙ¢0|J	NAÔQï¿bî+ÛQ¨–TcÅäçJ…>E"N≤ëäó-xŸ2Ì2¬qò£ÅGA|˘£Ω∆f[+msiã=N√—∞E_olË'jï/D9¶íΩJ≈ºíiÏäÀ"›M∫=esç≤©ÜÍâ∑¢±÷»˜á{d;H©ÂíT‚;¶c%æ„ËL˙x_{-‘êë
+≥"ìQæﬁ3˜KhT6Hg»ÓëB∫‰‡IÉHñ.ís‡›„îÏé¬3¶<S¿ºl.c±M?Ö1—π≈h∂£_À=ÉWvÓ∂[1˛π‰¢rõ
+?eüçÅèü3@„[Æ2Ñ´ÆYxŸ"Hu…Ω5ÄåOaåuÅÒBBbÉÀ#§œ[lY5–pt∑ EnÜOO¢ãp–‹\i'!uAk6(^mTb≤|¨«-–¸ú^hZ÷ê™ß˝ˇ  ˇˇ ”†xúÏZ_o7Ôß`A µ^…R‚K™⁄.\Ár◊ák'-p
+Ñ⁄•,6ªÀ…µ•
+˙0≈=˜–«˚˛b7$˜ˇIvüJçwµ3ú˘Õp83§qp˛J«©Koë„a!~¿>9≥Y!*â/Ï9ƒ£A"ƒ±Wˆ‘ S-¸‰â%YI˚˘ CH8û3œE˙=Ò	«ûkˇÌ¯∏ƒ°Îßh„…©#FíIÏ]Ï—_±À‡Ò]w0é8	=êd`ç¨#dY√mQú±(+7Ì≤Òcˆ\“=¥O–¸∆æ[Ç˛hŒ∏Kx¸è-<,â=9>FúEÅK\≠¶XÇÑw∂cà÷%àÍZ	ÉOç·~‹£0$‹‡`Á|¢àCµs>et%/#!r	zMÔ„Ù^°XÄ¢Œüfy£ﬁÀ>v◊ä<ÇÕÎ`3˛Ω°û‰L†/«	ﬂ2,;9ÑÚ†™Sº»È]è|\ÎÄYl˘&«(@öhépEƒÁà
+ú¢àTYœN]§˛g;Ãˆ˘Ó,{|ÅnpXP§ Åêôﬁí≤Øº#ò;ÀíÂstx.ò¬YÄçNêd°=Oë∫âµ~ëÉÊ∏Sâß†øí≥Õ‰U—E∆%qhF≤D)◊alä2OÌ}K0·g÷wëp0G!„Ëä3üI∆è–≈˝Ô˜ˇaàEËÛ®C%$çFeN∑ÿã@<°—xO∏ø-}¿ÇÀ%n‡õ¢≥s$à|ó~= #â˘ë#ÕhX¶Œzg/"ú—ˇD!„ÖôF:∏%°¶÷ùß9woŒ\”âƒ,]Êë+úÊèÁ¿CõçJ É ÒÉà¬"©"ã~∞öÌT’∆€ Aàxƒ)õ2Üô¯!'´Ax§ˇû'(Åç †‚`›Û’ah'{É >≠¬ tÉ‡£ô9å€!£‡Õºh©r?e°bCo_Î¸=sh≈∏
+4¯«ı‰ç—ı’À·ÈÿêtpR÷yÃaÜ‘cOJò$GOıtµ=®Î	âe$˙{ﬁª‹˜9ﬁ8ÏÄüÅUÔÖ¯†
+$ÎÈ<W†ÅŸ≠s√cÜí7}Ωè  ÿ≈É‰Mo&˝-pà_˝âûÃ…L‘ﬂìØsﬂÔ±_˝Â¬•ÿ©ºˇ—N|!#¨3ç&⁄D˝c1Úq8jÛJügS"Îƒ‘€¢Â∑Â9Ù<ÒoU~Ç´9{ì´÷>V≥ˆ˜xπfai?X
+ü•ÔÏñÖ/©´i&ß˜±óKt7ÌÙƒΩfwb‰ë‡F.—ŸŸ:Fﬂ†Ø÷úì8≠uTÄ·i—ºW…ïÊ¬Üáwc ÖJ°ı	ñëèîÈî
+∫0Å}é ¥,®£ ÌéÍ™ß∞MŸ‚„ï}g˚.ÚW6é$´vI∏Ñπ¡qa›*±‡/Ω√8øÁ'B™õ@ÓÌa‹µ:`-Ëï¡JØ<h˝‚ºúÄ\3EÛCÃâCç⁄.x°P/’/¡ÇÇI+‹÷eLD"kÿÖN…ãáh÷j˚‘¡j±9ïxÓëö8ª/‘eUA®-µSÇ}‰Sπ$ÿ--â$æé_&!÷ûWóÜf˘arÆ~Æ/Q_¥t-*Ç(Qx]P	´bÖt®+Á8â;ÀÂnÑIÖ∂;Â{p–ïÏN	[‚-%∫⁄ï4¨Û§ãsó2æ;Î¸bl ˜ø›ﬁº˛i∏ÿ∏‘Vµ+·Eº≈ÌJ˜À}·‚Ùf)≠Ûü∞e˝k∫≥ßÂ∏“ñ⁄’R◊¸4√¥ mªtÚ√U{ÀÔá wàO!üŒ?@ˆÒ†Aë8ÔNwÊﬁ⁄¿€JlP_BË™¥9s◊yy!¥Bƒ±◊(˛£¡RÙçY|‚“»ØQ†∏èõä›!ÍÆtµ©—6!ëãŒP@Óx"øi¸n9(|Íé 5~·¸ﬂ‹ˆΩÚB*∞™lt†È˛•ﬁÜË+4éBÏ‰\¶G»:∂ZXπx]bdÑ›ÖáÑ‹t,Ä—«ß•Ã÷~∫—B™?‡«Ì«fj*ﬁ¬ûÁ¬n|VÎ;Äı»Ö•¸Ü˙Ë4õÎŸ≥∆ØM±ù:õŒπ≤Óõ/j9ëjb5`™}èLö:´Y±£›Ô]•≤z6Ÿ
+·?R˝
+ºe˚±ö «H§NªqÇz!‘∞ñ*=òÂ7ÍìB	˚?„¬:j‰êÅ˝ÏR;>gBÛôû4RU 43ÍW∫I∆„:óó«©tÎCK”qFÅX%YçøˆÜS5≥*.aÓIöÛÎî*üÂ4$3-@´°º Ó9‘Ω´V•Å2KÒ–À≈™¯˘eµ¡]3Mè˝9§l)πyT‘m7Zçf[®‚/”≥ôC]›êˇU∫ÁuSO ïdn{ªT]‡U„ŒõÍï¨b≈≥q‚.·ì‰qo·!ñVÀ§IØñ0”ﬁ¢¶Ÿjª¨ç¢¥ÎÄLïØ[%íGÅVàÎ¡ì©N 9K*=’Ö»´JWM2ˆ´ôC'TÈπÍVÕ'P}"û⁄•XÕ∑∑¿:˘?PZÎ\ã≤T¨∂ÀŒ)s«_{LO&2&€Œ„2cØŸ⁄7ú—TÁ˚í5ôe≤£¯n1
+µÃUÚ–*-™∆˝êá^ÍM›÷ í?ÈΩ‰%ŸÖÉŸûÎΩãº{±´bÚ†¯ùO(⁄\≠˘
+F°∏≤'£ìV7™„dOZIÍNjHRÚÔXól$Bè Åe[Íj§óÍá—/åk\æúQôo‹9°©C¢>5LÚ√◊ Ì)úiŒ‹˘•ŒﬁLïm“Í\≈ﬂï∑©1C•ŒißtËvYÀ˚ˇfÊÑ
+ÎqmŸ˘¡¶Pü¥≤´P£‹íNÕÇÍ+å√»É§^,°¸˝dwÊ÷&A)…Ôˇ`.É‚ôÛ¥†A|9≠ùGóAN/<¬Â%ÂéGíª+'€Ú}ï
+UÎ.†FãÂZç“”ŸﬁyÖÈíea≤O:§Óà)ØΩU≥√‰;‹€A∑\˚ÌaµÀÓ¬ÂõÉ≈¬$πi”G…©≈|
+Ω¬áB¢Øuﬂrg∑+ü;(Vs‡‡Ù¯Äç˝∞#]¨À˚|˘¢Â±ùè‘«ØéQ®_∫ M«£wˆÇ é\b”µ»∫r`…ÙÜÑ˛;πÏ≥:Ù÷ù¬VfC”ò≤±%õIÁÒù.GâÍ”65Ö¨k]ÊáG$öÀ‡RŸ†°áôiÌP€o˙∫x®Vh<Â/‘∑1ÛÉ.– ”pÿââ° Xt´*3¿∞G‚í™ˇU∑˛pº‹›o£ª9èOœ⁄≠.‹"jÛŒKù∫”c	mi'áâ¸H≤•…Õ^¢mö›^≤õhÂ´ ¶É]™íKmÌÈ±ÍkwK‹oÄ'ªoo≠2 'ª-àú™»B'ïkµU«∑y¶[YÏé∏áK€zëßÛHJ÷ï˙™°è'DK˚ 4•Œß≥Õ@–^>˜§Äm/í(Ñ:É\·µäØf˜Ì÷◊å¸KwÕñ—‰éa˙í	ŸÔÀ>A¶ˆ.ÍZá{∂…ÌCó´zOÌ&Îc€MuËTøjÛÏ˜ÒU¢vO˚|ª;…,ó^tct:6K¨´⁄3—ll[ÎÂá-ÜwÈë¥ıîP∂ë†¨dVÕªéÉ≤,q…™õ,{)¶ëöÁÙ–2\ó xñ41!ßsºË˛ÂÓ±a@ï∆ÓÚ‰·´ÛÈ6èl™BW…˜/Œ/ +°Ø`tï=<Ê∞*ø·ó⁄ªY5û_ıv VW2 óíı∂∂+rÈùÕÏ}˙'Lº˝‚ˇ   ˇˇ Xfë
