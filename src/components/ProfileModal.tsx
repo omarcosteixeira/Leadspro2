@@ -22,7 +22,6 @@ import {
   Link,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import QRCodeModal from "./QRCodeModal";
 import {
   doc,
   updateDoc,
@@ -76,7 +75,6 @@ export function ProfileModal({
   );
   const [saving, setSaving] = useState(false);
   const [connecting, setConnecting] = useState(false);
-  const [showQRModal, setShowQRModal] = useState(false);
 
   const [birthDateInput, setBirthDateInput] = useState(
     profile?.dataNascimento || "",
@@ -254,14 +252,6 @@ export function ProfileModal({
   // Get current status of the saved bot number
   const botInfo = cleanSavedNumber ? botStatuses[cleanSavedNumber] : null;
   const botStatus = botInfo?.status || "offline";
-
-  useEffect(() => {
-    if (botInfo?.qrUrl && botStatus === "pairing") {
-      setShowQRModal(true);
-    } else if (botStatus !== "pairing") {
-      setShowQRModal(false);
-    }
-  }, [botInfo?.qrUrl, botStatus]);
 
   const handleSaveBotNumber = async () => {
     if (!profile?.uid) return;
@@ -824,6 +814,8 @@ export function ProfileModal({
                                     return;
                                   }
                                   try {
+                                    const sessionDataObj =
+                                      JSON.parse(sessionJSON);
                                     const numberToConnect =
                                       cleanSavedNumber || cleanInputNumber;
                                     if (!numberToConnect) {
@@ -847,7 +839,7 @@ export function ProfileModal({
                                         },
                                         body: JSON.stringify({
                                           botNumber: numberToConnect,
-                                          sessionData: sessionJSON,
+                                          sessionData: sessionDataObj,
                                         }),
                                       },
                                     );
@@ -894,36 +886,16 @@ export function ProfileModal({
                       animate={{ opacity: 1, y: 0 }}
                       className="mt-3 bg-white p-4 rounded-xl border-2 border-dashed border-slate-200 text-center flex flex-col gap-2 items-center shadow-inner"
                     >
-                      {botInfo.qrUrl ? (
-                        <div className="flex flex-col items-center gap-3">
-                          <p className="text-sm font-bold text-slate-800">QR Code Pronto</p>
-                          <button
-                            onClick={() => setShowQRModal(true)}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl font-bold transition-colors"
-                          >
-                            Abrir QR Code
-                          </button>
-                        </div>
-                      ) : botInfo.pairingCode ? (
-                        <div className="flex flex-col items-center gap-2">
-                          <p className="text-sm font-bold text-slate-800">Código de Conexão:</p>
-                          <div className="bg-slate-100 px-4 py-2 rounded-xl border border-slate-200">
-                            <p className="text-xl font-mono tracking-widest text-slate-800 font-bold">{botInfo.pairingCode}</p>
-                          </div>
-                          <p className="text-xs text-slate-500 text-center max-w-[250px] mt-2">
-                            Insira este código no WhatsApp para confirmar a conexão.
-                          </p>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center animate-pulse">
-                            <RefreshCw size={20} />
-                          </div>
-                          <p className="text-xs font-bold text-slate-700">
-                            Aguardando geração do código ou sessão...
-                          </p>
-                        </>
-                      )}
+                      <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center animate-pulse">
+                        <RefreshCw size={20} />
+                      </div>
+                      <p className="text-xs font-bold text-slate-700">
+                        Aguardando injeção de sessão via extensão.
+                      </p>
+                      <p className="text-[10px] text-slate-500 max-w-[220px]">
+                        O QR Code nativo está desabilitado por segurança. Use a
+                        extensão PESK Linker para conectar este número.
+                      </p>
                     </motion.div>
                   )}
                 </div>
@@ -1191,11 +1163,6 @@ export function ProfileModal({
           </button>
         </div>
       </motion.div>
-      <QRCodeModal 
-        isOpen={showQRModal} 
-        onClose={() => setShowQRModal(false)} 
-        qrUrl={botInfo?.qrUrl} 
-      />
     </div>
   );
 }
