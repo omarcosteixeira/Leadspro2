@@ -735,3 +735,17 @@ export interface CRMTask {
   status: 'PENDENTE' | 'CONCLUIDA';
   createdAt: any;
 }
+
+export interface MensagemEnviadaLog {
+  id?: string;
+  leadId?: string;
+  nome: string;
+  telefone?: string;
+  curso: string;
+  base?: string;
+  tipoEnvio: "whats" | "maladireta" | "bot_automatico";
+  dataHora: any;
+  usuarioId: string;
+  usuarioNome: string;
+  unidade?: string;
+}
