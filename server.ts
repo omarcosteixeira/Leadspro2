@@ -476,11 +476,17 @@ Caso contrário (se não houver correspondência lógica ou for um item completa
         });
       }
 
-      const targetServer = servidor === "comercial" ? "comercial" : "principal";
-      const projectId = targetServer === "comercial" ? "gestaodeleadspro-d4230" : "gestaopro-761e1";
-      const credentialEnv = targetServer === "comercial"
-        ? process.env.FIREBASE_SERVICE_ACCOUNT_COMERCIAL
-        : process.env.FIREBASE_SERVICE_ACCOUNT_PRINCIPAL;
+      const targetServer = servidor === "regional" ? "regional" : servidor === "comercial" ? "comercial" : "principal";
+      const projectId = targetServer === "regional"
+        ? "gen-lang-client-0111023338"
+        : targetServer === "comercial"
+          ? "gestaodeleadspro-d4230"
+          : "gestaopro-761e1";
+      const credentialEnv = targetServer === "regional"
+        ? process.env.FIREBASE_SERVICE_ACCOUNT_REGIONAL
+        : targetServer === "comercial"
+          ? process.env.FIREBASE_SERVICE_ACCOUNT_COMERCIAL
+          : process.env.FIREBASE_SERVICE_ACCOUNT_PRINCIPAL;
 
       let appInstance;
       const existingApps = getApps();
