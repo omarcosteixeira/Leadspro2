@@ -20,7 +20,6 @@ import {
   FileText,
   Copy,
   Link,
-  Globe,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import QRCodeModal from "./QRCodeModal";
@@ -392,89 +391,6 @@ export function ProfileModal({
         <div className="p-6 space-y-6 overflow-y-auto max-h-[75vh]">
           {activeTab === "config" ? (
             <>
-              {/* Servidor Conectado */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 mb-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
-                      <Globe size={16} />
-                    </div>
-                    <div>
-                      <span className="text-xs font-bold text-slate-700 block leading-tight">
-                        Servidor Conectado
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-medium">
-                        Alterne entre os servidores disponíveis
-                      </span>
-                    </div>
-                  </div>
-                  <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider ${
-                    (localStorage.getItem("servidor_selected") === "regional")
-                      ? "bg-indigo-100 text-indigo-700"
-                      : (localStorage.getItem("servidor_selected") === "comercial")
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-blue-100 text-blue-700"
-                  }`}>
-                    {(localStorage.getItem("servidor_selected") === "regional")
-                      ? "Regional"
-                      : (localStorage.getItem("servidor_selected") === "comercial")
-                        ? "Comercial"
-                        : "Principal (SM)"}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (localStorage.getItem("servidor_selected") !== "principal") {
-                        localStorage.setItem("servidor_selected", "principal");
-                        window.location.reload();
-                      }
-                    }}
-                    className={`py-2 px-2 text-xs font-bold rounded-xl transition-all text-center cursor-pointer border ${
-                      (localStorage.getItem("servidor_selected") || "principal") === "principal"
-                        ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20"
-                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
-                    }`}
-                  >
-                    Principal
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (localStorage.getItem("servidor_selected") !== "comercial") {
-                        localStorage.setItem("servidor_selected", "comercial");
-                        window.location.reload();
-                      }
-                    }}
-                    className={`py-2 px-2 text-xs font-bold rounded-xl transition-all text-center cursor-pointer border ${
-                      localStorage.getItem("servidor_selected") === "comercial"
-                        ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-500/20"
-                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
-                    }`}
-                  >
-                    Comercial
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (localStorage.getItem("servidor_selected") !== "regional") {
-                        localStorage.setItem("servidor_selected", "regional");
-                        window.location.reload();
-                      }
-                    }}
-                    className={`py-2 px-2 text-xs font-bold rounded-xl transition-all text-center cursor-pointer border ${
-                      localStorage.getItem("servidor_selected") === "regional"
-                        ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20"
-                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
-                    }`}
-                  >
-                    Regional
-                  </button>
-                </div>
-              </div>
-
               {/* Section 1: Personal Data */}
               <div>
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">

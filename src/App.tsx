@@ -118,12 +118,7 @@ import {
   secondaryAuth,
   firebaseConfigPrincipal,
   firebaseConfigComercial,
-  firebaseConfigRegional,
 } from "./firebase";
-import { PainelPrincipalRegionalView } from "./components/PainelPrincipalRegionalView";
-import { AdminRegionalView } from "./components/AdminRegionalView";
-import { RelatoriosRegionalView } from "./components/RelatoriosRegionalView";
-import { CheckListRegionalView } from "./components/CheckListRegionalView";
 import {
   cn,
   formatPhone,
@@ -399,15 +394,11 @@ export const ROLES: Record<string, UserRole> = {
   FDV_COMERCIAL: "FDV (Comercial)",
   FINANCEIRO: "Financeiro",
   TECNICO: "TÃ©cnico",
-  ADMINISTRADOR: "Administrador",
-  GERENTE_REGIONAL_SM: "Gerente Regional SM",
 };
 
 const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
   dashboard: [
     ROLES.ADMIN_MASTER,
-    ROLES.ADMINISTRADOR,
-    ROLES.GERENTE_REGIONAL_SM,
     ROLES.FDV,
     ROLES.SALA_MATRICULA,
     ROLES.QG,
@@ -427,17 +418,8 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
     ROLES.FINANCEIRO,
     ROLES.TECNICO,
   ],
-  checklist: [
-    ROLES.ADMIN_MASTER,
-    ROLES.ADMINISTRADOR,
-    ROLES.GERENTE_REGIONAL_SM,
-    ROLES.GESTOR_UNIDADE,
-    ROLES.SALA_MATRICULA,
-  ],
   formularios: [
     ROLES.ADMIN_MASTER,
-    ROLES.ADMINISTRADOR,
-    ROLES.GERENTE_REGIONAL_SM,
     ROLES.LIDER_FDV,
     ROLES.GESTOR_COMERCIAL,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
@@ -450,8 +432,6 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
   ],
   relatorios: [
     ROLES.ADMIN_MASTER,
-    ROLES.ADMINISTRADOR,
-    ROLES.GERENTE_REGIONAL_SM,
     ROLES.LIDER_FDV,
     ROLES.GESTOR_UNIDADE,
     ROLES.GESTOR_COMERCIAL,
@@ -681,8 +661,6 @@ const VIEW_PERMISSIONS: Record<string, UserRole[]> = {
   ],
   admin: [
     ROLES.ADMIN_MASTER,
-    ROLES.ADMINISTRADOR,
-    ROLES.GERENTE_REGIONAL_SM,
     ROLES.LIDER_FDV,
     ROLES.GESTOR_UNIDADE,
     ROLES.GESTOR_COMERCIAL_COMERCIAL,
@@ -2663,7 +2641,6 @@ function FiesProuniView({
     "informacoes",
   );
   const [searchTerm, setSearchTerm] = useState("");
-  const [unidadeFilter, setUnidadeFilter] = useState("");
   const [periodoFilter, setPeriodoFilter] = useState("");
   const [tipoFilter, setTipoFilter] = useState("");
   const [listaFilter, setListaFilter] = useState("");
@@ -2671,7 +2648,6 @@ function FiesProuniView({
   const [bolsaFilter, setBolsaFilter] = useState("");
   const [cursoFilter, setCursoFilter] = useState("");
   const [situacaoFilter, setSituacaoFilter] = useState("");
-  const [vagasUnidadeFilter, setVagasUnidadeFilter] = useState("");
   const [vagasPeriodoFilter, setVagasPeriodoFilter] = useState("");
   const [vagasMetodologiaFilter, setVagasMetodologiaFilter] = useState("");
   const [vagasBolsaFilter, setVagasBolsaFilter] = useState("");
@@ -2694,6 +2670,18 @@ function FiesProuniView({
   }, [editingEntry, isModalOpen]);
 
   const filteredData = data.filter((item) => {
+    // Restrict visibility to entries from the same unit, unless admin/gestor
+    if (
+      profile.role !== ROLES.ADMIN_MASTER && profile.role !== ROLES.FINANCEIRO &&
+      profile.role !== ROLES.GESTOR_COMERCIAL &&
+      profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL &&
+      profile.role !== ROLES.SSA
+    ) {
+      if (profile.unidade && item.unidade && item.unidade !== profile.unidade) {
+        return false;
+      }
+    }
+
     const matchesSearch =
       (item.nome || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.cpf || "").includes(searchTerm) ||
@@ -2706,7 +2694,6 @@ function FiesProuniView({
           .includes(searchTerm.toLowerCase())) ||
       (item.status &&
         item.status.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesUnidade = !unidadeFilter || item.unidade === unidadeFilter;
     const matchesPeriodo = !periodoFilter || item.periodo === periodoFilter;
     const matchesTipo = !tipoFilter || item.tipo === tipoFilter;
     const matchesLista = !listaFilter || item.lista === listaFilter;
@@ -2716,7 +2703,6 @@ function FiesProuniView({
     const matchesSituacao = !situacaoFilter || item.situacao === situacaoFilter;
     return (
       matchesSearch &&
-      matchesUnidade &&
       matchesPeriodo &&
       matchesTipo &&
       matchesLista &&
@@ -2726,10 +2712,6 @@ function FiesProuniView({
       matchesSituacao
     );
   });
-
-  const uniqueUnidades = Array.from(
-    new Set(data.map((i) => i.unidade).filter(Boolean)),
-  ).sort();
 
   const uniqueListas = Array.from(
     new Set(data.map((i) => i.lista).filter(Boolean)),
@@ -2766,20 +2748,24 @@ function FiesProuniView({
   const safeVagas = Array.isArray(vagas) ? vagas : [];
 
   const filteredVagas = safeVagas.filter((item) => {
-    const matchesVagasUnidade =
-      !vagasUnidadeFilter || item.unidade === vagasUnidadeFilter;
+    if (
+      profile.role !== ROLES.ADMIN_MASTER && profile.role !== ROLES.FINANCEIRO &&
+      profile.role !== ROLES.GESTOR_COMERCIAL &&
+      profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL &&
+      profile.role !== ROLES.SSA
+    ) {
+      if (profile.unidade && item.unidade && item.unidade !== profile.unidade) {
+        return false;
+      }
+    }
     const matchesPeriodo =
       !vagasPeriodoFilter || item.periodo === vagasPeriodoFilter;
     const matchesMetodologia =
       !vagasMetodologiaFilter || item.metodologia === vagasMetodologiaFilter;
     const matchesBolsa = !vagasBolsaFilter || item.bolsa === vagasBolsaFilter;
 
-    return matchesVagasUnidade && matchesPeriodo && matchesMetodologia && matchesBolsa;
+    return matchesPeriodo && matchesMetodologia && matchesBolsa;
   });
-
-  const uniqueVagasUnidades = Array.from(
-    new Set(safeVagas.map((i) => i.unidade).filter(Boolean)),
-  ).sort();
 
   const uniqueMetodologias = Array.from(
     new Set(safeVagas.map((i) => i.metodologia).filter(Boolean)),
@@ -2998,7 +2984,7 @@ function FiesProuniView({
               .map((s) => s.trim())
               .filter(Boolean),
             observacao: String(getVal(row, "ObservaÃ§Ã£o", "Observacao", "observacao") || ""),
-            unidade: String(getVal(row, "Unidade", "unidade", "Polo", "polo", "Campus", "campus") || profile.unidade || "Matriz"),
+            unidade: profile.unidade || "",
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
           };
@@ -3323,18 +3309,6 @@ function FiesProuniView({
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <select
-              className="px-4 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
-              value={unidadeFilter}
-              onChange={(e) => setUnidadeFilter(e.target.value)}
-            >
-              <option value="">Todas as Unidades</option>
-              {uniqueUnidades.map((u) => (
-                <option key={u} value={u}>
-                  {u}
-                </option>
-              ))}
-            </select>
             <select
               className="px-4 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
               value={periodoFilter}
@@ -3698,23 +3672,6 @@ function FiesProuniView({
         <div className="space-y-6">
           {/* Filters for Vagas */}
           <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-wrap gap-4">
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
-                Unidade
-              </label>
-              <select
-                className="px-4 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                value={vagasUnidadeFilter}
-                onChange={(e) => setVagasUnidadeFilter(e.target.value)}
-              >
-                <option value="">Todas as Unidades</option>
-                {uniqueVagasUnidades.map((u) => (
-                  <option key={u} value={u}>
-                    {u}
-                  </option>
-                ))}
-              </select>
-            </div>
             <div className="flex flex-col gap-1">
               <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
                 Semestre / PerÃ­odo
@@ -4409,15 +4366,6 @@ export default function App() {
     type: "success" | "error";
   } | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [serverDropdownOpen, setServerDropdownOpen] = useState(false);
-  const activeServidor = (localStorage.getItem("servidor_selected") as "principal" | "comercial" | "regional") || "principal";
-
-  const switchServer = (newServer: "principal" | "comercial" | "regional") => {
-    if (localStorage.getItem("servidor_selected") !== newServer) {
-      localStorage.setItem("servidor_selected", newServer);
-      window.location.reload();
-    }
-  };
   const [insumosBaixas, setInsumosBaixas] = useState<InsumoBaixa[]>([]);
   const [isOnline, setIsOnline] = useState<boolean>(
     typeof navigator !== "undefined" ? navigator.onLine : true,
@@ -4541,15 +4489,9 @@ export default function App() {
     if (
       profile.email === "canaldonutri@gmail.com" ||
       profile.email === "marcos.teixeira@estacio.br" ||
-      profile.role === "Admin Master" ||
-      profile.role === "Administrador" ||
-      profile.role === "Gerente Regional SM"
+      profile.role === "Admin Master"
     ) {
       return true;
-    }
-    const isRegional = localStorage.getItem("servidor_selected") === "regional";
-    if (isRegional) {
-      return ["dashboard", "admin", "relatorios", "checklist", "formularios"].includes(view);
     }
     const isComercial =
       localStorage.getItem("servidor_selected") === "comercial";
@@ -5663,14 +5605,35 @@ export default function App() {
     let unsubFiesProuni = () => {};
     let unsubFiesProuniVagas = () => {};
     if (profile && VIEW_PERMISSIONS.fiesProuni.includes(profile.role)) {
-      const fpQuery = query(
+      const isRestricted =
+        profile.role !== ROLES.ADMIN_MASTER && profile.role !== ROLES.FINANCEIRO &&
+        profile.role !== ROLES.GESTOR_COMERCIAL &&
+        profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL &&
+        profile.role !== ROLES.LIDER_FDV &&
+        profile.role !== ROLES.SSA &&
+        !["canaldonutri@gmail.com", "marcos.teixeira@estacio.br"].includes(
+          user?.email || "",
+        );
+
+      let fpQuery = query(
         collection(db, COLLECTIONS.FIES_PROUNI),
         orderBy("createdAt", "desc"),
       );
-      const fpvQuery = query(
+      let fpvQuery = query(
         collection(db, COLLECTIONS.FIES_PROUNI_VAGAS),
         orderBy("createdAt", "desc"),
       );
+
+      if (isRestricted) {
+        fpQuery = query(
+          fpQuery,
+          where("unidade", "==", profile.unidade || "Matriz"),
+        );
+        fpvQuery = query(
+          fpvQuery,
+          where("unidade", "==", profile.unidade || "Matriz"),
+        );
+      }
 
       unsubFiesProuni = onSnapshot(
         fpQuery,
@@ -6838,7 +6801,7 @@ export default function App() {
         )}
       >
         <div className="h-full flex flex-col">
-          <div className="p-6 pb-4 flex items-center space-x-3">
+          <div className="p-6 flex items-center space-x-3">
             {botConfig?.loginLogo ? (
               <img
                 src={botConfig.loginLogo}
@@ -6858,66 +6821,8 @@ export default function App() {
             )}
           </div>
 
-          {/* Seletor de Servidor Ativo na Barra Lateral */}
-          <div className="px-4 pb-3">
-            <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-              <span className="flex items-center gap-1.5">
-                <Globe size={12} className="text-sky-400" />
-                Servidor Conectado
-              </span>
-              <span className="flex items-center gap-1 text-[9px] text-emerald-400 font-extrabold bg-emerald-500/10 px-1.5 py-0.5 rounded">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Online
-              </span>
-            </div>
-            <div className="grid grid-cols-3 bg-[#032554] p-1 rounded-xl border border-[#0b3c7c] gap-1">
-              <button
-                type="button"
-                onClick={() => switchServer("principal")}
-                className={`py-2 px-1 text-[11px] font-extrabold rounded-lg transition-all text-center cursor-pointer ${
-                  activeServidor === "principal"
-                    ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow shadow-blue-500/30"
-                    : "text-slate-400 hover:text-white hover:bg-[#082a5c]"
-                }`}
-                title="Servidor Principal (SM) - gestaopro-761e1"
-              >
-                Principal
-              </button>
-              <button
-                type="button"
-                onClick={() => switchServer("comercial")}
-                className={`py-2 px-1 text-[11px] font-extrabold rounded-lg transition-all text-center cursor-pointer ${
-                  activeServidor === "comercial"
-                    ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow shadow-emerald-500/30"
-                    : "text-slate-400 hover:text-white hover:bg-[#082a5c]"
-                }`}
-                title="Servidor Comercial - gestaodeleadspro-d4230"
-              >
-                Comercial
-              </button>
-              <button
-                type="button"
-                onClick={() => switchServer("regional")}
-                className={`py-2 px-1 text-[11px] font-extrabold rounded-lg transition-all text-center cursor-pointer ${
-                  activeServidor === "regional"
-                    ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow shadow-indigo-500/30"
-                    : "text-slate-400 hover:text-white hover:bg-[#082a5c]"
-                }`}
-                title="Servidor Regional - gen-lang-client-0111023338"
-              >
-                Regional
-              </button>
-            </div>
-          </div>
-
           <nav className="flex-1 px-4 space-y-1 overflow-y-auto pr-2">
-            {(localStorage.getItem("servidor_selected") === "regional" ? [
-              { id: "dashboard", label: "Painel Principal", icon: LayoutDashboard },
-              { id: "admin", label: "AdministraÃ§Ã£o", icon: Settings },
-              { id: "relatorios", label: "RelatÃ³rios", icon: BarChart3 },
-              { id: "checklist", label: "CheckList", icon: CheckSquare },
-              { id: "formularios", label: "FormulÃ¡rios", icon: FileText },
-            ] : [
+            {[
               { id: "dashboard", label: "Rotina", icon: LayoutDashboard },
               { id: "relatorios", label: "RelatÃ³rios", icon: BarChart3 },
               { id: "cadastro", label: "Novo Lead", icon: UserPlus },
@@ -6976,7 +6881,7 @@ export default function App() {
                 icon: Mail,
               },
               { id: "admin", label: "AdministraÃ§Ã£o", icon: Settings },
-            ]).map(
+            ].map(
               (item) =>
                 canView(item.id) && (
                   <button
@@ -7055,110 +6960,12 @@ export default function App() {
             <h2 className="text-lg font-bold text-white capitalize ml-2 lg:ml-0">
               {currentView.replace("-", " ")}
             </h2>
-            {/* Interactive Server Switcher Dropdown in Header */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setServerDropdownOpen(!serverDropdownOpen)}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-[11px] font-extrabold shadow-sm uppercase tracking-wider transition-all cursor-pointer border ${
-                  activeServidor === "regional"
-                    ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-indigo-400/30 shadow-indigo-500/20"
-                    : activeServidor === "comercial"
-                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400/30 shadow-emerald-500/20"
-                      : "bg-gradient-to-r from-blue-600 to-sky-600 text-white border-sky-400/30 shadow-blue-500/20"
-                }`}
-              >
-                <Globe size={13} className="shrink-0" />
-                <span>
-                  Servidor:{" "}
-                  {activeServidor === "regional"
-                    ? "Regional"
-                    : activeServidor === "comercial"
-                      ? "Comercial"
-                      : "Principal (SM)"}
-                </span>
-                <ChevronDown size={13} className="shrink-0 ml-0.5" />
-              </button>
-
-              {serverDropdownOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setServerDropdownOpen(false)}
-                  />
-                  <div className="absolute left-0 mt-2 w-64 bg-[#011a3c] border border-[#092e5c] rounded-2xl shadow-2xl z-50 p-2 space-y-1">
-                    <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-[#092e5c]">
-                      Alternar Servidor Ativo
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setServerDropdownOpen(false);
-                        switchServer("principal");
-                      }}
-                      className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                        activeServidor === "principal"
-                          ? "bg-blue-600 text-white font-bold"
-                          : "text-slate-300 hover:bg-[#082a5c] hover:text-white"
-                      }`}
-                    >
-                      <div>
-                        <div className="text-xs font-bold flex items-center gap-1.5">
-                          <Building2 size={14} />
-                          Principal (SM)
-                        </div>
-                        <div className="text-[10px] text-slate-300/80">Sala de MatrÃ­cula</div>
-                      </div>
-                      {activeServidor === "principal" && <Check size={14} />}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setServerDropdownOpen(false);
-                        switchServer("comercial");
-                      }}
-                      className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                        activeServidor === "comercial"
-                          ? "bg-emerald-600 text-white font-bold"
-                          : "text-slate-300 hover:bg-[#082a5c] hover:text-white"
-                      }`}
-                    >
-                      <div>
-                        <div className="text-xs font-bold flex items-center gap-1.5">
-                          <Briefcase size={14} />
-                          Comercial
-                        </div>
-                        <div className="text-[10px] text-slate-300/80">GestÃ£o Leads e Vendas</div>
-                      </div>
-                      {activeServidor === "comercial" && <Check size={14} />}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setServerDropdownOpen(false);
-                        switchServer("regional");
-                      }}
-                      className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                        activeServidor === "regional"
-                          ? "bg-indigo-600 text-white font-bold"
-                          : "text-slate-300 hover:bg-[#082a5c] hover:text-white"
-                      }`}
-                    >
-                      <div>
-                        <div className="text-xs font-bold flex items-center gap-1.5">
-                          <Globe size={14} />
-                          Regional
-                        </div>
-                        <div className="text-[10px] text-slate-300/80">CoordenaÃ§Ã£o Regional</div>
-                      </div>
-                      {activeServidor === "regional" && <Check size={14} />}
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
+            <span className="px-2.5 py-1 bg-gradient-to-r from-blue-600 to-sky-500 text-white text-[10px] font-extrabold rounded-md shadow-sm uppercase tracking-wider">
+              Servidor:{" "}
+              {localStorage.getItem("servidor_selected") === "comercial"
+                ? "Comercial"
+                : "SM"}
+            </span>
             {isOnline ? (
               <span className="flex items-center space-x-1.5 px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-extrabold rounded-md border border-emerald-500/20 shadow-sm uppercase tracking-wider">
                 <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
@@ -7195,44 +7002,7 @@ export default function App() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              {localStorage.getItem("servidor_selected") === "regional" && currentView === "dashboard" && (
-                <PainelPrincipalRegionalView
-                  profile={profile!}
-                  onToast={showToast}
-                  links={links}
-                  onNavigateTab={(tab) => setCurrentView(tab)}
-                />
-              )}
-              {localStorage.getItem("servidor_selected") === "regional" && currentView === "admin" && (
-                <AdminRegionalView
-                  profile={profile!}
-                  users={users}
-                  links={links}
-                  onToast={showToast}
-                  uniqueUnidades={uniqueUnidades}
-                />
-              )}
-              {localStorage.getItem("servidor_selected") === "regional" && currentView === "relatorios" && (
-                <RelatoriosRegionalView
-                  profile={profile!}
-                  onToast={showToast}
-                  uniqueUnidades={uniqueUnidades}
-                />
-              )}
-              {localStorage.getItem("servidor_selected") === "regional" && currentView === "checklist" && (
-                <CheckListRegionalView
-                  profile={profile!}
-                  onToast={showToast}
-                  uniqueUnidades={uniqueUnidades}
-                />
-              )}
-              {localStorage.getItem("servidor_selected") === "regional" && currentView === "formularios" && (
-                <FormulariosView
-                  user={profile!}
-                  onToast={showToast}
-                />
-              )}
-              {localStorage.getItem("servidor_selected") !== "regional" && currentView === "dashboard" && (
+              {currentView === "dashboard" && (
                 <DashboardView
                   leads={leads}
                   planner={[...planner]}
@@ -7250,7 +7020,7 @@ export default function App() {
                   users={users}
                 />
               )}
-              {localStorage.getItem("servidor_selected") !== "regional" && currentView === "relatorios" && (
+              {currentView === "relatorios" && (
                 <RelatoriosView
                   leads={leads}
                   bases={bases}
@@ -7497,7 +7267,7 @@ export default function App() {
             {currentView === "evasao" && (
                 <EvasaoView profile={profile} onToast={showToast} />
               )}
-              {localStorage.getItem("servidor_selected") !== "regional" && currentView === "admin" && (
+              {currentView === "admin" && (
                 <AdminView
                   profile={profile}
                   users={users}
@@ -7582,8 +7352,8 @@ function AuthScreen({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [servidor, setServidor] = useState<"principal" | "comercial" | "regional">(
-    (localStorage.getItem("servidor_selected") as "principal" | "comercial" | "regional") ||
+  const [servidor, setServidor] = useState<"principal" | "comercial">(
+    (localStorage.getItem("servidor_selected") as "principal" | "comercial") ||
       "principal",
   );
   const [loading, setLoading] = useState(false);
@@ -7651,54 +7421,41 @@ function AuthScreen({
             err.code === "auth/invalid-credential";
           if (isUserNotFound) {
             const currentSelected = servidor;
-            const allServers: Array<"principal" | "comercial" | "regional"> = ["principal", "comercial", "regional"];
-            const otherServers = allServers.filter((s) => s !== currentSelected);
+            const alternativeServer =
+              currentSelected === "principal" ? "comercial" : "principal";
 
-            let loggedInServer: "principal" | "comercial" | "regional" | null = null;
+            // Build the alternative config
+            const altConfig =
+              alternativeServer === "comercial"
+                ? firebaseConfigComercial
+                : firebaseConfigPrincipal;
 
-            for (const otherServer of otherServers) {
-              const targetConfig =
-                otherServer === "regional"
-                  ? firebaseConfigRegional
-                  : otherServer === "comercial"
-                    ? firebaseConfigComercial
-                    : firebaseConfigPrincipal;
-
-              let testApp;
-              try {
-                testApp = getApp("test_login_" + otherServer);
-              } catch {
-                testApp = initializeApp(targetConfig, "test_login_" + otherServer);
-              }
-              const testAuth = getAuth(testApp);
-
-              try {
-                await signInWithEmailAndPassword(testAuth, email, password);
-                loggedInServer = otherServer;
-                break;
-              } catch {
-                // Continue checking next server
-              }
+            // Resolve alternative app
+            let altApp;
+            try {
+              altApp = getApp("alternative_login_check");
+            } catch {
+              altApp = initializeApp(altConfig, "alternative_login_check");
             }
+            const altAuth = getAuth(altApp);
 
-            if (loggedInServer) {
-              localStorage.setItem("servidor_selected", loggedInServer);
-              const serverNames: Record<string, string> = {
-                principal: "Principal (SM)",
-                comercial: "Comercial",
-                regional: "Regional",
-              };
+            try {
+              // Attempt login on the ALTERNATIVE server
+              await signInWithEmailAndPassword(altAuth, email, password);
+              // SUCCESS on the other server! Let's update localStorage and reload to apply the active configuration
+              localStorage.setItem("servidor_selected", alternativeServer);
               onToast(
-                `Login autenticado! Redirecionando para o Servidor ${serverNames[loggedInServer]}...`,
+                `Login bem sucedido! Redirecionando para o Servidor ${alternativeServer === "principal" ? "Principal" : "Comercial"}...`,
                 "success",
               );
               setTimeout(() => {
                 window.location.reload();
-              }, 1000);
+              }, 1200);
               return;
+            } catch (altErr) {
+              // Failed on both servers, throw the original authentication error
+              throw err;
             }
-
-            throw err;
           } else {
             throw err;
           }
@@ -7773,8 +7530,8 @@ function AuthScreen({
             </p>
           </div>
 
-          {/* Servidor Selector (Principal, Comercial e Regional) */}
-          <div className="flex bg-[#032554] p-1.5 rounded-2xl border border-[#0b3c7c] shadow-inner gap-1">
+          {/* Servidor Selector (Principal vs Comercial) */}
+          <div className="flex bg-[#032554] p-1.5 rounded-2xl border border-[#0b3c7c] shadow-inner">
             <button
               type="button"
               onClick={() => {
@@ -7798,18 +7555,6 @@ function AuthScreen({
               className={`flex-1 py-3 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${servidor === "comercial" ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow shadow-sky-500/20" : "text-slate-400 hover:text-white"}`}
             >
               Comercial
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                if (servidor !== "regional") {
-                  localStorage.setItem("servidor_selected", "regional");
-                  window.location.reload();
-                }
-              }}
-              className={`flex-1 py-3 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${servidor === "regional" ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow shadow-sky-500/20" : "text-slate-400 hover:text-white"}`}
-            >
-              Regional
             </button>
           </div>
 
@@ -13568,291 +13313,12762 @@ function BasesView({
                             </span>
                           )}
                           {entry.semestre && (
-                            <span className="text-[10px] text-blue-500 font-bold px-2 py-0.5 bg-blue-50 roundxœì½ËrI’ xçWb³«"²€À#]Dƒ ˜….’À`Öì²(¤G¸ğ¤‡{”»‰†È\gsØ9¯ÌÖÎŠ´T‹”Èˆ´Ì¥Í?Ù/˜OXU{?İ= 	V¥K&nnO555U55Õ$^:eYïÑÒø\%y]^«d’Tu™\7fßX®¦QŞTå ©ŞÖ4)Ó".È/~AúÍÍakdœEUõ"š$›½:¹¨—^¯®L/Şú{:+§Y²ôÍÊ
-9.òziTd1™^,­‘éåÒÊğ2:QyHYÌò8™0¼³.Ëqz*Ûğqc¹_êX‡Àã[„Ç×fÕ„ÿÍ¢:Yúve%
-‚¼˜$£*€ów#ØŞF•dÉ¸Bê,ÊfÉ¦ÀØ:ªgU¬E¾så'¿ŸÈfÓä@¾8Ki…¬PŸ¶±H’a•'I=¤M‚u„»¡ p5Î›Ğ½'ĞvUâivÂfê¢Ò°»˜ÕYš'Ky‘'dT”qRÒß½Å†Êu‘ÍÍMÒ;H ‰¼Nz°q»Kˆ¡Ê*¬2sæksÚ+“ªŠâ¢S³#€¹j•¾ÍßèN‘Ÿ%evlè`e±jV$Ìßò‹ÿ­€:&$åãîì²¨´QÓ·ùÛ>„fË¤.Ê¼Û°‹Ñ^5Ëßonx+ÈY‘Ã(KªNÍs-›çïÍÍijx­oÓ:-rNIÔ"x$~m,³«Ğqú‘ö2wE>R¿ç®ÆƒtM¤ÏÍŞ°OÍÙi/ª"î<r’Úz[1İDîlÏ<Î’’ˆª¥1bHI`¯'K@­ÃçBšÃ˜Ò·Í½¸FÛR†i<hf|6F³º.ò†9ƒ-KÇïacÃ}\5®®*©)@’x;Àº1xØ­PQîO“¼_—°ù5¹nâlN£¨Ú¾&x“0¼WÉiËbİ¨äïDÛnÂüç¸PO’Ã?Î¢2!Uú#lÑ«__“åÆR”ÑûıiTWÛÓiß·±Ì&3”#HÁÚÀBÆÀğµò}Ñ•"yƒ‰#ÿôOä—ø£úeOjOYõşòvÓ…ÀT!??÷²;“VU°WuZgĞ£—ÉI
-²JT—`Ì¿#œó´?«OŠ4?é†	89jÂ€¶ùŸsš›V:,Ùİ8­a;€iZ‡¥ÎK=-ÊÉ“¨úÍ´DàĞº§z|+«—ëR¦'Ë‰÷.e“I”f¢ }éRj<=eàg§³²*d|éRjZñ¬–åø+-ù]Å³èÃ?ÃÆÜÒĞÀbZ”õ,‡€/]:%t ¢ñŞi@LL–â"~‡’`
-â"+NÒH”Ö’ºÔpØíå'È¾È‰”ÂìyT—éx–E&(er'8Rvxİd±œd7›Ê_·-Ø½
-—ìó"².›sÃÖlSy*a¡.E#Ü4)÷È5K’™¦QAI$†*EÖl)Ê²V"c@
-Î‰UqÊU¬	ŠımÅ¾c2ÌvÛ'@ŒjJşg×ÔT¬ûÚµõLPÓÔ›€ºrGeTŞèBì4¤—núÀŸ«ã4CÁƒrÊÕ0Kò“ú”J’+!6yÃW7ûF1.²CØ¦7¯¾Í‡õ_]cLgk4ÍÎ`/à„ö!`¾HòÓŠA”)€@Œz_@'¤¨B&œDS¨Ò«á]Àİ4dñ¥™£Q–è‰–òÑx…Jù¯«å/	g=ärN¥OäËeÑöUj’-œİÄbXÌß€Öôy9N/’äT K+äG\.óùÃ¬ªÓãKñ*uW¿YYYşØÏhü>.‹)°Ù×)Hx¸Ò³â|ér)‚]ØêìN@…ç§Ğ¢\k©NaªÎ—à×9Õ-“It±tN?ÉºOÓh?™\.ıšDy:ÁN¥99†½ÿşXüÏÊˆ.ì5G/‹pfPım¥J¸€!t@FI}@hMÓ¹
-q$~H]Ÿ#İnœ~åĞ1 F¶L@ËÿzÅ7;'ÑÔ+5¤|måÚ¿3¡6ÈG©ì­ÄÁöÓ¯œ¡(~†Û³GYåß‚}\yâÉìÙ§)LR]²ÊX˜MC–’;ˆ¦½UÄ¢tä%ÏÔümZàû·N(Ø‹Â†‹»È¯øg£IZo^±=aÇR”@´eR¦ï4Á^'eüÇ\Œ&ñºz]£Hé;“°ëbPb	å½€êg#‹FIf‹¬¿÷(ñµ™C~k2ZZ(“^ ¬G„ÊY_zi>mÕÛŸ4ŸÎüÇ)õå”c•+“?ÎRØ–½Å9Œ&9¶u<Œé.‡C½ù0C­É¬ÆYN¨ÄµÿÇ?,m¦9åæákdÖ†ßÈµÛ £­&‰]“Ç)ÀŒ1HÆÑKÔ™sæşÉšf°N¯’ë‹uò³ü´ k+k_û
-xH¨oÅÒôÀéãÇÃôBÑñûîw‹êJ•‰¶Ÿ!~ŞSt;Ê¤{ŒeBáußˆªRÌQ5KMu¨}ë°ü¯‡ÂŞSŞ]¢jÍşşt]”ùàzD¦ZS?&û•f¿o˜*ÔÀ{r‘L¦Yñ'8êá¸˜|FØ¼sğô“bú§Ç÷yéi£° Ÿé+ùÄé¿ÿÑÏP~Rôttî¶z£şJéî=ÅØzşxZz@zßWáşŒ«ŸWø™÷¼ØÚ`#ìÃ8~´~ßpN ˜â}T‘(¿ü<‘ˆÃúa{;Åg	Ç…j8‰¦ış”êŞCrÂfğ}r¹y5½“>½ŸwÂÇPeÖ„¾Ë&Ãû°¬…ÑÆ=Şš/›üt‹R3€ùy/ø¤{AR~øKÛ'w¬{ŸŠÃn¼éóîÒ²êgœü”8ù\¡ı¤h©Ãİ7Ô4M÷~FÏO‰8;‰"lR$5¬-ïšÚö¡?#ê§Ö¢¡ùì‡¿ ıì=Ğ¡I[Şû†§®òÏ˜úIE'f©}+„9µM—˜B9H°ÿMë&nyWôNî‰ŞÁÑ÷Cİ´¹ªüä÷<[50ŞD+©)"³`¬“ÄƒZ@j:ø™Ö€ºßêv3Ú¦ûlWcŸ}˜ÚéBØ\ªsÙ¨n“˜Æólk+(q•LR›Ë¯JëTË`—¹F	ZmWıëÆ4N²¨ô JèfCÛôTÔ"Õ7=qZ¡}¼y•Q½h1{sqéæ[Pòr'nŒ>‰]ˆ,²WäŠ¯ÓhœÖxC³|ÅHÉéÁÂ=*`£é‘uş^’m¼á7Úş¬t"¡‰ğ¬åeäåç¿¢°!.ìŠ;¿ür³,—V¸L6¯*íÖ³ê)®º¢JÄª³oG³Å¥²gI3•~ózK»÷hf¦ÇvNní2¡™]rˆn¾Ëjªğ„¾Ú¼:GxDÕ]Ãé÷'t„“aNæĞa„szlô IuâĞ¡ô˜ôn,2uŠœ0bj^•™YNZ¿-lg‘ôŞ²(ß3“ê—FšFEÊqz²y%šÈãÇÁ"Á[8Ñ¸Æ9›8²6ûÀ"0+×vYF—Ã´¢@·p¼¯WŞÀÂîY´Îâüš­ †™Ú€µühîE2úuØq¡<·ò†KO2İeÿx{Sl9B+Ø*S`bªÙ(ölºs«¦“,ßaª_ëïo:‹‰~ Ûı€õÓ
-@³Şñ	PÈ‘BÖ4g³8©ú#á‡Âç¨‚~Ô±hàöFLÌAt‰ tÆî;ËËI_x˜ZP^î5 §Şù¥À7&;<æ¬ÌHY¦fÁ%Çû¾uPë9RßGeŠ{`ÕM/’Ì±²bFÙ™g¥]+Í€Y‘³uÀè„;#gxÉX¹Í©í¿~£åĞ6Ìq­îçÙåæŞö¬ümv!í xÿØ%m?å°ˆI9J:r’ 8ÇÏ«Éq^£·©Âİ!xOxZlòµlTvTD,FşC/Ei†S(§róêµ1G6º¼O.Oy“ùÆ¹•M¥|ø,.& f;™¦er–&çß£dyŸcËä°˜ıYY¯Í×+Ñ6İæ¡qÙåàİªy;¤9õ{Á|8ú‡ÆM±Â£{Å2´Œg#;xÙ9ÊZçï÷èí˜Izá¡n¢¥7yrN œ2ÖÅ³b#¾ÂRÈOú=È¿ìºÁ¿Šfq4Œ)8Ä4î‚ÁÄ~öáOğß($”ª­eï¢’*¬V`Ogù˜JÆôúóË$/Î°/ßC{T‘CÑ›âØ?§e$Ÿ{SÄ4¹…±bœè°
-->¸^'²‰uÚÊC¼¦„–··Nú“uRQ¸.’zÆ_ÍÆch®G€·LÊ²({tUŸiüPõn¼ª’ò€½<ôtuXìkWöz$~>Ô=ªqDŸ`×T/o´%RŞ Xç6&Ù¥+mÿ`¥ªİB$ ±µ“ë×o¶Z+×ŒCdœ×3ìvQu™IŸwx*ÖHQ¦'ÉÄè8[I0-rMEçQZ“(Ÿc(Ÿá6 ÔG‹dgÿÙ³İ£½ı‡ÃÃíg»‡owö_mïû¬%ou/^?aÇWÍ¶8ñÅÜè|Äww—åöt"}/Ê³_¨B5PiNOjbİï	‰Vw™ÀšŠ·d€_ ¥h³M¦}¹ŞÕŞË±¸ïjœÄ%|q÷°O‡`½KçÕ\“qTOI°N”’ p‹,Òu€ßİ–wá‰
-ÙÇiÑåK‰7ù€³^Ëka°
-îÀ¤YE=W&\ñ«î;
-7%l:Å›š@‘Â¯HˆWjt._ØTŠWiµfx©AÅ°™ 3zôáÏã<³—ƒÿZ-8m|Ã¢)e‹#†"Á8~‰Öa_ÏhJ;[aªpsM…ğ3öÛ °âÃx*‰ÊñéQRNK&^b½^ÉíSÊ±Ó2å«^fƒQ€×o	¾N´H5óZùC-¡¡U>qZÁ=¥¡$Å ­Üzo(%fOï©‘ÔXVñ¾‹¶²¥mB4axÑf“/ËÕ”Ò“×fË¹‹>î¼¹C_¼èe›+n2ËÅÿB¾šËŸLŠ8Épï£ØM•‡tP,—ÕWl!’ËŒ”,/“ï`ÊŠ’æåÌ¤ßQ5Â·ûa	dIßf‘"–˜}Aä×ÜRäË”·2èÚ.òQø:{ÍéåAA4EjTl5â éÆóS~ñ<)wĞo8±Rr±ZÑfFN—èüM^…ZÖ¦Ÿú¤Éß‚Nûjæ‘›dA_ïVš¯Uı£§a`ÕËŸÕ#\m2˜«ÏšØµ1Ô$°ºh‚	05T-w;L¥õªlÌ¤$Ğÿ  ”şÉ4³*5Ô³B«K¼OÓ„NÅÄ(Ùšv"ŸB;YÌ‰Î ìTÂ»JSi×Œ•Ìl§Å:fÊ¦ã²˜ôQ<:Lê>[ÚTÃÖµ†vƒÁ°‚}·¯Óª|m:£Ó6õEÏşÆ®‰ª{×(¢„û%€aUÈv÷p­bº‚Ä=.€TEù€²‹ª1‹cg^G£4õe‚<+²^»g k„2¢ŒiO’ãh–‰úDclogzµ	.zÜ2^‡\Õ_şÃ“e`B`SÄ3”ŞC»&yq]«NpuJŒ®¤Õ“u-EUn\ D_®*ÃÒ /»ş‹_àá€^ˆÔZwAÏlö”––Şeâ;çÜEWq£Ğ:ª¶ ÉT¿´~øğ'’\Àï„äéƒPSïYx§tY6â²Ùb¡¦›3‚ùÓ=ëİD{¼}ØËİûßoïlï"Øp8<vì0„İ…ÏQà	©*ÊÎ
-	$ØlKªl KwAD.4KW¨©fŠ+\Ğåa
-t4ºALA¿°¡5ß =°¡Ø­Õ–"ğñJø¤	Õ¼#QèóĞ 9Š	‚/C®ap„@`·ò(Ëâi¨©ë„¹´ègƒÓ¤raHk’6,Røx–½gÎ9ÔˆŸ}@–ZnüÆ"ÃÜ|4üpŒ:r¢Î/Ş=Iªä‡Ö5ìØiI¾¸òW-éUìğ ÄEµõNÌãïĞõELç–*`,Æ¤8¶OKÌƒ>¶èc
-\÷1şß¼àñèc W–~ú&fÿ]—±•É¤8KÑà;­²æ#€Ìóè&¤e›>RyíÅµº89ÉøQ! G?5mÜi2~Ÿ@Âˆo¹&ÒğÏ½!t°9ßÈ%’À2hªÀ¯sØñ]EE5KM£ÛÎ2àÊtyip+ZWZ‡&§ÛîµÎDãcPâÕ´½‹rÓé tœMÑ8¨3öK·¨úÆÇškØ±8çÿDYú#,è…Š¸.äÔ%åÅUÁHá°5¹ÅêY„*A6D:÷ŒÙV»Õ„ĞwŸÔbØ»#bĞpŸ}¸#ãRÑ Ç2àùr­!ü—ÇÊYŒİó‘ä-FÎø¼uÎŸş™wWÁe‘z ‹Q«ãíí¢G»Õâ^ûPr£€íÁ…Œü®²ŸëÉ(ì»ç\¡lp~İ3íñµñ|\3¾OIrœn•K¿Ø™P48*v/ÆIÖ©òªGgü­<æbå¢ĞŞD »£‚×Æo?ÛÃ‹» 7¯9ˆ†$(.í—ñ½Ú¾^y£¸LTÌ	K§?¹’u›³	²€c0ÌÕÌZ†Ö¾èFQçüXö°÷É¥$±@·ı¦#Pâw
-ï~ ROKa=ÆÙ¿Æ¶Àwä[0›m•Äá€fP'TÉ+Pä±m©ÔO{ôŞT†Pöê6S¬‹\e› ôA£¯Åûº×¢™"twH®d1òø•¤BF–Ö˜ª‡¬)ÈùaëH”¬eš®:½ dJàš¾d¨Š¡Æ	?„–zhÕMó+ıSéLp[hkÏWºNPÓCÑ›8ß˜zª6fE4#µ7mmL‹ÊßÀôÃ¿V¡Ú}ĞCwş dfN#óÏŞ]MSg£Í‡ª{wû‰z,ó”õ§Q¦•9P‰EÑæ×[üĞüĞPZ÷jŸâkCöÓtTÒ¨hb¢yò‡¿°tUÓoERCmqz‚.ÑµROxÊ-ğ€í1œ;›¤åNÑa*jmiÈ*6{«×çZª]ØXcZMYz‚['I¡’(zºÎ“—®Å–ÜÚ
-Ç"=}ûû3Yó®¨¹·õxÂ"s„¨^+‘6”O£r»î¯àt¾šNåFö+úµÊÒqÒ_4aŞˆ2Ê›”Seœ)ZË›Ì)>LõÅíØOs.2k1d™1£¢½Ş€£™¾y*]™·ÁîbU"«ªN¨yX1¯‘d†*1Ú§*8oÓÀMc«ÁmPé•ºŸí¯›³õh¦&ˆH…Ÿ½ƒ›Ãô¶Âsb;¼ÙR>"¯Üh·d1M´a+Íœn£n"üuà ñRé>½Ğ
-µv¿›fFˆ+àÁ²Ò‰0~R½ı7²>¶ Jh¹±Z•í¨aé}Û‡íÊahÔ‚	©ø=°é°³T=@q4Îw€¬š$@UÙ›aÒüÉ[oGP'í°Ç|‚âÒß¬&Eâ1ĞKuÔÑ¾r¸XëáA:àËL—ûÕŠi]Îu¸X-ß²¤æ¢j‚–÷+/Õûö>ë×sçĞÚ™£˜)M¡|°	YùdFM¥z>Déî9ğH¶ô4€ TÖ¬±}ídRóÓGYÊ³ˆôjA71³çíŒÑÛ­Z^¶÷Í8Û4Ë7ôÁ«õR–ĞáÌY[	Azgƒ÷Ûúo~0é‹ˆíj°6@mhßBåŒ«Â2ƒUÇí_ıÊĞ˜qöpd·r>p	=§–íİW¢%ı¼%t£2,CñŠ¯¬Gd…laqpMÒ ´”%1=º¦Û÷ğ=Ä¿~§Öòõ²¼[P;ÖÊ”jÛq¼3«êbÂí­oaÛ ±RY¦©µ§§æ‘ßİ¨ÿş·ÛG‡ÛoŸïn·kZ5ã…‘u~ûëm)uŒúé45ˆ³;mhkß¥ERq©|ºõ¡üó$Ç˜XÇğôŒ>2ã•±_›Ÿ,º\ÓzˆbZ3KÄ«Ø-Ş‰è´Öãuè…Ïêù] ì:,"íˆVÅ]ysÅ1%3S¥šY\9ğ_ëxÈ·3´'AÓşMçÒ‚s×.tûĞƒH”>ò6ÄIù#<'W¨l) BGåøôşQÚÀL óÊB­!ágU IzN^¢Ñ¶Ê=â¯gãm‡	Ì\U¥“-“WRôË ÁúJÃş@ÙœP«2™—Ş¥!ìö†;…ô³ˆnDI"Dr\#ÇEÊGCò=-q•Q^§%-vD02"H”şõ"…	!GSo?•mÃ"Jóó8e—ÕÙYX•E«ë×ìiñC²À;“Oi4±]'9ËÊZZ ûĞVôcÁêÓë‚ş0 »&°ğ=‹Í’Ó8’[•¿‘<‚Æ‰QŠ€œ˜ ·>WwCe;ĞYNioÂåš[™K2uT¥<l²æ6=Ça±ÚZiM¥g=¯f<P&u”mg³œZ:ú¢Y>”y9ŞzrêtE™.*S_İó³[´ëÎ£â¥V½Ş­%Õ0í¸aİjû8qÕ~-ı–x½ à?èUƒ©ÑßeqŞkÅD¼€4Ì¢wÍ^²{=9ıfe…P¿¬»yq^FSÃÓ
-U?ûğ—?Î ETF,ÀğÈ°:;–¤¼Ğç(ÄòĞâİ)d:Â0CLŠàößpGGâFù“>C4§á(ìZ$YQ‹	¶[Óı[¿rkùà8 ’(BÇşÚ‰	Èb£ïñ%—­'İçö£ ]¶ø& 
-`v$W èW7¨7°¢çëÕ•éÅ?HedPä€“†ş8‹Ê$²Ş_×kšŠålÚ¼šÑ*ºàS—KÓ‚©ş­Q¾šRÏm˜ÆÅ"Áî™<Ù·ÜDãq2­7{Ã‹¬ºX$øÇÎ¢|²é–
-¶O¾,ì«Y5M3¹«€Ù´cûêÊŠíréæ«y_»9õxRœç]æ•Ğ7¯.b^Lo_-Á@×Ì` _»›R(ş/Æ  üJ¹](ø\Ö­Šp¸rß´6öZØéÆ`ÄîŠ²œÎ¦”}„flü¥ó;79!Lc@qÜ9p[n˜¼½øJîÔY$Ü0ÊHÀv c9¹·d¿Şv&ôíï“Í…¾sÏ3’—»“™½ø{w.$kø	g¢(‘†~Ú‰àmÎ;T»ÛÉà=ñÌ…ÎÃÂé(‹ê“â¬óô,±c7ÎR4ªŠlñÜ¡×´Àˆh.èµ‚Y¶ş#Ç_·9‰nB›Ÿ?ù.šš­yÜÖuEÚ1L’ÉÕÏ†À·NV®oÔ‹‹Jk·”Iíñ”û4Ê@j¿êÇ‘ŸİEë3.÷ûF§—u)u@¾$€ƒhºñ4½HâşªëOÖ%!Ç)GÍhZEÍLƒ-º~şÀ\.sÊÂ€™vóÅR.nLôSP*ºDLØ=AØCØ½L·¥ÒiŞÇxÕZ×hÔêáÚÀæ¼Af¸Sey2†¼Õ™²qñÍ¸!îº<nl7Ç]œ3OÆxÌùµéÔX÷{Ü ct`ƒm¾·a.=³éº
-ÆòM˜ë´ƒïë–	ë8Ûm÷§›0Wô.Ğ—fb7ŸpéygÁó=pÓUnLús›Ñ{ò®K´âk{oĞÛÛ-¾æ µŸİ¤u$‚ÿşßñÄM³¦ºEl‹RqKâØeâ³› O»ª¤åäÍç7ıîvŠ^÷ÙÍh8Œ†Ê`pÏÛA²98çı‡§;Ü9ãlÎcÓ_3ÁÁ«éè0ÿÒvÖ.‹Z·¾ùºnÔv;„l´vÿ±±½nÙ%‚›‰„Ş˜Ó·‘½ñ¢?'aĞß¢)¶Ek\wlÚy³²BSEëá-”fàñU î5µªpTg*¶¥5Ô‡ÿÛ°·•i£T+Åê$©#šïü(¬^µ@İ“ˆÔv¥ÛoÀoCËkÛs¸lÓœz*‹:3×e9*£Q”Â4ô…ÅÆÀ µ¥¢j6Ûpí4ÂZcw»`NŞš¨T]ƒØZ®ÖÅtiuy,QL¥C½¤	¦»³ğĞoíÅÔUi
-gPÏÇ³jÀEÓdT ö7pš-ıx A›tÓ‰qÒ×+W+{br5¯ó¥¯W•WÆöÕtÄj‹Ÿ- öíMÏgYúøQÆŞT›Wš#>»á†z‡¬ÊdxG2ÜÂÚÙLíOæoğßcÛM>>@.Ÿ¡mAs>çôİ7T3fÑWŸ1ì1	NT÷XÙ¶·;în›±ÂY}fğ²Ş#€fÃ¨„#‘`¬²¹¸î¹xnÇê…ÍmxíÏbŞ5g¢]f]sV|WsÎœZ¶Ì8ËÄæ{Üe¾Çr¾ÇşùÿmÎ·é¬µË”›n¦ïjÖ¥óÑ–‰—ùØÜW]æ¾’s_ùçŞôobî5÷Æf^Ë'óÎ*úÆáAoôV!Aï4èOÔ‡ÖóÉHaÊ9Ñ‡¼5J˜™–b7rı¶tQŸ&Qì€§.;X #ä`#hqÈÅL´>µ–î·¸t¿–zuÍ´šú_6–ëÓ9kğÆJnËMİ Šlnî$qÓ`HlGœº;Qßû†®z¼¹}¶)øt‹Âlû„T”F¸~ôÕãx=Ï\ÀºÉmŞ28îyËª7¦ø‹ºG,ø\R³¦_üÂ«é¬ÄcYG+µş9%ÎBÚ~©%È4V¸³•¸•ù1Ù¯'Ò‰¢î—Ö?®`Z¿ÔMlŒŸ4œ•Ù­Áãè¹Â¢ºòRAºˆE«¨]#ÚÁXd'¡ÈµóÍÊÆã¢6®Kİ	Á¡Ew17¾%i¥½uy6‹zTÄ—:Ü`»z¿tIøp8é+;Í„¹vMz!´vC"Æ
-¿­-Á‹­{ß¬,cßèBx£ıTE·2õª¿V›§—Ô t(È¯Èªÿˆªv¶í¦iØ»mˆÚ–Ù)½é†V]ãN%‹/’N–wËº;€5])”!ìbˆQ¬›šY8rû­ÎÄİ›D0Ìh%O×Şï±TÇ>øÀ¸½ãµâu:£9;	ìM£ç7İ¬…©n…›÷t!’v°vL£-fÌ-*U×ÚÑĞ~eøoó˜¦·ôòãÂBx¾5(¦³ršµ Cæ¹8xG?
-4<*ÿÖOóRAyAÎ¼ŠÚ²‰òY2ß¤!20³aWÃpŒ¤RA×­'8®kzÁ«X
-›@íçÕ8#sO åªÎ[ºâ·¡¾âú.z¬î·`ÅG»²/5Baù”ö©á²æ\íéŠ¤ö&Õ-]CŸ«AMõÔŞqùÜº7W«U{ëòŠ“!íÍÕ®®Şjn5©]r³. 54 ³¥&ëÒ<§·²yşŞÔ|€F¹›*@Ì«T3ŸB4P‰O1¹›9¸×ÌÕ‰O¨PU=ôˆosîzlihCšG-Ò:ÁR.û>÷vŞºv#”ıº«ÚÃµ²/ã:Rí¤hó*;:y‰0JPJ„ånâ¨š4#sÎ¢7@¶d
-N°ı’Ùi¶Z¿ì¬†ªŞ_ZZ¨@×g+ÀYÃû=Z/?1É ÁCÚ æöãe8ôœ³LoËìÏê“mÜ:Ï2§ŸpŠU¤vU†W=ûµ¹Œ¤Êvªû¨wˆuö®E%…OXGeT®)S­\›Àå'œ®jĞg}å=Â`±e½rÛ†[+Kv˜ñÙ!àÀæÕ7ş¹ğvóTÉ–úÑå:öAÙ¸I~:›¨°IIÑáe\ö¢¢‡8è—3¢ñ Ñ÷åí`lŸSİ«y’H »Ùv
-r)¨-ßFdÙ´ÂEèõØş¢{%İÉ c5M»±1‡*{–D1“rŒH×[”D2OÃffjˆâä¦ª'_vy+ÈmÀ"Hæ«Í«ËÄ:\ 0“ÊíÁè í	—;L,ˆ TŠIzUff9IŠ`;‹¤÷v”Eùû±ûkşdÕOyÒ²y%šÈãÇÁ"zi«£q³7ÿpdmözÆÊÅÂå¦ıË º…ã}½ò†¬ã»€ÖYœi³=({Ú€µ<ÿr±c¯7-çp*¸lz;°¥1ì·Ú6û)p÷¦xs”L¦HZ«@È¨Z|—A‘µYÖ
-Óé–ï0é¯õw#ì«XLù3 İşè‡@ x‚'4¬¡áKÔmOLÂAtI½Cm:=`'[FÀ»ğğÿ&<Ğ¢İk(@şN½óMôÉßs§ˆ¶P¡.'gÁåÅû¾Nx>ßGeŠûHÕM/’Ì¹ÈÌîªgUum¬*fEÎpÑvFÎğò°r55ÈŞqQhu?Ï.7¯PPò¬òí<Àxyä#}'å°¨G}"ê”/ÿÔö™xmŒŞ¦ !—Çz)\»›Îº5ª¥nA7¯ø½pt¥N¦œÔÍ«×ÆlÙˆó>¹\'=æõÕÑ¸P—oë„{Â(uâäBÇÛirNMÇ×1ZP‰2B1ûÑ©pm¾^‰Æé>­ËöD,«æíx’æTa·_œ
-ıcãJÂÃ{pb5Ï³‘”¢¬epş¾`À·c&K…;„÷·Zzƒ± [ÂcBANÂWí¡7­—¿ìºÁ¿Šf1b™>‡˜ÆCQØ€@wÈğß(,\V¨w}I.îõƒÇ³œú÷EEßC#Ô=ÃI4ÅÚ9†ãÏiYĞ(‡ğÓŞş0MnQ¬'9ìE£A˜€ Êc@Òb{\Ğéõ›Å×ë„7¼=¡,ÄkJ{y'ÖI¢b×[ ‡j6Fg¾=òOÒù..ô³"¥ÿx—×É«*)ØËCOÿ×‰Åm°våÖÉcñó¡>:èQdªO°UjAk´eD#½3à²Î%´‰ìÒ•¶¥°ÒÕ"jÈÚÉ5Âınk­XÀ†Ì;ZJTàP¯)ƒ‚‹K1‹æ=x¿Ç8_^f<=fö´´Èxk(a\ÌXtn^4µ¥lõ-Ûı¦öØÑ ŞÒP *ÖJ>×SJ.k¥¾o%ÒJîL‹l¿’ïF)µ3ó‚Iœ¢›xª9©wµ#†»X[°fòY–=êã¿zUüä¢æQ¿¹í[F‘×Áu8E#.öf”íÅQu:*¢2¦‹>ƒÍ(ê=bkGû¶ø€3¼jh*Ø‹Yÿh	F‡IÍ;ø@#âÙÃ=-Îeñ
-Ù6b'Ù5}®uf‹O·Ôê—O‹ò÷œ¨9à×?¾álZ±A¶ƒ“2MÆéq:ÖÂ#@ùçÉ¤èë
-vÎÛÄ•ïE"4Acı±4<Ò*ëê÷i}ÚÇOoU¤¿aU”u¿-’‘ÅØ£`yª´ÒŞ®¨ ŠK«â#OñQ¸¸Vš§°¶†evŠÉ4*^«rWÏb®,’×6˜Şœ Ê:ÕÂVXĞ+fp-RD(HÄ;+LùR=n·ŠêwÛ[2„›·PTs-Ac,«5S·Ñ%:4nÇ=wãú¼ë2¬œDÆH¯†ï´:›… ÛQ@ìL]7ŞÃà§*(ı¢0\V¦È’(·°GØõé1Tœ‘‡C‡À§±¯kÉSlA˜¦¢¢ÁÕœ5n;£ñ²ï`PBWÔigv2Ô:Ò:09ç¼ÏæâµªÔ
-æ|!ù]”)wãD«½IØ£Ãíg»‡owö_mï™Ñ8x«{ 6şM<åg¦\_LƒbCÅwW¿Á=]ˆôUFaEJj|¡JazæÔX¬Ë´$·äœ—‰5&Nd E%HÌûÈÓH®í2|vBˆÚáuMÒÇˆÁ°N±É¡Õt‰êhM¼H—EF0qî±ˆeñ…;•u±‰¯Ê•”H1<ĞˆD+J¦Hv<ŒÉNŠ0¢"…có1™½_ë;'lô*{…¾BÇEoZÈ™: gW@Vë½üÎ€hKßãtšìÒö‹§'9®ÖŞî‹İç<åæPvŒıû-üŠ1dQ^ìæUšã—|mÑs+:ˆ¥(1¾[ÜÁ¿lhÚÈĞÒ'Äzif p*ZÔ©8ê§i."¾X_PœÙÏËš±«m”«ñdÈ³S&ÕzzØBókO¹¹#ß%¥VÚÊ¼ÿ;‡§÷N¦ Â€eIu]Ï;¦Æ<PÈ—TÃ+¸
-æØP9hî]ØãW=¿¬ğÒBíËÛ^TM/ê[´[¿@Öàñè|>¾¤R/İ¹Ã{R³)U	¼¦
-#†ÊoÖq’ÈÕ¦¤OÚª^'+‚>}øó8§8*“zşµZ:Ñˆ€üÈÊŠr7ŸŠÒ€6E„¾Õ(Q×iŠÆŒà5È¸İË y¢>üjSğÔ‚˜sï~€ın˜ğm—•°}ûuÁVİ™åõ3ú6ı"»ßÅ^˜„ÊP¢PQ.‰ ´ ‡úÄµÁ e®¹±ŞMõşï´é¶tZÒöÉdatc¤%àôœ]§»ÒÂŸ~T2 ±ı[vÂº_’´8×ÜÒ3›ŸœZ˜l…­¦ëš5¯ÿ«şWİø¯ñÛÍÊmû±PpypwZ"NX>Xœ¹ÆwX‹Æ&Ò,Ô³ƒ'.ˆœÓA*v"_p²¬¾ †„*gZCN§L*¦P¥¤97YŠ#œ'åZ>)»vu<ª³fVÉÍĞ(ÊdAjfÙÈàuKÕ(?ú«àY¬ÆP×²ªİßd@RŸıİ¡Œ¿" š×¤ôƒ9B­ÇªT p¯Ş®¡6[æŸ¶BEæöÓ
-Ù©OC.ÅÈ1¦7÷s‘…¶¥S"C›joàÖƒõPÉ8P™$
-ƒíº´õ³ FCqÊ]U=Ï‡Ä6u¨qwr®m¦K?´M£{«Z!ÁbÆ	ŸáˆQy]T©«ksœF#º|¦¢êK!iÀ£“C*%¶}Z-È¼ñ¯+Vç‚<àÀ¦ûêİƒH'=ØIxÖÉûå¯êvl°pJ©]bĞh››*È•'?%>òb[hFÜ/01NıÕôı÷AÁW	aY¬	™“é’¹¤ué‚±dO‰Õ«±3u*J¥ëaö§¸NêÀ´Ôò©Ú<áé9‚!óX×ªQŒH•Å	İz™±½˜)MÎ¹¨G]ªrC`ÕÊô¥/JÜeCyC·@6
-‘•iÓfÓ8j×$/BûªÕuÙ/¾é‰ÈF€É²ôÇ(¾YYQ¼T-·G—eÃáX+å>Å´„6Ïô†ÂòÉããÓ,‘CªÈîÀãØ¹®šóÁ¢ªÇr¾+0ª:Ûá¨› 3"ç,Kßl¦ô¬C`?e´ÌOHzƒĞ¡È9äèeqt1ÔÎnu2ÑıDâ„ŞZ&¨¹§«XYw8Â/ßÓü‹İĞX¥U¥´A–€¤v7ŞK)Q°-´Ñ‰ÜL°zË-qX~úSğx¬Ñtš]¾d†|ØOìImÜ=x"·Š°áßE½Èh¿Ñ¢Q¬˜kŞ…€Ï(Ş“„ oZ†áT…ªõÏà@HÃ<¨û½‘õd—|(®	Úö/~!®å˜jŞµoLªªzôÕâ&â=/~»Ú3öZ‡ÎâLÖ$–sHã;AÄƒ…Şl¿Ü~üá?½8äáÙÉÿü¯ÿùÿ Û'E‘³büá_È‡?“óÈ.†g§dù?ÿ3ªó|øOô¼á¤ÚÓVÌ²SX_d2KëÖ:åÎ¢ZaP{zh’cX®q:ÎhL.×Pœø4OÇi´ ü¿ÿzıàÁÿü¯ÿåÿ"Ûy”ói4´JÊ")}\$VU1ÆAÃœ?e3‹Á<E·‡Ôà…ÍÔìıö˜v§Jf„Ö’üNÙ`<«¤Ç¾Ñ(J/Šõ!O²4‰ÒI9P¾YQE“Vå?P(UC<ÁÁæF%Á‚ù)Bx t’¤H€èÙ‹Ùí•ì¯}Ğ“ç´’ù¡+şr’Öìüûºsğ”üŠüü‰\JHğ/ÏA¯B@uş­¢°ÂœUr2ËcoÆ4<Øff)Ìtzœd$õyŠÃğàÁAÙéeÏ<ºpZ×Ój}y¹J#müø
-Ÿ—Ÿ'EşNîtR–ÀÅô×Ì\+…g~‡ˆäİGÊ" çÀøk!aDâÃ¿L bˆP°x¿@`fGşœWïÄN,hÛv<@ª.|ËÃ4j©È•¡èÚŠ³ìÇ[grÙ˜Ñ	•‡åîÓëg³
-Ê>¯N‚@Œe›½ŠnÂÏ/!”Í¨	T=rA.³`×pAÛ4}¯rïÁ‚,È(™l¡u0FÖÃÀÓ„"q4­9	d¬ç6²HØÊä8A:Aï÷ÖäÅcgºPÇ†Çš!ÙC)-‡¢f¤¸Ørlô¸H	Àq|HyÁöğpåÃ¿ä@ñHL—ıÉWTeğå_\éù¡Hó>²+èPßc\Ó˜ˆà.VÊ"°H•ÖüÄ‚ õ(O ÄçşA”ŒG' 3}«¡8Œ<ÊañGŒí‡î‚GéÖĞÄiœ9ïVˆ{äŸ3Û“½kº“ü+˜å?äÈ_üû¿iÊˆu5éV|(·SÈÅy$â4OÁÈpƒÛ;»{G»äÉ>A[ƒ—ÛGû‹X)Òì3@­ì ”Ÿ¥JÓ“#ñP^ØA°ºUèÿÁöááş:T|x¸ı’ì“ƒı—GÛÏhÛ/ì=6ıËË9C¶%éÔ4£éU~š,ÁŒ-É‡¶´öïÿ9éıÿõÕ.9Ü}E7	üõâ·ÛÀboîÃïÜ&Ûd2~¿û¿/ÊÜ»‡ğïÎy¾yY‰!­ò+¬òÙÍó\Âƒì>yµ³½ì:‚~9ÜıîRğÁ(wiö½¯¶_šS#ô
-ì½"
-côQ×"$”¼ÑÆMvÏ 44¢	9¤=I£YV÷MfvŒbÓë!ßÈ–ñ:äìkùO–O`}õè€IX±&lP¯NØ%x*1º’VÒŠ’+¨Jcû4:©–^·İÂDMqÓïËáÁz£:pJ´Eê@W¯Bö=»9Z^úÀ’•ˆïƒÜ4^XÇ•Ve³êÂùè6ì˜7Uá¦h}àó))…$@ÛeÙäP3áò™´¿3·mÇ”q¯îÄÀÕê ÚlS{bC™™a8Š™[N½È¨1zMGşí _Ğ+2eƒ6‡X’¬ŞfS"ó
-•2'’ó£ô¦‘&g¦cİí·``İÆ!µ*TE®Ñ7Å+ã‚ˆ4åñœxõŒ».]®Z¡ä`° 4ƒÕ¥½á²îM¢ İó|’˜¦£©LHùÇï¢é~†(	<HyiŞm›#óù)0BıChä067ùíŞ—–Û‹U.zÂpâ$©‘céó%º,…íg»/l¿ÜÛ»½³¿{höÅº5*€#.ª§IJÑƒ÷eˆ.ônë««ŒdıvpóOœgE`.Õ‹>ËİfòErşÑfR!U‡‰dq'Òï`"µ®´Ï#4ù)æÑ¼‘bİµ.¨{%ü£'ü¯i¹H§İ±^¤Ô-ññ[1jö¬&Œ´BÓŒ¯á">ãEÕŒÇ€‘öÑ6b¤¸`2ŠeÌÈ&‹ë%çWzW·¬ô¨¹™l•©5¥íÿú4úõá;hS­.· ¦Ó¾ˆàÜ~1°Ï.òèWr¬›7øxxq=Af{ÅK‰<ıÁC+pM­ùâÙ4G¯0KØ³ ‰<Z¼„®§ğj#$C¹¹¢•^[Kå‰ıÁ(
-î»}d±WL&+á¼iï­nÔ¹:.hğú– êóÇ}qGƒïá51t[)uq£®`´| 'Ğ>¥ø½‡vQ˜YT÷2k¦ø+áPáCÙmd>u“ÄPŞ;¨Q Ì’ú²{Ã4ˆ×¢[O\›•ayeˆUZeµ”ZkÔª¤ôˆ‡C`•¤ ƒ©Æ7P£SEqtíÌĞéê½Ê,{ïòp@c´s¸ãˆ»FIbşz"Â®Ş1VSúìa'q–Õ}HN16ÌóûéŠ&ÍÈ+?»ÒWPE¾¸’}×oüL¢‰nÀË´¨ªô,É&TéÅ/Òk@v¯]Z¹{»E"	¨‘nŸÈ}ñİOŒkGr_<q®_€8¸ÎÄZi*¶Gi¥%­~QY¤ï‹=Ú’³]šRÁÛ.¹m–H=”Æÿ'Ê]²Qî¹¾§èoÍ|=äè€Øgi·Œ×,q 6Wiµeµ¬öä¿O"-'•¥äúø„¦­h"£¥¬³[1²kO4a®í“\jµÑãNıÓ`"ß}qE¿\£¾°o˜qîckHÏE¹	®aÚzıNñ/Z”ŞÕ°Å(ˆZGÅîÅ8Éú1½ÓÒô‹°I&é¸­¦½‰XMR½ÅÜS×Æo?ÛCŸú»U¡?rÖŠº¸¯¯Áø^ÁĞVŞ(-ı&*C–N~ZÖiêû@¨ÚpÆoJ+òü{z£_çüºp
-h%ˆ_¿	¸ë¿ƒ|–İ¤‚…¶;ÃwÜ›1›íŠÃıÜAP%¯Ü8æHóöè½iİHÑê6S|;1¸Ê6aŸ„F_‹wÇ
-Zœëyôêt+<¯,­‰+RÃ$=¢Œó&%¼ŒÔ¢ïÆ ÌùR}¡TÇİxCbJ«X¤+³#ºOÔOH|òoñô«7pµ,¦çjÎ×Xi:´]4õšTc Hv*4Ä3Tœnâ}k–Kt(Ü’©¥“É„› Ö@’WmÚî•˜œÈçÄ¬7K5f`phšJ…HoôÚéAUƒ«¥6kS‚ªUìA‹í›%}H—ŸÚZ–²¯w,|ëÇ†xÆ¨°­İî¨G35×£nz«¼eûÄïÆ
-y¼Œ5fƒ®=í5 i_³–´ß¥a—yD£LHÅï½>ğéÖ9ŸZ£±‡N;´ËnëWèÉã6îËU4}Ÿc¤ö¤Ëpn"½ñóÃ_ğ÷Í:;¯¬/×Æ,æ	¯/GóWQ>ØÀ$øqØÉS	¹1™ßÃg]Ï_wRIı)Ë– v}å¡ñ¥zŸN§ö¾‰æĞ25Húvkæ35H}½>e	å@\+×SPu‰]ub|èË“PiV-Î1•ïR}x¶¾ÃÇQ@§¨"ÆÓ)M)ÓÖ3ã„ÔR+„ûT£eØ%ôĞ€BôÚf|ç;vó¹~W†º0Cê³œ¶1Êu¯ãò¯~eğÁ¶âÜVÎî/çĞ™J¢%]Âã¢Z@/0|õ°›ïdÂ5IOò‚iU ¿®é¾£††œx33dŞ•’Ù6!k$ç!Ù@íXÌaûåÒ·2´ÀÕò—ä(‘ÑYzÂÌ¾\`k¡Eã¢«÷óSH'SÍÇûÚEFªSèø9:÷…EÆ°çKÇ©)Öõ™îÆY”Ş±úš×+ÃeC¤›À ÖˆğÜ½6üÆ	ÖŒŞï•?|ÓUºIË¥/&¨şYë~KÅ—ùVDa0ä0ËNÄ/šiÍ ½NzVˆ\'Ø )t)¼GåÎiTÖ_	î¿¶¸3gøOÄPl‡ø®W÷9'‘92»ŸÈúv'ïYZÕÍó†9(‡Nı§:áìÙ3=·_ñÙt¬ßNh|¹NÊ4&øF4¬€vT“uõºF²íõko´Ü¼>³²àËCHQ¿T1ñ4ÍÑb1-éÔB©£etqaûùOGØ¼BWšNx/è\QnöF¡PíËsuXêP¸Ñ°©6õõ–9âğw˜]î¤å8KÖÂı±VnÙu<ìÓ;BWZ;¯¹	t?+ÆÎÈT¿#4„¾m¯¢‹}1°:Œ?í³éáäúïŞù{~T²±½š†»¯6ôß\4¥m«f®šoíUcÕ¡màßxhÛ–»£hãô+7´1Æ¥ñÆ!ı5Ô5ccûB mQe¶Fô¼‘”¬¾8$OÍKG³”™=w™µ…gjùô+g¤š÷•§ÓW†¦­A‡yÍ4Êp5DW×¾fBK½LÛ³ªN/—FI}$¹Í¯J&icRpK€/wzøMC<0Zgğk#`?½snÿA3]I_`åÑîf:)üº% YÄ(Ê4_%š{QEäùjÑ.Í‹ZD\ ÆZ¡ƒ$!Z3üáÍ‚+ºĞ%4îRäY^__õH/<„¦¦dŞµ–ÍÁVûW¸k	2×ŠÀÙ:ôÆ˜RáX«ÖÒ>§˜NŒØ˜ö: ÈVg@¬OÓ°4¼È¡òàp:¯ÆŞ)kÕèB#Ãm>·\—w°*ïbMŞ~E6¬Çª¾ÆåêŠœ§q}ºN•V¾Gßæ
-ñõ~pCpy2º¬ËgÎx0sKDã`uï†ÿ@İ?¶úH,w²Çxicú9ğ½G¢ŸŸ`“™~âMfú·¾Éˆ]Dªw”yhåôÓÊ`‚ñ:¸©g˜¶ÊRÍ4i`¼U§†¶àxºæ`8’ëí=Âû[R¬*€¨­5‹¢´Gá¸¡˜šÂŞ6Úè[=öúúãÚîëß_›~ıi³ï7:Òbëo4êÚıëOğ€ş4Üp»¸`ŒÕwO@=Öm ó±.dÂ{–·ÉøÔ¸ÓàP•¬+’"5+å-­Ãßšª»bØÃwd³Š³k+ŞàªLÓ»Ã¯•~ÊŠ¾ºAm!}PùÆ
-|[¸¬ºpqµóMË¥i‘zèíï«)~ĞzëÙãh¡­p#EûInÕ—S¤Eiæx9Å'“i½Ù^dÕÅ"Á?¾l@“¨¹ææ•nÏéÛnôm N&gŒËtŞæ&Ş[-n§â´B÷<ñæ‰Ó´P(ìÍ­¨ ú°^@™´¾¤‡"Ä½nÃd¸BÕ\ËÔxW}\µÌIy®JgÓö1Ø¾lì^&ûÇÇvB0ÙHsÁéğğP$Í³4O¼\•¿½g)Æ`!OiX`Ôr>‘†ü"ßóÕ%ÿÀl–<š”tC>vM 0+vÓR7Şœ
-±:Ö:¡dùIqw%DlÄóQæOØÀÎiâô×sÄ;Ç“X;FøÊ<UøÖç£¦Ôó š”›Ô`u8†N…¤H5%í'*´Èİ—î´"géšá¹9êh­^˜¬i"‡vŠ\Ìj\Š Çå¨YÏªu´‘ƒ
-µ—n­ĞÚ9x–t ÙV2(İg
-*GÇÃuh`±ö>€8£˜R[ƒ^ïÔÆ2ûĞ’_,i/‹‹ˆ
-½GâWÇ‚NØ…GvŠ¿" ›æ^AÔvx)³V‘Êş™ ÍÜ$ç€›‡afxáí´ÜôŸ)Üšèáƒ¸@ŒšŸ	@Zée·Ò‘¸79I«jôQî²eMÙî¬mÇMÄ¯µ¢Gê÷\„°	?¥Cì.¸)ã´şµà¥4Jtœ¼–úh§˜P#&æ{¯cIz}õÑaÒ^Ô7‹s0÷„_ubì›Uóv#2÷Åz˜tõ¯5Jäó:™Yr\û46õiÅ^y]z¥¾o¡ï!¾^]™^¼Ñ4³)*óñ”ºñ{D”ó4öªxG,Ì¥£_“ó¥Uß‘/Ò±‡éŠhèÅQq>‹àÁ7ı*eö4Ä4ÕoÎódë2‚ùxò?"+Áás-‡NXq)©á'ç>Q©Oç›/X¡ÂÙÖ
-S§ËD2ÍóW!®§®uşÔmÙùKN­m\=°¯ôZƒqZäô  ÑQ¥ÛQ{ÃEœ3$jñ­~Ë•6HéJªü
-ÖÖt–*¹ë¡zÃchµÄÄëèŠz=äŸgevgàt©G8ÿa½ÛıP™a-’şÇœôÕJCÆ6›¦ynìşM£KÔ£aßô®zıƒ„ºÁGHèá>F×ıNû¡å¶
-r³ÿs=hD‘?‡qŒÃã¢îˆ´jÆìíÇ<‹Rû%£UÔÇ®iGõ’?ÉNB–¡7[Ì ¡lıšêÕw'ÁfsìZ‘›-éE†ôÒÃŞ,ø›zTÄ—:\Ûödé’ğ’Móëöo9‰Œá§!ÀOFJM{„7¥è‡öu”åol­¹ƒ\TvÂğì53^İY/ù
-R3éiªi‰Ø¼PãòÔù$Yı"qØ¥¦õü´Êlô²ÚôÛæÀgŸÿàI@£“så5ùM ÷Õ£»qoj®ÑÊÛ!a‘fŠİº3ß‹ŞP‹Œúàö;ûVímú×` vŸQÌ8Ç›$q:›èğüûÎ³K½øßn~[/Ï†­œºŒ’ËÂ¦‘aKMr|üĞ¤i„]Æ¨ê“Áä˜Û»!ÿßü¬>4©Û¨Z–NÃÒÀÇ‚ 6±ˆ§àÍZAí¯ztÛÙo€Òı çe4åWÔ'¼.½^[A`6í*èmGÇ²<ËµMj«D‡åÎàŸ6ä5¥¿ÖÕ!C¶-J|$‡Ò!/Â C¶…7z¡éa¯½–&öŸ6Íq‘Ÿ•f åVÔ5r®|üµ»ßjaO,: tË¸#mcDÂ·®=¡ïaQ^ûšöÛf-Ô±Y„Ã‡û^l!>ÍríÆ}¡?ŞÓıá'1Ü’@n.i£EÛC½ıpñæ{lÒni9·qóØ§Yı@}_ëíé¡‹Û–­UĞ#>G{ÔïŞÀ©Pw6ì<qC51Í¨ï.”*í÷XéYÕU(múéYËÒm‹„z¼ˆÛàô°KË-Şc;Wã:H°ŸÛÓÌu_ÃÎ­DXs!"{$yºÖÒŞiçÈwªw—Zøî{»R)+`¯ßŞü®q£@e·22ÓzØŞPƒÇú qàNşF!aîîÌiÁ ?sX3Ü²“ó+˜MùôïóïÉM6¿Mûõİ±XJøË§Eù{T±ïó«æ)¿W±Š²é&‹zn¦Åg]•ö÷†f_hN4=şT³°ëòM¶Œ©KMô„»aÙŸ~øçÿ#¡q°ÅAÌíO	¾õšdky©ˆ+Úk×‰µ1¥wZÆµèÔryM=ìüJ©W}î.İGµY¾;•¦Wß”§ÇNeä8CyEË¶_‘Ó†ë^–kİètÅI8F@p°ìÊ¦SìVN9fEıBq“3
-¡è¡ÇºèÇjiˆIzœ›€~İX74—Mc§²,ö+ˆ¿»—ÂøDªÜ^Ü¥äušßzuQ«on‚ÿµ‡àÓ»3Î¥<óÀ¶ëÅjI¸‘@EåI5^ëF¬?ñe+ÌXå»hÚíĞk¹bA[Z³Ğ¦©·…6³g¹!¸Ê¨:½#x‡6ÿ!yH_så±S£auÂúòıì“íæM=ã";„ı}óê›ğüzØÌÕ5ÆqÇrê È(š0xY„ év–Ç‰Ş°}Wù¨9‚{ùŒštÎ÷l;OAşL`7Hò±UÁUªè›o&¥}z‘ÄÔOp½´B~Äuâò›ÂQÅKn”ŠEã÷h0‚¿qYL‘®•>1Ğì¤ÀÕ6ô»¡HsX‹Q†ş"øÓu²²Hªq”ÁV¼2üÍ7~J1HåVe¹U¡ä"­çn©£90üâf¹ìÜ¯ ÚvÀNí^ƒkšĞM·0¹¦Æóz“­x\÷„œJ4Ù\éqQÃÁ6'"EéÕWyM/º€KŸÿş¥q£q]İºa#;ØßXtFÛ]”o-AÒø„¯ƒ„¿‰è‡ı [è­®Èg£	¢¹·Û?|Íš/¤®qƒWOM¡Y˜µAEK(ñ5h<¾Ğ'©éËÈFÑo˜o©³$|ğ",Ù)&SŒf$úŞşòs³qT™ü…$¼òC	¨ºÙ¾fÃ'C5¢8Ó8c f9XY§šS:ï­ğĞ-®ííÛóºşaèõ©‘hçàéı@F[¨›bN£ ˆî>TİÀl¤ \ö­¦¦²?£åÑRÄ{º¸)´S÷A•6Í°äûOÕ·„§~·‹ª³ÍhÚrèo£a«ÁİO‹…JÃjîÍÌ@å3C¿¥ÆíÜ +êî!XÅM]#h6±İ³Å‡Ç”º>ı£l‹ë¨ñïëzôùõ3—æg¶&?-^½|K‹úİÈcâ|êgìn8
-î=å“³Vs÷»Auèvï‘Äòe³{±NÖVÖ¾¯~X%ÂÇ~¬'Í­´î{WŸšh!€?	¦h&÷•‹2!~fŸä·„‚N0èO‚ˆ†UÊ}EEÛægd”ß>š„ùoíV°C¾ìp¿î>—ºMÖß6ŞŸ£Àmæû4ÇÉˆ#ÒßŸRW5YÖ-H{…Fyß¾=.’
-Í/¬$İAÍV“;š¶XƒŞ3ÙF¤–»³[°˜õk0"‚Œm‘Ónö
-@%‰²C¡óáO æ®u¸:Ü~›rè¦…î€Îs+æg%›sİğÂo]Ñ’xÇdå³(ëÙÑÆıÏ<¦ÈìéLÂÄ#4EÇº—
-Ç¤0Ÿ6SNšÇšÜÿ°™˜`ğ$†Ù°æqšÇ].ëÒèäGÃ”İÿ9ê2Ãù¤3×±ÛbÒä¶Ä/f¸~§³Ù’£ÑŸ»ÙïdTõæÛXm”ÎñˆÉ,#ÂÈ™Øwº\ÂÇŞ^Ø­øh\w¸¯wˆ^y‡bèHĞCşÚ~±ºy©Í
-éÓß1 Ş^Uo`Rd':¶é±9_N‡ÚG°?C³Ïş“ô„š¨±rx-<ië}·¾·]¸byÚ<YôíJßÚîk.X…\`´²ŸˆAÀ@}lf¨©°eŒO[Ş/Ó“Äoî¦u±£Ğ*]ˆ‡9¹ÂA´ßËÇ.k¡O\Nûù“öRsyÇbÏ'Úiæ‘qÄÓŒ´ƒäck¼Åãh¾ŸÂû¨(Ş/’ƒ(?Îw7Y$I=v<»ÛOã•¹Tã¦~°7È"m«e^œ[TÙ>üjF÷K>Â8¨²{†ŞHÈ?Îò4/5ÌiF– š*ŞµDŞrá‡ÎŠš ‡‡Ñ!Ğ•x¼Q1½ñã.—¾2‚Y4Åùb^:ÆX1”,Ø"½Ã(;Ã;ã`ú¸­™Õ7®QiI¶ñROÄîô6ÓÃ"_Yê‡cŠ7İKjÎ‰Ös!dYİqoÆ8‰jo,¯ÀlÈÅ¡ëLkŞÈU‹ãVOË3­¨EëJZa•›VzgñZBQ%ş‹ÇîtvOá¡+xÓİ	¦iHIÜÓnE£N“1Æã£©Ì^² ›“êÄÓS&?£åMtÛ+ óªÌú!`*Àë4Çtòvq>,pÌPë"é½eQş¾L–D1sèlÑ¶¥Ç"Ô¶¤¡Œcğ…¤’¶©±°ÖYzŞ¼’?mpSÃŞ‹Ş„)ø¨
-B¢Z#$KÉ<y4B²nwKoŸ)§öÎIÔz‹ª³Æé°K[xpíŸm}ãI 8,ìãY>¦Òß)Ÿ&ç”9—ZäG8ü9-Œ+‰?ù}³'2ÓÌy¹g¦Îª¤¬ğG2™‰ªƒ¨'i¡¿ì×ÔHä z{šââúNşfS"ÖÌâƒëu":¹n!*^¿y¨ºlÙDø’Z$õìj6Ãúô’²,ÊÅ—³"ªA®“WĞûöòĞ1Ô#Á·³éGP'’“‡^@±¾Ñ…Ñë».(¹ËÒDË¨ ·%øÏi„Á¢ù€i
-¹±+<V>-b„Âw»Gû‡G½‡¯WBr”_’k,Fû	š¤U²©Šé\Ïà/ë L¼M)â
-ÈëS…›R+q1Òy9K0šBĞ@[×lQ2’ùZE×[4Ãç½ü  ¢¬¤ßCÂ…–—Éo“l
-,¦Àq<á(	-/K/$‡CIÒL²= ÎÏŠ1³„ù‚fúñ:Áø™'çôg Vôº9â!Ôñáƒ÷>_¯\
-ÿ²pÇT4çsLÔøY§Ô¡WY÷×€¢¯ôŒÂqtiåı”*“zVæ:;v½ôÅm@U×ï0×5«?Šã'ÑeE‡Ë¯f
- ®Å%å@ºg³Æ?….`q^zXM³´î÷–D‡Ó<âgñWÑÑ^Ï­	nNÏ^Ğ.°j^¯¼‘7ŒôÕ7²DV½ßÖDŞ)lgXqXÒ	X˜·	N?h©Mv+âqı˜fi”sìİ’øïÁ´Àó€sKHób6š ]/‹ß«Úï•7:ÊÈ„ó¨ËŠİ¡‹Ş3Hm„4‹3>ô8Fô”æ–	ıúËx²¸ØÓGÉó+Äÿê÷),%\­™e6b½è¯z*Ğ®ğ¯®à®ìû°ªØUÿ»o¾ùâŠ¿2‰m™£ÀCØEÕe>V<Ş¦?û%pšÓ¤Ûƒâ©ài^ÕÏè<Jk‹,[õËzªó×
-“¡©““¤Ü› _jÀœ:İ„ñ³á &ÖE—bÑIV'»A©§d¸ŠÌ$¥
-7ÓO‹7Y3±ÁÎy†JŒ-óHàÑJÄE¹‡¿%ÕİÏØg¶{Q +ü*ZãÂÎvíş4?.şÿ!ÿ’i\×¿$_\1 0¾¾PÊ¡ @À/È"ĞºÁA«°Èo‹’ıêõqHÑYŒëE;Æ ˜Bt\§gFGo©w™ëê ‘º OŸ|_á=à¤§QZ‘,Íß'ô«UeêxcüùòâÈºÊÇ¿¯{¾ï)Ûô-òÚ÷]9¨]'8ô™‚¾è!É ú©­nFÃã3dÏnSnôúÍ€vögfÃ?ÈLcÉ›ã‚…A$æ?‡œä)‰ƒs(“w_nŸ¥yı¢8‹Èv¡6ĞeÓN™Fqô%âÖ~öáO‹äK@^e2Äõ—È_M"Xdgò|ì¸HÉ˜DwÔáäHÔ¹‰€ø—õ/®pº¯±ú ÊqtV”¨,&Ó(?MHÎÍê(;M*­ªá;%ˆ0ã¡cÆÀ…«„D©U‰Sß%,<òŠ;ªR(UC' á~Y‘ğÓ²¸ä!¿lbJs\æ†2Ï£È[Yyf’Æ2D*6±–Ø5–EÆ·¾Ü¶{8ün÷ğhÿåÛW/öl?ÙÅY‰^°°gfÏt1Îá4<œ°^"2ê¶ET7Ïêb”WÏ;!éÎ"ö‰f¢.h6M2J\ôÄc¨
-ÚW‚8Æ½{hu;ˆGÆpéÀšäàö¯k¾¯	J¶¦(Ù$ø¤EHÈã¹¹Š½”ÿ¡¢Ú5f³cÚ©ÉÓ0…=—R¦Æú\r"
-ÏAºT{X)©×8®¿ûïæÍ¨¹º}"­?…]qÊòèÙqúG¼ZÓ#ØëÆe‘'e4‰<â ;t[/Â¶¯†+ñ¨ÜØ;#øÄhŸ‘®‹İÈ—E¸B$kgÿùîË½ígê—~"ŞZÌŸ4b¤£vx'mÙÀ»`«¯
-ulµ.•0Fó{ŒCÙB^íK¤V/“j
-™>üé,a¬™A»ŞQ¹iù©õÄC©[¨ô<…ô= µoAœÕÆ½NGˆà¸nÛùı»ıtºqyQVÈãhüş„;±€WÎ«K¨ñ(“IŠaÛØ:aiÓ¢ª—PË€NÅ4j»ÇÇ´J?+â4uÖˆMom¸ qş0¾•c ›6ÚÇ—¢cÛyü’wBIC†š•Ê¢ª~9Ëi´Àª‚¾Â’p¡Âa€Üïa·l\ouíÔ[Ú Rí³úòâü( V…1Îû*Ú²-².	]ÿ6 ä«|tì#6§ÍêtÕ±Ó‹BcÅû0P /˜RÈÃFlİÊÀ·ôøÔÃÊÃùÔ»¸´´´„’Š˜²Jg£Ê'¢$Õ0d·öO@İ'ÑåcZ€ªÕpV™nÌ•ÄÉÒªµgjÅ­Ê}«†¨Ö’wAR=üäÁúÌ»&BsÏù!Â³d2‚	M`R¬³I‹Ğé˜ÉA²Îâ`–ÿ-’ıgÏvwöö_w¶Ÿí¾x²ıroÿíöÎşîá¢ Ë\ÓáH}İY§nüÍk]@Psò×/_k¬	Ùãïİûü¿Út]›c7µ9ó®­Ù±½‰IÇ_Ø†­âôÃkjiAê2o¬²ƒ1h€"ÌRà¦ÄveèâHç·ë&ĞÂ‚#nÜXpõÌ•%¼iâR«S¨Ul5ah‰¯b&]±U<^ñU<íbl°`GáV<^ƒåù…]j-B¯	7)ü†‘o.Á×Š!P”hÆÊ.fz‘=·Åã3AqÓìóı:H•„t,eÁÊ!R¶XßMlî”=ŞE‡Û‹ÓâñŠÕM$Õ+Në šW¬6{2/Yõ‹Ö›¶ŞJ”ÏM‘T“e!X{xŠI7ª §7”®;7iªšîb({:QÏ®ÈÕYùO£³X)«ˆáÍDLöØH¢ı&c¼}CúIYÚ ÀáÃ”©Uˆ½§Qš%œş	9t‰BDunòH†Øş m4Ì¯®¿´%›µ!A{¸4Ë…N.àDÇèZšØÅFéfsïæ±_´yšNI«X#ëh“iüo*Ğ<MÆ§CxOD³C?5ƒBE’ÓÉ™f[l©_š3ı%¡DYúc1ƒuƒd¿uba¡®Ã/©0Î<ü›FeÄ
-Û€ÎäX".³âÈ…_ø|\` Ï}œÂÇâ”øgø‰¬›b¡†·®Ì²?ïóôùÄû¼Æİ·yĞÀJjD£(½(¬†Í–lDr¡¡¦hØ(ıÔÌ€½ûùÌuÏ=mŸXÄ½=¸›ë¯•rN(Q«’µ¤Å¬îµÌ‹Tgkš¥1…3Z•¢<­’Ù¥-’×Ô¢—-€7ÍNíuEˆ>¥k‚YXj	ºåm¯‡_ˆ¢ù°³°˜¤·;A=£(4a‡níşó×('nPÓ£>­‰ö÷DC­;;vªi÷iWÂUZ¯ô”æÂT/ŒDÖ‡æZÊÒ€VÙ]=¥¡dZmÇ1µğ¢7Ø‹‘_İk±»-lA,j!×XŠ1q¦27S~Ä ş¤6¿ZİÚ‚ÎFGÑˆÖ¼­Şz{qTŠ¨Œéüf°uD=^¯öÍ®ş,MÎ©Ë¥šÖş½|5+ëõBµ,AÇ]4êEsäj§˜å¨¦7€B»±EúÌ®Ü<1ígt½dú-S£0²|ºmÒ:Yyh´û¸ÀÍ-£»Õ.3x>™¯]º<9×fü…x3P…Q2fp'¼è–uz0*[ä‰WÅã©4F,ÖíÕ¿((ãä×YTd–J‰uòª ì<}’Ô‡"6€ü30&*PæÙË«q™6åš¢=c	S£y¿šÁ°*aÕÇòEYQªZ­Ñ\ûå8Š‹`ƒñ\÷%¿0æÇ¶wó÷ÏÈ…òÕé´‡ÈĞÛĞiOåoèë÷i•ÖbòóŠŞkë“Ùsºº&ó3b³Ü’KZy²„k}¥«Y|’âq}z–¤As.ö™•˜VIÜáÌ^î?ßŞŒ‡>¾}ùj[Y>,¨z¥%3.óğæøÍVï‚¬wûÉó½oŸoí¾äš@_¶§{/¶_ììî½ÜWRr «Í`Î]@ı¢åkÄ5—´q`Ø½-0İ§Á=W6#¦+c ù]@¿ÖöóoŠGô¢óK:±!$ ñÔÇĞÏ!Ø¡šü?>~<h²úĞ.m©fômSóÜÀ¶K­„7°¬¾êyUº¯İdíìhçåû¯“&ÙùôYÏl)e´Û6_"­Ÿàö¾…k"y©¿ÓòRDÀKæ Z®Å·ZÙMÿI&·Ğ¥C2÷Íº$‹7tJß Ûº¤å¿CZá†î˜{q[‡ŒÜówÉ(ŞĞ)‡[XğÖgåÓ+ğrymÃIÒ½DUn²…mu¹ç™Q¼d:Ú©K,ï;Ä
-7tÇbx½5ylå°ÆmU¼ğĞg—n«…f³'ÜÇg·WD3ÚUY¬¸·#Ò¶ÜÃ{«ròÙòòò]ªò[rìŞ
-ôcYH9²Ó4f iv›Í¾?=ğÜ©öÔ–t‘¼Özaè¸D¨^Ú½Mf*Eó©ñËËhŒ.	jròÑ(ÍÒúR]lªÈ1¬MjÜSáõ}´]Y„³¤‚aÇ“4_>¡ªè¿ş!x,Æ«3‰»ë-™uÚ²eÃºxVœ'åNT%ıÁ0EŞ%Nª¾º*næ(FÖA¹ª¹+y¨u«azR³wŒÑB”§ˆ¥nn™êP‡<ôÀlBWÕ2/T»EYb²î~WİôÕ®iVeVkÇ¢IÍ1—[V–èÛEİÕN|½Ô¬8u¼ öwR¾Óu¿ÆPL´İ¤»¢–—W×‘yÕü·>Ør°Æ¸-°Â}£sÔšô°±i–—ëKˆ6‰Õ&'Ì•«§O.Ì]m—qµGÑkuraVÄ×¼Äs%ØÉ´Y;QÇkûÛ+-l×@“"áâç„Ï“IaH”ÂZ½¦Şˆõ-…ëkuú0f!réıp#«Øv„\I Z¦ ;æ€‚5»$êıÿ  ÿÿì}ËrW–Ø¾¿â²Bî(¨Âƒ%A jö"MRG°b¢*¤XUYYE Âà¼˜…ğÆîÕ„'¢#¼qÄ„·ü“ùû|Ï}?Î}d HµîL‹¨Ì¼ïsÏ9÷<¹3¹5¦Ç"z
-» mé3ïŒş»ª0ıb8\%bÃ!ùéÏÂ¼g b%*Ã†ådôûuXºgë:‘Ñ·X-J¶Ÿ›Ç/¦ˆ!Ş×[µÎß¬ÏÉæÆåËê‡İ½¿	şz=áœ½<›QŞéy9¬›Ñ®ôĞçRÍ=:Çó>{ûëæA1<–ûo;ˆ0Gƒ07(é%ïùÓ–ôõ¶EDœ±g¸’–W¢s*Üƒ.mB)-ÀŠE-<3qøÁÑZ9)›b<‚x¤=+ÆjéXæß¦Û0lµRÀYmH¯lÎÍZU‹$G$ùÑ´ù1ƒpÿ	ë¹“NbV­ß!`	3œè›ŠÒ$şX{ñˆÂ¯`-Äô_óØÂ¦n™½5~³ïÌ³²¤ó,Ìƒ© kJA©nëbÅ[[7s
-v«ä€é`À[[c8ˆşµ¢'ûBH‹ä_|^­;—Á`Ğ7ğà°ÛA·Óaó?/¤îÚ<B«ÃYü=ÏÒÎs¶k,v8!Â2(Y¬HãÌ• K€g÷ËÃb1Ë«„i8&c­œATB8ÑæÔµ&Î?!Ò0õ¥%c¼ğntöÃ¡_®Ø ò-»¢j¥;Qßİåºª-äˆwc}ëvãK0œŠBl‘ÑÿÒè  yÓÕLq›ê ×Ãz0‰^†0MW´%h‰^lç	aõ‡ìb&`(ZšP–åëd¹§ëĞË9ö‘£»qƒ,¹dÆ$”+šÌúª½Ç¯jï/fcğú+ååº¥—4m_%,Öó*ÃöÍ¾hqz~ê°×–™¨gåhÕ6cµª[+K¿o˜ëZ"	cšæV„šë÷şôş¯¤<S;Óó¼ÔKxÆÔ	%_£‹àsÚRÈõº4º¶hvîµSÌ³oõl,JÄWQ?2F«¦-ŒÅà°ù¶°<¬oèÙy‰&Ö×É]‘^È æÂœ	U@BèFhì	å8;˜¦ÿğş+„şÁŞ4ea
-Iá²Æƒ«k Š+%—RBFÄÖTiéxüãci7hz`]ã°T¬¯}-0qgÁ?ïuõkn7ìj†4	õ3s;q>6{QŠØlõğyy”–ÁXÛÀã-¹Š-ƒÄÙFx”Êz Ee¶f`#`¥j^®¾ø´³;–pù,y‘áOêˆ9øEÖy¢|Ôt$Ã\˜Ê<BÌ
-6Ùs>0¦›@ÕB4°—Å´B4/¾é3W›šÈÚ|+šò5ûi¾7Õ©>Ê6¿TL~&˜ß˜jQù™~fóÜ–²"y`C6D²"şŞdÄmY§-ü¶C»†|v„â¨ö:¤©FõÑˆâ9¤cşĞšäˆN7®5t:›~…xİ †-¦ëŠj±âÚ©”Ò)¢IÊÒ%5?!EuDeŒk€|i^ÍbËjêÃïk«†í?°=®,ç¨§ô^É\µÿøüÑËúe”·qy8…a¡;ˆ ÔòˆïœQóy2 D
-²Æå3áºxw>=–úÂÉªÉ0ˆ¶Í­i‹X6ßëèˆğÂ¸–ú×Ïá¢AvÒƒ•…oW€k¥ÜI…	)Oç?0™å¯­WÆˆ^ÛÕÔMÀè×º {é}±šİ‘#İåñ‡ÍNüùíøÃò[VHtéÇ£¾O±J56 5<K,¨`³ì6¬ÉÚ–¦ixãw|†ÇnÛf/œeu=;Ä‡ğÎÏ7·=gD8ªtoÙÏ/ÌŸ>g©x¿àU£³#Ş_›¹óNª&o|7‘Ò4HucæÌ¾+Ê5‰ôN=¯I©œ™F”s2ê‚œR}<ª™ ?ÎĞë3¤*ó°
-%ÂÁj†u’Æ3|‰%‘)€½²Qp²/LpŸ?ûÂ°Â…x§\‹–;O¶c½n#rÀ°NĞõ1<å¨Èi‚‹‡=¨Uûm_¬¡mMC¡ò\®.…ÚæÅŠ[‘-/R?÷*]è?‡—ñclÒ³¢¾í†‚úûÌ^
-_q$\	å /”`¹4òÏ==œAVÜ#3-O¤ì;I¯r$S­úGÙiõ–Kk‚ğ½5ô¦0/ĞòÙ¹jîâÍ¥v‰>½3œé»_‚
-Gï‰FNñ®Hp"ÜO)¤Q(ı© å),G25)cÛ‡pßJcd9~óM±>ó7‰îNäf.©ÄÀoY:9…ãéGÈ3ğÁé¬f!É|İtÉ^	#'KíÈ8ÊÒI]ù@™ÕH0ê±&MßÿŞ™z;®RßşŒ^&ÍO t€xÿX˜3+‹ùâ)¿[r‡wşŞ¿§ËƒØÁ¬¦ÀÌj„*Iî(_£—õƒÓa9îë[÷D‰~do=/¦?ßG¹JÃÄ²1Óî_>yüR¾=—€´ö¼}9“™Ğ~·ûƒW¯ßxè¬XÇ)æ£géXÔAšÈ©Xšeû<¨üBĞoê¯«@›Ş–g­sî¥Ñáui(Y’¡…ZĞN(¨1}>Ëğæd‰(%¤mÒ&Eãh2áş[6¢·ˆ®€¶m?µY\Ç%˜yıË>ÿ{èô•üıÚ¦ÌÊgÃúÆlÎô'ßªÚ3ıµ+A=`øâÑ»æœQdå¯!“'øTëd Öüøî²–(Pó*€cøê­¸*º@Bqôu¸OØ·{ÍıÊU{OÓ;Ö_õ†úÌÒ¡©ãÌÆI
-ıÄ¦ğoı¶÷Z›9@¡Æäì8ÌÑ^İ‡nÆeÔå%m9R3vP‰+µ7çGû3Ö
-ÈóP“g;¥¢Û‰AÇÍ”İ•Óni:Y¯x­Y>Ø9í•S66	ñ²HÍA5b­©cÍÁ—U
-Èµ7	èì9|"U§½Ã¦x;î1°(Ú*8'Ëúò×ÿ‰œ}BüA0YjörØU×‡ôïı
-q-º„ŒèBÃì£ø"š2Şœ)˜t›MUßøÅßv˜d~M˜r0š6Îœı.¿vª~x5)D1õ5€`8ºgV_[oÚ·Õlæ¾a‚h¼dCzQÎMlkZ°KbÄ–QL©ÉtØ2Fö¼(E¦ºfêĞÿI	gájİùk\#²œËà¸hûo>;×-BZ*·u3áEøTÒ)¸œ„¥‡ì¤|äƒvY9JÚbçQµËøƒÅ*¸:p(bÛ/çÿåÉÄdl’=]‘²TôyIoĞ;„*nŠõF=¸ ÕÑtE;àÎ/Ş jÉn÷Ñu#Ç¹ÙœµeìæÓmgÅ°\;[»­ré¯N^ä»â]uÄušŸ¯Ëer«ËSvh×À6­l eİÚ&d¿ùné™îvëtLÚcJÃNÖÚ	š§xscƒœ¬Vs#³¯ŸËÜTªá[™°ÔŸÑ7ÂbX9Yõ¨Ï‡Sû$¦±	–o³Ëƒm3i¯H¥l$ïµSõ:XÙöÁ‰¾¡ƒö™ñ&–7X¬ÛøHşÅ>ÚÚğR SP3²ÚoÓVTbaùÈfMõ™¶C»ß½s5ó›¤­~¦k¶ùå…×y—%²¿/§â&¶÷³ñvŞHíäcİD>ºwW`nÛ;ø¢Ñ'):Im¡Hq*ñD¬,ÅIœƒ}uÔT#ÿY£ä¦¥h¤ìèŸ[d|dü¼INÇÆÏÛlëo9ùÁwõ¹GÇç¬ø¼ši‡/™M­^wcDyæÁ0`†¶nìÔŠò wÎ¥”Ã}ËÌ³ï(øØv·~½ÓhM“òØ@•Mw`°ë^ÕÇåVxÀÒ(ı’cÖÆë±£óÀx)×ı6<Pn÷~Éar@`Víi`Ÿác…|Ş+=ÖÙ¢¡;sÙÁr¯”oKPÂå—Û„ıl¼ˆŒ»¢ÛsT_vÜÒJ;{ä–7>ö‡ô^ñ’âÎğØ›ºM­¸åØ“f²PÑÃ=·]Üã´a0H·-)Ä)Æ©ç%£?¾i¶ÌˆØwš”M”/i[“ƒµ[$@.½æi<ÆŠAL¼î$Bs ŠbPD%1«;õã›Ş¤4ã&2>%¨3…÷±húmyF¡‹‡XÄúÙDúÁÆÅVñ§E;¯!Zñü¤,§|¹O[¾m9©`
-bì-)ß-`"<ö`;Ø¢ß&pK½
-›ÇôÜÀå ô|¬\`›§×˜¯Uhë?C€G¨‘'—‹óé…†ïê–ìjÊb±F:£Wós DÒáæâ?¬„{ŒO=òV¥ŒG^9`vÂ6‹(0‚»•ØÄÃ1EÇÕˆÒÙ0ÀÑÆƒÓ‰pØvéó^­!DYh»°²Şåv~FiÈù99©FîİÖv½!¡Ú nFàÅŠ7<äCŸ–|â”àqqV/æêÒ·,IxYÍ¸İ„û²‘m÷Œ]]`–-½j–ıUÚ§ó
-1ÿ(DoOó áùFÃó¿w4,ñ¬qoŒâÜ.Hsş#ÍàëçÊEXÁ%4,"&r`Gşœ<™ŒvØßM}[Ò=Ï¨¸!)+å¨äA^nİÙÚM,!ÒUDÈ„àr)§H|ëÂ ¢û¸‹îíîñ–wàaL(íù
-!ÏÆÅ´Ö„Áïdıxéz@5Ûr©b	…%‹V%‹¨$äû%a^Ë@Ÿ
-RşeQÍJd³Œ•Â!î¤)f9D8Uv2åït3&N×=Ñ¬,¾ˆV“–ñ¢1¤‘ÁFöfæ¤ ›Å;êÈÖRîKÑeáÂXKüÚNˆæNnûÂWYl!ì-%„u/6Ft9„Ğƒœ8HF<©‡-Â•Ep]ß‚Ø! Ğz2wõfÉfÁÑf#ø7ø1¦mpDV/>	l- »íïµÎŸ˜}OÁÈÔ®Ü4ÑŒÆùJwÁê~u-(¬MTî!éå–»¬ÈzSR¶|IKÈóA3jƒ3‰Á•å[¡ían1”µFáé9«¶é¯š¯¼.š¶nÖf5dÿj0ÿıŒEÙˆƒ[GBÏâšw+°¾ÄN½hQ’TKìÜÃa9›ßéNÇíé*°Ï(”2cÏ;ç¦5hõ¯í}„p4lß:Ó68uN4ùuDyËoc+2ÎÆıúdš|Æ!XÀGˆƒ°Ş¨äf–Á€'§Ìº©´¤óÛAV=ã|ƒî‰/ø«ÍÙékœ·b²˜ÁÅ
-D/“Ñ<+[Ê_¶E“	£Îš5%í¯zWb‡y‹Ÿ™â ­ÇºæãòpNj^Snq}‹¬1cs9cìÉagVRú &Ñô†õ1ÓSqL»lî0CFR/¸¥Ş`0À*H’
-7‰ámú¥¤Š/T¾2!g%8!)˜Ñí¦‡½A;Ä[ú–B!j¸hwÀRÖ3~¨«ê¶Ÿs…\L~ ¹}ïÑ­l†•å}ÈG‰Ÿ×kJì¶ÆÒß2lË½HéGöCï×¼ãÈñªgÌj‹/‹Æ¹÷²G/úÿtÁÛİuş"1eàÓEXb*údBS¨åBnÿ…ËèËV)<HLˆÄaâc…r3$¦9¾eàÛŠ¡šÛVz®_\ƒè¦•Kƒí»MSœ ¸4ÁÒğ×Fd€½J²¡R |S×ã²˜®¬ø·DLNÍ¢o§Ë=_úlÎœ,\”^ŸOñ`q…ÿ•œ+3²sŞ±2³ø9§JFhÿä'|¦aĞq*ÛN={ÖÏüV,?›=óWv†ãÏa/—__9İìÉ?Ãµ/wVr”†Ö1v,®æä¡sÓÍR¡'b#/Œ7Å¯N¸kKMc´”\zò,7\‡,~ŠI™2ğµ•T2üm@[æª"Ä‚³¿›’Qz28øÍ¸š¢rÇ?®&3ïæ%,ÎÑ¾¯gürÎøş55W9Z[ó‰ğ'®µãGC¥\&U\z³­ã›·Õö¹ú•l´/Û:G•T©Ùƒ¨Y©%ÇòŞ1+SÚ·•@Ç†Eìî¤æÑdP[„1S<!/ªBm,«Êúe©dŞvË €áåwR‡0—æ@sfÕÀ' ¨âà)-éApiÖ¯oFtUöÄLYìQ ¢Ù1·ŒİJ3ùH§n­Óé^™½µèTØ^GûdŠ9WÂ›«…CUkùŒ£^Ì".bÙy¦Õ¤¥=ÙGæÂ²ùíÁ3h¦¡ì[)”ÂC>ˆè_¡\®uç®Y×üg¢ãËÀ¶îYÁ6çìàW²_ß¦^ÏRV‡à!`
-´,sM{p(û4ßø©š
-Y?Æv(™L;/R« e!Ö]ÔÁâ·b…ÇI0¢¤ÇÌ•íˆ^PôtUÇÀ¨gÄñÁ‹B ªx¡}ıbFµğè¼~!°Û'AY/ÅGi„)p›W”± >\aÄ÷b>-—EÌ†Â‰¹mÄ;$äfüƒÄL‰.°Rø™/Â(±²4‘¬´ãÅÀ¦€¦ÒHL"'alrxÚØå&‚¤NÕáañd©x3©ªXQ=å¤QÅJ0ÕH¤·Ü«XÙG¹‚m$3IM#™”5=	$5ërSpÂZ+IÚšhæ;“„%R·&š³ı¶Ğ®ÉÆD|m¬94+Vœ€Ü¢­Œd®XA‚w‹“)]3šc‘–i_±Èµé(/×5Vö‘&® şƒÉ|"“ÈÍF8KörQAÙ‹h®¿\¤xW<a/ÒPØ÷Ærpw\‹²MÃ›Ä7ÑôöØÙ~}Kšİ¸”†¥Ôâ}·k„ûT²xÕ(âBˆ­»ÃY‹$dWºD/›¢=¾‚5J9ßäJC´ûğ+ßqSMß®á~Â:ğ’Ò\ê=ÃÇÙÙÚ†¯…Iµü›îÁğ-ÈpO*-ú<”r°;ÿİKÄL[SÌ°íJˆ%]ÛÚØX¿”nxkâ§Ñœx"Ú»"©ÀyŠ~†,Â®sç’Ğç±&QïÀ« }b-¡Œ£#`ùâ†¼ëc¾õß,ª1àhu†Ãâ•Ä"-ãNîzäÈ#>Á‹…¼²˜j)0y9‘i`ä˜¿.«×rû".Úß~˜{D¿1ÂA¡ü+üû×A9ü+ì•Ì+ÌbÀ¡>îkÈ£¦9ÖâÒIĞq¾o°³³Òï"Ğ÷Ìå±e	ÿÚÂó*^Bxé
-'¼t„ÙUG˜‘}¡Ã‹°2cHRN#f`¼ÄH//L=G›
-³?PR®+_
-ÿA†‡¨š‚¥Âš‡9c„/æäM÷?„RÔ”£Ğ‡™®éšawèb³İy-{Û>ÈAİÒ“bö¬šJŠ‚ùâŠÙBHTÌ¤Â·ÿ|VĞ/Gf†7¸ğ&tbİ—–0uˆ#¿½geóşoõ(à¿e-úÊ÷–‘Ü¡Åğèù!Óø³ğÀ`å âızš‚•hè„sãû‡Õ„]xı¬VªU»¼Y#Ÿ¥‡B›^¹xbø<çfc1ú¾ş9yRÎæ1-"zè¡Ö—Ò!,®Í©·éØZ³Ÿ€D9¼Šh]è-h¥–´æØÁ(YÀ•ÈY‹F‹ˆğ¤yuğ”1+¤h$Ø`’Ò¤Ğ4>ÌeN”s&èuf#–$$$²ÆÅú§Õ¿Üè“rM{#×¬ô¼lã9Or”@MÏ¯a¸ƒLûºiØGĞ#„4›Ç@—a{Ñ¾xÉ¨|t™ØB>\Éá}…¬s°?¬1A6“ÚğÔiq©M'	öé³uj÷}Ì˜ññ 4èxòi-\L’ÅÅe™;~Â*ã—ƒ‰f?VH±µ]a%WM@¡…bVx~­£Vâ›‘1°$*[cbÜpw>;”º^„¼»;ÆDëHqã¢b.Òƒ–2ÓÅR®íZü8ŠW“R'€³Ï¸8½TôÄ9‹SÍ‹q5ŒüïÊéñb¢z–lU"ÊñøÊ¬ÀQ
-×Äú‹í˜	ªèª1YËì{z$SÖgnöÌ§?AF/Ë?Ë£åí?Xq¬ ½'¬ƒbZBj„Û9‰YrB1VœL”ûƒW335q¬ÃQf
-RÚfb@Ğeô…ÔK¸«RìZ	¿°b%½—h>Y˜4†§A±µŠvÂPü
-7„Ñ«7g§?nÑÿ5GEc•ıß`ckå5Ñg 1–¸ÀMÎ=.Ğrä8Ñc—ßª“9‘!:YLJìv“õa‡ˆ¶vé¬İ&Ç†cS=…IütH HJ™š2ÔEïìI{ì/ÓæÉfáÊJ4˜ÍvÄXÙ-%¼YòöâwgOfßÄâ,æ@‡u ìÙğ¸hîÎû)>Î©6¯¿†ƒçïË®J×}?[Õ,Q‘…óiT•´Ôkµ«<òRj1ÇİKñ²Ô–_rÓYsÁå<ç	iCr¿¤¤0Î×8+û•òuâæNÊQE™°K.¤³<ç©º†9fƒiøÎâ}™°2‹m+”9¿y}t4VYâïÎçàQ1Jë¢UÆÄäê¼%]ŠNY×PÔQcvÆ¬x>ŒarU$™2œX”öÖ/—‹ü»S±ûÂ4Ï’‘4Já'kHÈµÌÉfÑ¹<è;×¼}ìbg—]–ËçÅ_ESJ=âÍ¨eŠYâW1§§¥;É¤j]°§µV½gE3¯†Õ¬^0÷’»xQfSÓÜSÖ‹æ—yÍ˜FÄrÊjÙ!è“¹Ô<¿ÚÜdè ˆëÆ\şIºÊ’U ërmŒwısò€_Ï»`¡Ä…Gé¡_ÍÕƒµŒšÃÈû.›O9ŸGEKfi
-5n,Àr¾v~9ï¿’wåŞóg_ô^C(v}çf&8 >½}'mQ©t Ìºğ€¼j—;
-v?§ƒÍå\dYŠ-Ğe1ƒø’Abò>’t[3^c±DÍ´D	/tÑ–©&AÌì½íŞ@·KT.û¤Ë’~Yz˜İédLi]ô—d“t‘k+D_<íïd¶Ä.%sQ¶“®'J„}º}öI—L.A–®'·;ªÈ§öº$<­Oó¯\ù·ıì‹'å„£Ì/Ì<ÃøßUW³.ä¬? yÇoaİhı­Ur{•|¹J67\Jß?n:Sïeh÷ò”›Ñíc$vP¬\Šh_1É^–`/G®]ÊP¤=ÙüÂ™CòOœ;ì>ˆã„—³_ºQûnÀp)Jt~“‹K~JoñPŒÊ§½¤İ²oº]‘¿nß‰Àw;ã€Ob¾néNÚWps³@ó¡Pç¡Â±iÚfÅ-“jz§·Ù©FqJktÓ‰Ğo6ì2§×.;ê…†‹káİÂ•Ñt(I½·[œ ­Ì<¨ûéØ'Kœ¨ïØ–ºAïâjw·\)ùZx-Cº|ÂuI2ô.	Ç-Ö9âZí+Fá&Ëğ±))J(0¡Ai¼ ¡¸YkÏ”± dX/æÌgZOK3¶á¦ù#”°;^¬tOó&K—Lqğ27š+û0I„2Ú‰ÂÕE¤‡hÛz]íŸ­@G¿ÿ=1/å²è˜Dß4L¢Ã^1V¯ì^æ8º%L<r|ÜÌd'íŒŞf×Z®¹0Ìr\#‹ó	a‘z….G½˜…F|v«ÉQºÚfxçV+©Åx~çüÍCúù„ül†|{…¡UE–Ñúà'X¦!¬Jü¼7åaÙ4”Õô>vFy–zM>ŠUŒ¢†İ%/Ç´ƒœ‰üFtYàãõ²~š%–†Óç;½ÆÅômjÆ0ñzVN)”LëœÀSğTÓ¶œ¯mğ$ŸÅğíú­RÏŠa5§´„CÙç»åS'+˜xœ6PÒW„ø(eF»âgZIfŒZŞÅÓM:‰I(*¬7–(ş¼Zªcèå£Ê(ND¯È’§|°<—i¨ÜÁ/04ÛNîà)| ÁÓ2š-Ú[Â°…{`L7-”åŠ¸½Fp}ÁƒÑ–ğ…ğ®Fœåçá,ye’‘š*SB¢ÂkCGcÍå(j›ŒjA³hÀ.†ó ¶T„XüiVgw#xdVc}#a'û7ìºšéQ»–FÙv'0Å³8ù"ÆL_*°­oEV”ÛËÄ¸5"Ü†ÆğöªDI(x0F~6’X6¯¡e’ ÍàIIº5ä%‰5€§&áotüw÷­OFíàò–ÿ	J]ªH¯k 6QØfkÃD&(!qÛ8JÇğ4†Y‘öät­XP~™y y3¨=rC*ß
-±/aw¬P’ò¤ëwº)ˆĞË•SŠÍ(.¥¤gFQ/$è}¡ç‘bcÚ
-ssAG†Xt¸ÎÆ{ßø¶bî.©K•Xh%¶è”ÚÓO~>/Æ%r{áaÊCeæDAm\ÌĞ$6»ócÊÀ [4oB>k¢Ùßp*jğ¼L¨ÃÆcûhò;ÃBõö„çò:a!v×çÇ¹M1‚ât«ªkt©%³Eå×±8
-5÷FÏı‡GNŸ7X6yw~PÎ°†ºfÎà­…t6éPL`CŒBıd¾#zs1ÕÅ	rãŸ¼ŒŠd"±¦²¢ˆñ’Š%&ú‹‹àÜá ÷•íh"ñø˜<[©k§È<¤@Œ¢)öîRÛÖ-:×eãs-¡kÉ]KGéJÄéZ"RÉˆÕ•­«c¼.S¬ =âÌzJhÓ•cÕu¥Ç!N—ãMòC9%%KÇq"ä¹t(§«Ä!Á
-/qñ
-/2H\•¨…—Üºb—è°òE2K¦ƒUKOøúĞ#wø‘Çà5¼,/®áåRB^.ïözÉTDzh:¢,¿ÛË¥$Ò#@ÒeúıÆe5Q0ˆ`Â(ËtU¢´¹e6hcËˆmğ†:
-oD#A|¼bL–¢Üùã¼t†ei‡ÌPP–É%êåfˆ‚Ò1K”KdŠ’Õ;g‹‚Ò9c”Kd‚’—9
-JÇìQP< £q¸„¬*]3QAY:™‘*ct¡¤UUSy,®ú+™<kc•ÜÌ`‡,WP.é
-ÊRÙ® ¤³‚@é”õ
-Êd¾‚²dö+(y»¢,X¼©e2aA¹t6,(2b½^&+”%3cAÉÛ¢² \:K”¥2eAÉ›ÒeÌršºlÖ,§99+Å‘ÜZh¡1ùÌ=BÄaF)a/;y´Éıµä‚Èì`Ë-I†t—¥e„¼d.Ë•f0ƒâg1Ë_æ¥òœ!æä:wÛåuÈyft¸|Ş3(Kå>ƒ’‡Ñ:å@ƒryĞ ,™JŞÄ–Î‰%J‡Üh¬ÁlûW0aFÅé·íÔhJó¦s7çiŞd•pg-.‘+#?Åû:Ã¿i‰»yçtkPüEoÊ‘ÎÕT‚Kï.±â§p+»Ì’ç§lcŸ'×|I=®ë©TºZë°ğø«Pù³bzç|ûÂÚÍ,KÑÌÇaÏ#“kÕ#>O¨£—¶ğáåŠì|äXÃF¾İÌ‡/ú)fIAƒ‰ıØ7 ²lwÏ+Ø}¸ô¤‘Õi92å•É„á?(†oGM=İ€]ÑÏ€]’Ğƒ	Dwµ]œ7õjJQP1¾s~.MôwÈÆ*PÈ”ÇÛ|µ‘ŸbZMèX­Z›ªÖ&VÅVør*ağ4)N×NÀ<1¨ÚB¼ZìhPûxíÕWï_»h±™q6a¶v;b•Î Í,‰å«C¬å¶‡RÕ•¦d$‚œìŠ\uX¿“9!P÷ÕP:»¹Ìa›ÌÌa1nÃÜŒ'äÒİ|àyÂ8É7&šY™¾0Š@ÿ)åÖ&Š¬ºšo¤¡zúbq0©æwÎ9ÂaSw@VF8»¥Ç'ì\ ÎÓ!{ÔÀĞkd9¶-‹1Ÿ4ŒK±ë’N^²NxÆRòy ³AsFoÊ¿P)x™Êı©TœD·²Õé¶*$İªƒU¡xq|¶/Bºà;éå À²¤‚so)h0†‚å$ûàt‡|3®æ?Ó¡“{×55©rÃM)Jœ/˜´268fP ÅdÊšXâ¶ ƒp-LÈËjVóCRöCqÓÆ(´Z—ğ-¥ƒH-¢Ö‰‹%.r`üæ%ıú'•º8n<ø2+3ö%NŒé©ˆÕñ¡‰0Ù¶6]¬‡°ÎĞ£ÛÕÅîñSÕãJøe“ö\Óa“Á9¨¦ÃşÓÇ>!¨¸êSç	óO^TûÏ#€ĞÑ@šç”ÄÄBª]rGŠ5[9¾6#‡
-ŠIÿˆ|l Që˜Ø ®‘øbâô(q9¯\®}ñ#ü"Aa‹À+%d{ªmz/›rÈ„†ŒXS‰&vÜïãh1¼!ÁáU#F'´‡ÛıÒh±·'…	}f×ğ#f%!Ï½cYI•üJ‹8 W‡Épt7ô>v×“…ëZò¯h+)cC‘YdĞq´ø02¦
-ÌEFe2tàÀ]‹ñ<Wã™ˆLÛRfãûWBŒÀ®.’ˆŸI›òRà””]yÚĞ.–z)Â~ñ©qŞ ¦7÷«óe™îx,3¹L£Ã‚öÄ%a!´İÜÇËµ›æ~63ò‘òæ¡
-¥ÿ¸[ËàSñ©Á1óÇÄÌèô7Öï®	‚ÿX7ïÿÚT!C©«€ßy5‰À¯BYÿñ‚§².ø»Ï(ò!¥ĞÌÿì—9sŸÚk:‹kë'&u~Öïÿ¥à2çe„ËÈ‹`é¸Uq0ƒ¾Š¦9x ”Hµ$<ÅnV™ØÎôÈÈEw¿„BÜaĞ$on€£q¼>%¡'ŠÎğı_É!¡í_‹2DFh]Â®Š­Xd<¼ÿCK—íŒ^Şßÿõ]Y-ÚOèµ¿z½ò«q{çÜ’0Ü¯ ß
-zåwz™‡2!¯Êü¢\~ xk#î¼¹FnP€ıh‘Š;xÅ¤áï>y¬·ùDÈ@rAÊÚ„ŒL	¨YïY¦é;$¸«Bø¼ØskZì$@!ŒU"R${¨ »cÜ†¹E5Z‰¤læ­VM;™~”»T=šAl÷Í¯6^3	ujô¬?X“¬ùâ¡}²Wº×`cãrN¡÷t.t3L}Q—„Çï4ÄŒ"MÁûÈ°@,kk%CıR^B‡Â5(Rbu½´%)[†G.rÃ„.uLPñkL„_>â@RïÅNÇk„¯7‘ÔWÎÆ8¾;âpgÖàº'u@3kqOdWä>+ö‰UF4lÙpŒêÙœM±z¡½ê®,LúÌ•`Qj­İÙWŒÇG¹Ó{Yƒ¯[5TÏg3¥úëïÓæI9/ÀF:°*Ë®k”¥²‰°Ü!‘ŞåÉpıx%Fœ‹—Ë²ŸóQ(ñÇ'&¸BdÛŸ¶VDítıÉE5…û0f»Åÿv—8[A¨YRè¼4µ%¶A¹fº˜0éUwx¥ˆáv1ü ìä~š‚<£7Y0™«~ÿøşóÏVÎ{$’í
-ÏT9… n2}ÜW*Ù¶ÄçCŸÌ!oPÔG¨ÿ‚	Î†Å˜õÕ„°ÏÖÉ­ãUr›şïËc°9ŞÜ8Cm<FßÇ€æÚy9£6"Í<Th…UøxQa§ğ¿¡BÏl®NÜÜ„MŒ?6%=mŞÿö—õœ¢ÀB¿ÊÃËÃ‡|äG7/ÀÊo÷2÷ùg„²ğ«WwxÃ<$¿~QÒ­­dˆ£®*ÎüÚå„®åñI8|õM7	í¥Îığ¸¾=¨OÃûÄ¾(Gæ¹u‚?}¼g×‹_¥N˜ÕuNp	#E£ˆ>±AN(ğÓÿ9ÛíÄIÂ¤Ê£ŠR©/NôÏøÊš§¦l÷—ä>Cƒ³£º+–9:°»,Có/æMu°¨#ö™JOû¥å0§ É0ú6||Â|”C/·$R™{Øwı6EDsŠ!¤×k,<gpÉƒÂÎÜè¬dó¦¾@>© ×Q¦&Ô’Ak¨!À>.?çz‹M]©ÿb?ª*Ê…@Ò!eh}ôş6*ZˆíP“iÙÎ™=Ä»joê	]Ó*áğB¯x3Š8†Õ¬‡c@¤ËÏäâÔw€Ü„µ³M:®D2à1…ñLd7Î
-Ë5‘8/ãšc^Ì³‡EÌvÊ€"êít„¤dŒ#á1’î9'b/œ´óÏsB¡2OsZ9É;îåÅØ»ìDŞWºy¼tÛB^2ÓIóòpñ æesÍìb?=×´õ‡[úÕˆmP5bÄ–™zÚ?J–¼à¶²˜Œ\`Â]R~/7µ×yûÚ1€4/ùœª.@©¤òšI‡Vc_åœó‰	d‘7Çp"Æ=bNlïq–çË&X ÌdòšfdH#éÊú—:#<Q×]ö+šÒ.<ä>wõ"é ¹ò#òË’LsNû%>/¼İbæ*-wP(ìmÓËÔvÇ`bÓËsèd‚”Î Å /;õh.$A‰$pØÎ( %o›·G‘1XÒëvÑÜ÷7Vóú{¸@Ü£ˆ~fŸ‰lÖ§<—Õy2×=á·‘y	¿1˜Şy“ÑÓhêqÂUV?o¦9"¡¤âmF70±˜¿İ`=´N\Ì÷”™IcHv×,–» ¢gØ’â>}:ƒ–£ëûé0T!àñ­ì«øVjpû„¬ç%X2²ˆé:®T"6Èîúñ­°Rdi¬¤ êšŒ?yÁ}I"nB›’”«æjTÒ:ÌJ‡'¾²ÔV8Û.m§@ÎËéN2µ'ËéO1ò²y]³ÅÖ£ÄwÏ
-˜X³}òæîb^OŞÿ•bÊz‡|vv€îÑñÏ/Ş$ l	ÓÆFá;¼„‘€¬N˜ÇˆôJJ­2R²,®’ñU §NkÒR¢RNŠâ®Ôe$uKĞÈ_½JóÖOÁZÒ?~Û1°üoHö@²âuB³A»\(¿^,k-ÕÆ³KšR^½gjXöòeëó÷ÿ“Ü$ß?Ü†ı˜+ªÃë§u‹:e¹Ë¸şÌI œÄş9™“­óú†În=°ôŒÑªäd3œ>Š 0è.T ¡áÊpú!wÈ+KüÍV*!‹†Š¯èğ_w
-€˜~ ’Ò±AÅÅÆQqñuÛ>QU( Øñ5"
-6Îr´,ì4>HÔé	‘íÁ’Ü4—DŸm;ÛÈvî‹b¬b½ä_2-I~Ğn?Hú‹bü‚¤ƒbIÄb`¡Òïñ,	ÑhéáøŞÉÛ}¾»®#ìÛï°lú|!ª)¸^üîw‡‹)ŸÌ×/õ‡ª<aü:.„]Iáì±”qÅ°.õ¯zú².Ú9ÿóÛrJWCf|†gÌ8G½~Ú²îºXÿx\ÌÛ»³<9¨ç÷êéauÄ>VY”ßOYˆ_]kÖÔ‡Õ¸\ıİÅ‘£Ü‘³“xÅøşağ'lğô‰ÌfQÕw‡EÍß‰©ìşd‡´,{ø*™Ó)‡eÛ²XÂeÓÔM¡­wu5ú™ø‹}
-ÃñÆeÕã‹£?”~Ì‡ÃÖŠ¾ñg|Îrœæ²Ñ/ú³ãzZê1OèX‹#õ€õ	–#U[îBß{_›KMøFşıµ·ìû²Ş·X|{X¸¯ôtŸ^–ãò¨)&ßQÈ=¬†ƒ´;¤hÏ¦CAÆæâ“?²ØôO™ç«˜{ïÌÄ|˜oøM¬Ë ‘ùx8Êÿ¾ÓèYde:yxÇ\•ÍjÅ¬ú‡ò¯s—¿3êğñÈ´[3´Eù­Á¸>ê÷äªÀ‚gAy³9|AÛ^4,[‡îlĞSdÅœ?ËóæÌê¶BÁyHûk2 ë7é«Öø÷µÒÅIQÍÉa9÷{ëtÚëtkt§OÏz«m”óãšnRïÙÓ/É1=]Tw,2yeç%ÅÑ/)èÑJÅŒeb@Xÿ©­§FúOH”²Cşôâéw¾íÕá™u÷SKl^B#ŒîtÎs2Eth|£ÍZæ>$»>_mû†6)§ ¯wÈ´x¡nvş°ˆ}rKä`½ô2PSïê· †7Dİ@U¦_½A†¹L²÷° §—rÇ5;³D§<zÖRÊX3ô¿Ÿ¾Ö'SÂQ¢şVô‚”c
-bşPà4¼q»ƒAÌ	ã6ùú^¼Ñ-qà'€†Ç½6ÄøüzØø†”òCÕ‰‚i:+ñŠ>O,àßƒWmIQõñË²™¬øBış‘âäsŠçû=~:e–¨ù!³2áµŒf½]Ô{}ğ/Z«‘Ç¸F+ß›Or›iË£EÅR·›ãq«íÆ{Æ8¥’F{÷üç¯…iRÎGïŒÆÊ_‰QéúUû„¶9~:+§«<CŒúmí’N#*
-6NåU#gŒxdÁ¡İ”úCJ™=~„àÏÕß	`Wk/¢ºâ)ÖŞ~ˆÌòÕë½ş«×XK÷t0«1ã9¾jbÁÖ×ÉºUdùç€¨² ANG*ƒ=hı¸Ó°Ÿ3ŞÁlÏ|aµÈÖ”7+Ö™>Ù“9|øL€»zW’—ÅÁW´¿w-ğú š|W´AÍê†=¤Wg=¦‚Õ¢•Ø@îÊ_Vï=h®`ünı¤Mñç54.ÎhÛ@ ê¹pğrĞÁ‘qÎúüAı´;Íˆµ­Ğ&ùÒ9/¦OoËë?)'uß´ æw›¦8RVO¢yze%/Êy˜d.Qàvm£Æ+Ò>î›š¢Ñbºé3äbµ2héô9ºX%¯ ½×jcøñ°°È]xÿÎÀª©Àé"p@àÜ 6ÁÍHğf|Ÿ_x2wG}a‰¥x\ŸĞ±@-f bĞæ5{ÁM(lº[µ÷¤)ñ‹²yÇj/ÊÎ˜	|•±qÏæÊ™Œê\ÛVö(¦£w#;ö‘n;ù©´s³¿ô& o~‚Æ‰ÅˆÅµc4™«¾CŒE—»Î‰m§?8<¤{imğ&6’ÕtÁ…Î·y¾T&¹ë_ûm(ĞmÆA$ÂæG°¥ûÒ­‰Uq‰ŠAô¡¬SI(KN€Ñ9.Ç3X\zÛ§›2© —ƒ>)”¿})‘ĞıâŒ zŸÄï’Æmˆ_jJ°w¼;—!²aŞiÄk6˜;Äª@á~3’(fUËFİG?#Ÿ“Í)İ	|¾bö>ª_V2şÿze Ó¥)­™ãÓÏİ&Äš<)æÇƒÃqMy>Õğ:éÃ¨èàn«ÿlİZ±á_µ±Ë ~ƒ^>úÚáÍ­¸;.›yæ^Àp¦Pæ–+âŞƒ‰¦W=µC@ã¬9òù¹`ÀèË&ûjïÙÜÖ'L4¨ùíqù®ƒ¶ƒb‡£÷ÿ:¥ÂàÓ¡	ı‹I³é·ÏK
-çS–}
-¯ÆŒHé‡ôÆj<=8â6uMİ2#!¬d?•¬’ıúÒ2°«è¤ï‰õ7¦Íæ…yó5§şEÆÌïÒK¨›1Ÿ7ö¥œjİ€¼™-aÌW<P3¿s_eÍúfÆ¬Åæî52ã³r<®O «4&Ì«ùòŸ‰éò‚³u¦¥'ÅÌNUsJzBö7r: òUåTd"kÓ>yÓ²O6çáÍBz"Š/.4ò øşÅ3?ªJDÇÂ" “FæÇ¥àZÆá™¿gñ[¤›UZB”¿¶¤||ÉLé—$ğNï×ÃşşGYá{O?~pïå£§ß½<xòìùƒw_üøìîó{=¿ûTN+¦ìÇBf;ºw½ÉÂÒşî|‡yh• dZm2ë#!kí÷ÄéDäšXëËş%gîUm¸ë“¢VÕ1Ğ½ãKI-~Ï73>Ófü1¡GËfÂâvJq ÆPòO'0ìoí°PŞ:2s‹]IóuĞºÁÑq:ı„2¯N5¯k	6’1dœ—århÛ§S,K—QÃk]pJªyKlá´oN'ÈÚAVÍ¦y©‹›#×Pı×ÆüŒj,™]ÅëÆ’m¨I>Y¶uvô3¤º×ñÃÑ;
-aJ6‚ÍÅdláµúX„,uî$$ªp&ˆØåÎ:Ÿêå³_Øëd¿£Sá×F†|Çâ¡èï~ÑÔôº²ÛÌŠ(lèÉV'l¹N›¯ÑÛY¶ D$_»¾~øR†ı]9­ —Ÿóµé¦Â«úg §[à×{´›Å¢-ÛÅ†{ºWL‡åø2ó‘D:ù®¨yzÇå»9Ôx#®Øaxº ¨;§ÿ0õ n¬ígÇêK5Î*ÇZÿ¦©§?—Ë6Ïk;í;äÿEñ®Ôd¿Ü!ÏËb8€éÊùî_>yÌ~K8š{¹*ÁS>º_WØ´	ôË‚äÁì¡øÙ§C]4­õ’éW|äËCU#ÂÂØŒ`-³=zBL<YØkv·oşb~)fÜh^VœëbÄXZ]ò<'²œ/Ü&û=xÖ3Ä[’/Ê”‚ñ™vãV´m‡LùjW“Ïcu‡{E>ÁZ*'EåÕeÑ¯EÊH¯‚xÕ9(*ÊE¹5øSìû¡ÈÇkÏŸbß«éÛ'Å¬ukÈçhæ¡òº2_bµ5ıw«ê7h¯”ó:£ÏĞ>lnÙéÆ|Z“Å¸D…½Àjùü•Ñ¬ôêV¤äNø”ûhîØ?U¿I¾ÿBW.¤
-Å)æ’#Îß@À¾c‰— ìf‘ì¼ªöş‚+—KÉÊ·t„
-/	~^]Upnœ¡,9äµ]d´™=ŸıAe£8˜³1<ä
-ó§÷%å)hHB*GtØ‹Äê„E¾`ƒòn6®}€µ0ßÕ'¦â¬vŠÑ“vwq¤¶Ô5)ğp`^Ocòbÿòª^ĞËæ=Ö#\kVÄ: ªk¹uöÚáêåyóŒd@_Óã[‘
-Ò²ğ“à2WLé•¿Ğ‹Â6Wïúgç& ^ğˆ<¼…ü°`M ĞƒFFåàm… l•ÌÇ–"ÌË¤±¿ÿ½Ed™-<´ÍŒÜ@ı‚5hè‰ûàS¶í-9”ØÃí{SZ…ÁZq‘¿(Ò¨_úöIt!änÆJìì9‹±»~°·ô‚„Ì°úØÄVÅ$œ2~Ğë›l¥!ß–€“Kr	Á#™ÆiqÄıPõ5`Î9Z(aáê;@JÏŸ>~ğbğíƒ/Ÿ>ÿñŞÓ'ß{t÷±şËOwœ¬< ±ë[s õ¡š nØ»Ü“£XñÑ»GÓÃÚæx/™·ÃŸ§Ÿƒ:ÕH4Şùœ—5FÜ°Ô.ÖÉıü.½«1Yÿw5HM)úßR’Cïr+ŸÿyúçéÓñû¿®’Ï¡O>WÖßç7ş<ıÒ¬)TÕPm@~â°>;«p½<£KX¼«›Ush÷Ìƒ'ßØÿÔ»æ†ù[F³·iì8_rß4®¡=$7zÔûÇŒµƒğ¾ó&âxêjö2‚´ì-B–½·úoÏÍ!‹Y)	tq£g4*ñšàã-F#`L†õX˜5d0%–`y®yl!Jƒ§Ûk~ãW~ãW~ãWTù_ù_ù_ù_ùµò+Z@„ó+JÜiZGÑâ¥mş,ímù ‚úw®¥xXÑ*`-øÀv, ßklE{mØŠ€ÈàŸ?zù@¿LoÄw¾Ñ€Tû·Ü	OltZéÏÇ}l¡ıŠ6«p¬¸Nªé¨>0fÒïİ/Ûò'
-W§Ã1HvLö½ß[ÑËc
-¸$ 0ì®Æ¾zûß”“ú]5*æî£–Û)¶|Çæ(3ˆìÆƒ\Ò?˜¼Îì2²ıÈN¨5	m…ráøa$c›¦óİiœİúf1~ëî˜³O¾»ÃØö	3’_:û«f÷F™‚İ bÏ)7>0BÎ”Â5=ãğˆ?§üÍgçÁ‘\¨ôŸ\ŞÎTí¾â†¹!e† ‰)‡ sÛ§K±¡wİ`ªP6…¸$Öşğ	i@yóÙ¹ù±±l=ßÿìA mÓë °£7Ş$¡Ú°Ôí «Sq~[ĞSS°ŸP,ô.G”»&€>8enwˆoÆ^²W÷e43Å—vFÊÁ«Y¤zB‚Æ½ïı‰?Õ&AòE¯Ù7†ÂR~ôR))á©[”o{òµÕXÏşØPDÚxÀUğ-S<ªçL©øş_jñNèåëo„^Şqm¢İì=¡Gd³æf)Öû†Ï1ò±ÛQê@vwó»]aSçFYŸõWÓ·„)(ù·R_‰}ÆUvú;öÛùP)ßˆÔßÕ¢†­·k)ßh­ôëí¤Ì­~ª«i`\ªçä™æĞú²~p:,Ç}»«DöGå$ÎÏ†MäiPf<Øƒ6\x¡*Ëe˜Wš‘àw»?xµñZãïğP£uşœuü°©'|üÌG\‘ø‰œŒå4b#YeòıC®Âı¦>aÈdD4oË³V»B{Q+¤ûÉÉ?”ÌxûéÁO_±ZĞNèÆFß¾†Ïğ«ú!D<ànÈ¢q4ktÿ-Ñ[D£IÛ¶ŸÚò‡…ÕU}Ò«!íô•üıšñ¡T®Öö7!…øVÕ6ˆ…‘n[„ú`9àªŸ…¬RO’ş»bŒğjzè7èj\-Ò×Şv…§­$|¤q/!Ùºø»)ë0İŸa2©ZZ
-Vz(Ç¡1µ#ÏÈ~,­jlÊäË£zæV´º2Z™Æ"º’ó;kµÑIªÍ)âÓo£ø‚î_œop‡h$ÀÉ¯âıƒÌ?5l"„mÒzöRq„áHhÜà¥±¼`¸7Ìxƒˆ¼şQ}ò?Âè‹ƒlÚÂ9‘ôú‘À#±LIÓ0^b3ë; Wî²bÆoÈĞ-Zl"VûØ`†b}eØ¤™]ÉÁJ2ı¼8¹<ÉÆü=$?øÂà‚ß(*ÂÍèov0–ä€†°1w°uu6-õ”A;WôZ°Úóã{qÁƒnŠÁ!_9~³L€ß¤¬l*Ï­H(`ÛNÑ;íD-JO 6{E¹iÚÜ a©iÄ²Ä`TA©hÚº-¬ËRRÿä¯‘=×»n?Õ•9ƒwèÑ°¹D{kJà¬¿şçûëG«°xÏÏ»®~2Fd›q.58aê‰n2»ƒ±[«0ıŒl³6Í™™ºÅ±Ö¥¨ú^tØZiLŠN‚ß¡me]yq?Ä^àA¢O#M™¡9k¢¯Ğƒe4š½	kN·ÎM–ÍÎ²uµğoV|EÉ¡ëğ…²äîˆÑİà5ØZY–¯êÚg\öOm)œ³Zú~¾JLcâì2Œp³ûã}Ñ¡4ÔÍ‡	ßşÖyÁÄC9‘¿í}ŒcÃ™eeïŒÏ'ÅÎ0³,”«'ûsÅ  ã”³±å›ğ¦}[ÍfîÁfMi¼’wapÆm›Ò†İ·Ù`ãûÁT×É±¥í‰•[Ç”İÀúZd?ÙFË‘‹¶o¼s¯Z7X?îÿR%¬7÷2/‡CÛGC)ÀEUPDn‚óåïü¿K“7ŸËé/ÀtÄçb“y8Š7êÁ©(‚Ïol^f$Kª,D×Mà×vY.v¡0¯·U˜W4›ĞÉÌ±cˆÍÏ$tÓ
-+ëÖ›­İ…Õ4Ópàq2·¼œ¦»ß,ªñˆ¢Ä-ÒRŠpç|ëÖ…iÔ‹KéÇğİ=Şò"oYq=˜½_!yU¥H’(‘¤İşúñ–ÓãÌÏãª"ËHªn/B1:ëôÓT ) lñîı¿N«ÚítY÷ç’y¢Òõ¬ÌF³µM3nê¤ñbã\L…V#©ÈnšÈ>Õs—YqZ‘¤K:’hÑ^½¯dJ(ÑvÛ‰B«&ùu”mK6‘;Ì›ö¼šéFğ‘2X¹GÚÚ]zQ]gõbş-$áÇhóË7`/*v™c!¦>ø†±^?…{Ìâx%6BuÚ*";—H	µÑ°>3í<æÍÂ¥óN j;7rùtíöµÄ]FËiTgÒYàgãE+)Î†¿ş,X=3,åÇ¯G÷È"¯#ƒØYÈÑØÜ‘¹8K´é/‘ŸM<š¦~÷û1E€Íø‘àl° şh x§4fî©+†Ãr6¿ÓœÛÓUÿ¸Ÿèhî¦0ŒizÇÕhT:)vöÁ‹¬=8¦>ähº¿Ëm¬‹=±³À¾_ŸLsö•ÏÛW°-Ôc'W€o/‹òâ¤‚Û_cdpCyÇ‹?o²ªŞş„Ò)ûdJ…dì‹pŠ¾¨Şì€"'†¦\¶qâî‡œÅ06yPá!5Å*\reÄº½±§U;ê{6
-Ê9²È¶6Ëé‘®/Òe,ƒ¹×ÿï¿ÿ—ÿÌéÑÅÙ`cã=P¸š½a‘0¯wk¢„!ºmlp÷®ı×ÿóÿíŸA&ÅÍ>ÜÆM?Öí3†ø1o"GÃÿşÏÿKùGÜæˆDeÍÜ’>X´+>¢>w£Æ€¨ÃKä%2â®Y,š™0h„‰±›ÆW‘ —¥uGcOôVz	ZÏen íÊĞ»;šTS0ó^Æ'FÓC  q;8ïJˆ	@.9×é¬Ûcõn9à«é¨:ª5Èëß~­«{çªäğ <ºdRnG8ğ–<5'™Ã¯¨^¥Òg¶b`Å†1$	­¸Ú8hõ4™‹–LLñÖKSá4•.óÎ×/Ìm=^ĞÑAÖv
-”óz¶¶¹¾Eø–²‘œ±öØÅD†ìè5 ZwÛ43CõX@±†ĞfêkH%]-ê³Vn"5”Ÿç^¼¤PVğ}79^äz!)é¾‘Y#9{3q(Ÿ’uÏ.ÚPüÀi×?dĞGˆN6®¦åÚ¿8ó½â¸éÎÙ7Éd´£n£É‚±TiÑ$i‚t B×[‘ŒÉ¡´–\×ç O”¶Ë­Ô}’€#¡ŸE	…£F
-^©·n.+’\˜ áÂ?’ì©fI¶Å|EÁ=ïow¿KV2,÷ôßÙÕ-CÂ=úKqù#Pö„{êÏìÊ¶eßû)Ğ…¡Ä„ÁM"ÖGpı•œ
-$dŞá@2v|Êg¤È?#,Xàü7»
-¸ÇşÉ®$ûíñ?}ğ•á@•¾ÿJ ØŠñšºVœ_+ĞÛi×¸â"˜õSöÁÒz..Ôê^ò.ğD„¡Ñøé!?¸ÕöYWÃ‡8ñ‚3y§Ö'	¶uš9÷2ÔpÈmó ·UÛ† Í'şë„Ü‡÷¸UQ¡ó`UåßúÕ©›{¨vsaÙ¯–åá>ÀÆ¬KVT(”s\~b‹IbÒçºeßCo‘ñ‘ñóK~- ¿ÜM¯HC»Z‰RTçŞãfQ®WC*rPÓPèÉA "¶IW|ÇğÌ¤UßN	
-ÏüîéôpfYk+¬q!1]ØÊ¹
-Íîƒ>Ò+†z‘ìï×0\Õ¯›$œ–Y˜PFùªGÖ"ä$şR¥#·-%oBö÷æ‡F+®>‚uXNÊ¦Øq1`“ˆÅ
-dº×b
-Mú! [ñE B…ªC÷ãh¼ó@êóë\Z• §ÃÂšâ›¿´A-ÒG·¶2¿T˜•’­_ de×ùª¢d*±¬–¼ïÃ/­‘íâÒ‹ûMKŠ;»7Gãq³3­SJsº\ëÛ`	m³2è‡ÿ@û—CÔ_H°×ËxÚêõ !ˆ$/õ¬'˜ŠÃ®ñQ…Ø5
-ş*Ë5`ÓĞnıËëYvmº×}Ù™T÷zÖëËÄº³\ÏÂ‹<‚×ğ:ŸáKÏEã×³öb`) çC¸F|ï=0€å%Ä3c™¬ë)yVLË±a~É¾	G3Ãm…|(°Spz™8]ZcÃE;Ùa7õI”7`èø&)¦Õ€ş°•¦>ÉÁïÄNš¸Ú¾0"¦íH>^Oö"ÁÖèVŠoz¤çïµ°V !%Vëø"6P~J		]Ğ“µb1¯Õr–Sß‹¼: „¢xñM£ğpiÔ›ò!ÊÛlÅ˜„$yôö†ÃxŸ½;’xãÂNğı²X0U
-rN1_™+ZY7az)oK©®jÕØµL†1_hÅ/ÛÖ$,£ç­ì.½ºµÇR–µ‰É²ØgÂÇ?4euâ[’ƒ=W.\Ìùt+DlC2¯Æ¥ƒ;Ó®qFse”(¶¢[âpÆæ‡ÿ]OkïH?©!>ëtT“s$_áÌ%&ºC8¢ˆÇGÂøCÂ/	
-wš¦PøPÌ"šh¤C8És^2ÚjÊ»ã±D_ñÓj|PÒósÖïÓ6üHB¼ TAEr²ÿÈ‚ü´íÑøQ–eÑ «hâ„beó!7œÙšGG;ê¼}¹áŞmšâl Y‹ûÒÉşd. µX|<{ä¯»×{vU=Y§RIìëV™»÷¾‚(‰3*8.ï[ëS’Äcğ'Àß$ÄÌ~G(â€%mjÜòÂÀ^ÒÿE9+o|]ê`šÁÊ¢¾¹tqî4~Çß²µIüÊï*’Ü­²Œò2°ƒS2¶ÈS‰ëÊf.bª•s%ódÿl~M')¯»<è9ašG>ŒÕHzîòbÊ—n3‹X}!¼‰I™ì«€ËşîÅpÇ@ßh3¢l q4@Œ	|à¹~ áÕêºõ-ÔC˜m¯$ <qàşHY»ÒD{x\ßÔ§,¼ÈÄ
-cm³$º¸GA™{ƒ÷67ú¾E~¦ƒ\`	nµ­§çrháåa_”£;çzğ!C1,‚|€,<MŠ^Ê‚¢h”¼;DT&fä9¼ äH–(OâUb”`ú‰UfŒõ:>£à;„àÊbz6pÜá^Ì:ş„‚ò1ıŸãÎè½nàtYÎı@ÎhÄh)„gí	FP)}d×àÌŞ$kMutÌ\5<s &˜
- ÁÕ›ÎXZ.>bO(x¢ynî…|A‰ÆM‘1ğLsò[x ]°ˆÚFíHó¡ ~Ù_è¡ğ7SCáxß‚Wd)O¶‚d
-J „°3”¡6"]Ño~	C¾f¯Ítü{¢ÑŞñÍ°ÌÕÎÃ‰şšËß¶¹ÊRÔM.9_Fº«2¤’Ëw|32úØõx“2Š«Ş®…É,k#(3Ò%%=Ò%ã.m?æÎYzµ!@ÜÁúP,[)×íÌ• nFS>]b»@÷b+ìtè|”ß\çÎšfä]¢û"3éà-O^¸}=+lKÿ.¿ÄÜ§é“Ëî#'M1c×A©Rìå›÷­€Ä,2…l‚OD¼!ÏĞ7èkA·	’\‚QLÃ™:8£@!°¤ğ]ş6H§|'u‘AÒÇ†%=ÕMÆâŒ±Xn•”ÃYŞhäÉÑË‹Ô‰%†ÒŒå»hÈ{¿ÜğÚYÉ›¦d¹í2H©yDQ’û¹Pì¹ÇHuHµk6¯Ó·D¸xÖ*¢÷h"ÚOìğÆÂÜdL †íSkÙ¡s-yÊY¡L’“Ä
-~Õ	Æ´R‰³F´Œmpp”¸¾Ç;Aõî1?Aô6.ÌEÑ¨†”¾Ûš ŠR9–˜™Ñ2óë¸ ısSŠx¿8cÈ•‹&#6zK Ò%@-N d€’‰„º4ˆ9¶øŠtØGQ‘ÏDjôõÕ€<~ÕÑ
-yu½sşC/mÈëC$®Š]şı¿ıÿûoÿ|‰½ò×l\à~°bÖÓ25€%Ò§(3ì<n\a;ËL3l²£KÆuÈW2=²Œ$ÅÑ‹p¸‰×¡ë½¿ÉÒó&s§ÑAiì`—)i¤ŒKQŒ%ã#-}ÓTå!“xéën¼‘K²ª? lOX#‹8Ëïy„…/5ÌŞJì2æ˜h#fÙ b–x“W¹ï´­g,›ôUìº$¦ç‡L½Èî›ÉW.ÒÛ•Ü0ÕÏL~•çÕ™\A!¯ğˆc‰Çşš êjáJBVò3¢a/ãÛ t’š­šŸQRŸ’6õÖèsøB(Ah7v4!JbıeœŒ¬³qí§ƒ'/‘ÙÜù$gCÎQv÷ê`y÷{–íòøQàF'Õk#¦æyîç½:®ÁP~±‘vduVíVdá¤Î1›Ø»G§ÖP¶o¼ƒÌ9ƒ°¤ù€ë‡¥'E5¾*P²j7‹éÖíqøbé¤r!ëLzö¬ŠÂ•M[ä¹ºìÌÏäÆçË”Re’ÊË“É®¾Ş‹ÄĞdic•9ÿÜÈSıÛV†»ôVËdàÆ*ÿR[!CRVFdüx¨Ç3"Wœö(3øëû&ôg¬Ù<9{nÄ5âŞ¶#&ónA²‰^rãótŒdRœ®¯mİ" €=×'ô†Î|x².@8ag¦U0ğŒ3Ò¤$Ÿ¦fZ-sñqÙùƒ#gx{cı¶yØÌÂ‹ÿ  ÿÿì}ÙnI’à{…W¢¶‘¬"3yH*U)ERjÎP"‡¤ª{ ¤`f)3#+"’›ËÏX,°ØÅ¢=@?5æe^ù'ûû	kæW¸GøÉCR•UbF„ßnnfnn|@{Ã{,Ô½RÚ ßätF?  İGò­D–°q°‚j
-;?ÕöTkñœHfÃ?.ì&eZ&€ ;Q,½]5È)‰O0)‚2zñ›[~ršÅÇkZ…î•a®ÖZo†Ñø½³x¸Ö§é$ÇèëšŠ³Ì®ÆÈR<¥QD¸ÓªzÒªÜ]#ñˆ›ƒFÑƒyı†sök´gÃô(öY)ùéîÂe
-¡ÑÑìÌ˜Áy£ğEküU ˜Ïë•¼lÑŒtè’Ñg®­0†q4¤ÑUÂ]ªÛ2·Š“GÁ,L¹¬¢X–Ÿ!À†e¶ãìšØZÚà¨ïÜÒqt³q¾lài›Çá{x<ˆ2{Ô$-;„g0ƒY§JÜ°áVs³®¿åCMó²²vuóWÒóúë«‡=ÖğR³\2´,Wùü‘òuãÑ":Æ€bJÁñ±d0d- vÓynµ8£qÂŠL”1Ö”Tâyµ´4ãù£$©İk½ÔÕ1ï1›©`N(4„g¥fWmZ§eµãÕnq:¬Ö#æ€to¹Í*PCİC5°"QÓ:dÌêfÅvÒ>†"ø./Š‡7~N7Zü’	s%ğ>3 s×Í«ÅQ:8W…Õğ[8'üGU'Í,ÿndßˆé¦lËºf±sÄä°ud3”Y·×ä‘ö.ØV§æ =âÔ­¼†Š˜”™nR	‰¸äF-HV‹KP™Ji›‰!7.´E”ñÉ‚Üf‡,…²ÔÈ‘¥&†ˆ,53Gdi&£DQÔfšTœ££O[’%#Ïä³ 	´ydi6ËG–f²d)|VÜ¶,ù€Îc!s'Ö‘,yŒ2|ò&—t¨©(Øj&ÔiL$‹“s=5Óësæ	Vw3©&Ş.µÌÊ{E¿˜1Pİ,lD!c3XÙpP¹‘Š8¦V2¦nÜ)`Á	!)PÒ¸ÄÙö‡VÃØ	õSTQ%3£aif3X‘73Z	ªózV±zÏ‚m?kÕŒdïë6²ÊˆƒldEò*&…îœÛY‘®½…¼j¼…ñÈÊ¿Ö8µæ
-œ•@Ã6oÃ­;›…Ûâq¶n´›7mïæè\C›7Ñ½²{sÍZÛ7Ñ«›°ÃtS6p˜f²ƒº[8L¤ÄºÌn‡)˜­	·£Õú™Å=·ôÜÊŞ„Ùº…ÏÇäÛ½Ño‰¹¹i¸`ôÙÄÓbfr ¶sy=ÖuŞnTÓú¦¬ğh«úÖ¿V%Ìğ&\2¾„EØB~«Mƒzù,Lê–E5´h! ¦š6ö€CˆùJƒInˆêus›˜ì;0ç)•–ƒhÅíÍ^EEûšÓçP¬hUa¿R³ûÆ›we>Üf0s¨º¬¬µ'ÀX-‚-k6÷®aó Ù‹45u±¬©]SÛwhËiYğwÈiÇs·ßDWÎ |;ÂéÃ¿oÌÁ\Ye–Cu­+Fo¿UõëçIÍ¬±üèh7]ñúíoSPü÷Û|[xV)ÀõTçS×ÕbI›&î±Ş­6<q+ƒ±»U_ß™‚oKÕÉqñ¢ºªJP€®X€Ã°;X7ÿ}Ûl.áfq
-×ìÒkRR½›w°äš{¸/f½›»‰³Mú»Š˜ñ°`JŸ|³£z³&³¯yÃ<C¨¸SÓ|ëRÕ7ıµ)NEùM|Pâïv¿#Ï£IDĞHÄf%?'ñÅQt5Hï
-Tcôb%+›JÃ"ZÄš¦.¤¯cá3ı£¾úiïéõ½¸’ß¬Éà:Ğ¬¼¡Wó¦cvù9¥€=³N–Ö.ªoÔÜÊ9qM=4–y,ó,%89iSE¥(Ÿ#ûñ$Í
-ßŒKy^w‹Sİ+=õ-æäÙ4Äd#Ê¹':IH¼»*Ÿjqçğ™dŒ÷dòT78¬‡L^.İ4U|ÿ ë;¼¬j¾·–¯:ùôC7AFÂs*ÜíÄ££P1:ÿÙá€4®æ[íŞ3´n©X™¼7¶»‡˜&WÏe`«2HhLöˆaúh>èŞ/ÓØ¤D×g˜Ü©Ñy8ÊØ`HÂøHJãşiÄîa”u7³¹¼hÖá³¼_¾ µ¸€n ¢t7o$Yß	 –áëœÊĞÂézM6g€Tev‚ê.Pµ÷qŒşÈ®ş’%ƒÔ^¤ ¹´b‰ê-è,Ñò®œ´j	šòJö3LÚ?Xr¤‰p¹5Š³“«ÃR^2åä4„Ë¥ûÀL§d%yÇ"»Ÿ]ı­Hú‡Î¤ Á»MP‡—ƒ¼&tÖ^T¸Š$/HzL˜«¾$ÎÁ+ÎúÜÆÍ˜ˆxX-c7ÛğÆ˜&ºŠv}é®èº‡x™í£òôÕß³„.Ş:w{(a¬0µu«û™	W‰ƒmèÒaZ ‘ÖÚf°œ÷ÌŞhàÖ,= ¡åDl”˜…_ój»Ø.<¹CÓÊ ÿæ®#ÙpôÅl=>à“Vİ¢AÂ_‡á%îzeE ¨ ï†e|O§£HÆ¨óLÖÓª§‹ğo=¸h9˜ÄêÕ>û·ÈÍ˜n‡ñù¬Ì·ˆÅ€jÒ¸Êf,d*«(Iÿ)i?İüy®iEÜE;o\Ïôpšd<UãÂ@ÉfÜO38V¦V3'[qy,êf/Ö¬‚wn‡ÅXÁçSá²íB›Õ—Ed5Ú"7f¶Å1—ƒŞ*0Ãt=C®²†AtW
-K™ŸìÎÎXa&¾ÙÄ«ê5Ò†é‰FÏkÑø<(˜Ø7¼Äœ0,k-´\ÒëaŒı-âİ£w=‚­º2c¼şN›d<È}6B¼nÁÄª5ïÀÉâõ‹Ù›š1Ä—°‡z½hóÊ;¸¨À×¶çæBg˜ç)µÆŒ±Z¹´[“báÉ~ËÑËKØx1¹Œ1bRv|˜µà5\íúê¡-kåª÷ö7TIÉoj¤ÏÑĞÚ¦>U#Õ\9Ä;¦{ÿØ7»	÷2ÆàuK^É€T- NV¿íªË{t¶4Q|'OŒ]ôÍc8%ÕS#§ïŞÚ¨SxÉåŠ³H	RåII¸·º™=¯Ó¹ĞŒsêĞÍ4B0Í ;D[
-wĞ\óPQ
-ÈKÊ[» Ü6µ£R@PM€~›[3hLË2È0·P´áÕ†¢UytuØa3X_ÓA<"rèäLVFäíÌ§És[›­™+E–ügŞ´&'¡Ú^ÎQ	Ç€~i}bâşÃö¼ÍE ê°æĞlÅ©x´y\	4[CÔÉ_Ø0C÷½ß×«íÎ°C´°ğù"€ªædp<òDIgúY?ëÅ§@Ra–ñ?4dj/ğÄ}&ÁÀDFÃ [}‚w*íÜg¦W|$£‘©X8
-ml.æ4ªehr©©Å·kj5pà	CÁÁ¶cÍ¬Ç®o?Ö„d7Vdtã5a;?~n¢-M«%ƒêÓ
-\‡XÓécbj¢“‰I×ËZx¦»ùr2 "/”árÎyÍ¬=
-:lVÑ‡Ç^Ê³ÄË¥šïfÅT^Óå$A!eº»ÇhœŒ~ “—p?Î-&Õ§~e–nëü¿ÿış—¬Ô-Ä¦Ls~1p'Ü>Ø™
-èêÇuh“ú4wjrbnÒşïÿüo¢Êß$œéÎnÖŒ1|5p“îl¾­ïàèı,fèF€nûdœf_$¼ù‘›İ¶…—mlß‚Ékã‚i;öÊâµ½¡)KÆp† È6ÒÑd¾­‚øİ†æ3´L ˜İ€˜ŞnÛÉºÎ&«•‡ÅÎÃ¬–£)ÛéßµGİ.áEŠÚ]»h‡0-š8íR535I˜déq2Œw²t³LëƒQ2&Ï£VÌh›Z“´E¥ÿ¨«°F5ÔQ¥pRÇÉÉÚ…ü©›r¦Ğ ZpĞú·õAÒĞ2µe@cè!Ô7>f$¥¥Ì^”õã$‹*KíÛôÊæ6˜Š¬®3,¿-Ä@ËË5¼HÊZ«2„Úù&Á¼d}YX$FÈëîÏUÔd2ê¿Çæ#ø;ÈÒ	^¬duµ’ÕQŠˆ¢-W`3Ã¬EÃµ‹©GçIWñğ«óãı:‚ã´M+³$Ë,ÕÄ“¢Q>ÍS®a
-¿¸ £V5‹·óêÇÅ³Ó×DwN©5âW±¾2ªKóZWDe¼Dİa¾3¤õE¬;zøãx¿i¡{>Ü»â[À¤jĞNuw1¯ïÊ.;†ylÄ¬vù¢‰Ö[6*eıIh·›©’
-™CäXu'yT'
-l&	è*Š›İKk-~şr˜gó`z4Â-Ä8êƒèÌx#Y^a`v?p•-ÊÔº¬ê}TÈ¥mqjÄ%¢DX%ß7°ô}yb%¯vióÖÎ¹TiQOÁÎ5âãh:,~†S :}›>ö¨Ídñ/Ó$‹Ö†hQÄv®è{X4ó—uÂËFÂé´ ÎW]ÇgçŠ(ğ	ÀÕynPEhVp«M€¦Ç§0à8[k-.vÙÿ]øqÁåœõK„{²:=¾§…³òÒ‘˜Å.Vmÿ®aÖ£©ì†Zfgí[MUxVø­»ªtx§¼&TJöïFÀÓ>õ«é9drF‡Üj=¢–èğ&ît:«]ö5¸¸"—~Tşn\¦Åı¤ŞtóIñå#ù³q%ºĞî‘&¡òU¶Úe úeé=ÚfvÊ:};RsT=3EÑüƒÿJw$·jµÔû#ü·qQædııÓ¸ğ“,ÿ9n=bUû£Œõt‹,VéxfBà_Xc·¶>öÈÖ`Ê·ı<ù9Êâwæİ,×—vÔ"‰M€Ä1‘Gf°Sq}(UœµÎ
-¦Aş^¿oN¶Ğgé-‚õ‰j&<ódrCŒÇëêWP…Cî9˜ìÁûÉ$’¶$p‹"Ïºş¢¼”g±÷5î°XÃÊ¹5¢9XÖ>ºŒñ¾"/õÛmCì ÕŞ@ëşõI¡ª/†¿D½)^ïó•mQŸÆWÿv›á7yf*-ü.ÿª`êÓ¬÷ê7ú›9¦u©¹[ë¯}}ÑÕô¸Í›ÚÀÌ’6Cò/q¡½düŒSô›;ëµJHÁŠ¼Ç&f*Q>PJuZ“¼×í¤içdØAÉn§Óùu‰©>!À g}cêGàç«¿¡mímR\}ÚŞuÀ‡VĞ~r,ó«76³Tv+àÄÍ²3BU¸IıF:Š3êW·Knşl›ªª8ÙÏİwÅ®+¤ŸnÙÕm‡Ó›ÚÑLñİ­TP=x5¢›Ã…¥E4»í«)¹ÊaA´ÜX9«ì2Kqµóûfê½0œqÌc·ğßH]“¼xšfliP”ùğºCaÿi2¸pÂÜêØ	qÛ¥ÇvöÂg;e:ÊŞP ÓNggÉ æÑ›·%w [ó}®S¤/ÑàF”Çma¤Ë€Å¿LvÇ î[Á:2ˆòt8…€>áØ^¤“…¥î2Y Öt£œÓÁñÈkA¤:tû]ÔÜñ©î¶×ìĞÉê»“TØ t_ñ5î-=f¦Èæ°'âQäò/tVbî8/JwE®Bkv,dp×«ŒüÎÒ²uŠ^–6ÂaHsús1'¿LcQ—â,Õé%ÄÙ­â³†×¥íÉİ¥rË Å)*züŞ@L“Í¥ŒW;‹“ÜæÊeíò³aç€Æ=L}å©jû”Ö€¶M`×*zn®Yƒ—C¨ÉëûcÖlÇ®èDĞdè¦rr‡¾rs¿˜Ø]Xÿ4î¿?J?º2ÍÖ|¦`‚‘1A¨võ¹ñ~#5&ôœ(™">"Ÿ¯H6(É_‰Ş·õÁøƒ1…8‹´µõêµ¿~÷<{PNôˆa&.îğ†§ğã†Éi•à³A ‡)z‘j›Ñá¥›!p7ä9TÖQ0wúDŸ¼PÈÜ©&ù>²Vß0@†Sa´Î ?ØtD âŞ¥Bş‘P¬§¡/cPŞ*Âã§jö&?ºT¯1¹'bj‚éD¬(WÔoª`­`ãZ6c˜€ÙV@ALAÂ¸ã â˜ø‘eJ¾aHk	ó_ãæÍËÔ#¯:Nµ£ó¢±×!¦À&Ä‰3`G`E|G(Sh,X±YÃ<5y°šÃ×f‰ËêµrÑë]sì’.^Ïf¦Ø
-:Gµ¤¸¸ô°u>k»œÚ€™V;î5"«XDÈMé4ÉN ®¨iÉùé‘:Ğ#u¢Ón–9<¿hÆåPK=ƒMãA4<Ã˜ˆ-"æÚ6r?öŠ¹£É¨ÑiØ§¿*dÕ/•¬V»FË_™ ùòw¿;©Ğ…lDC”äìÇ£)†ªëG)šP·ßÇë«<‚óf’ÎS$Â~¿L;Í©ëŒåÂÔ<j·˜?l^j4ÉdÈŠ=çör² t2ã˜f}Ò¶JX®3ŞÈ'ß<~:L£¢Í{ÚÉb*Un·æ[ó¤ÕiÍÍ¡æùâOj¢Kz¢×ö*hİ.Ah†ƒjòã)%O0¨ÃwäùÕòšáÄ·ÏÄ¨œ‘½ş®l;u9¯Ì²èÂkuV˜Ê3XÓsô3†>æÇSt˜¬Ìoİ©o‹açÍğ”–^Ëç%UÍ‹s´tnõy½Òñšxßìïğ×—sÖl›.5sr®±Y5§Ñ¥ù3‹á!?JLctœ­1Lçšè`õt¹–}%ÔLyãê/äY<öº)Åj÷tYi¬.’ño´ŠaÃÁ”F$eŸáOt%Sæ4¥OwÜdj³¤À(9JãRR£cø ¸G¥õ¹ˆt$NÏ]‹a’{,¤:9y(WDwì>Ë}lÕ5¼MpQÍ*„27mûÖğ±‘1hpÏQ“-ébĞ{¡bPO¤%Bö¿5P3ëce÷5Ç†MdZ\Æ0<eâ_ŒW/,{Èu‹n^:o>Õ˜oc–åmÌJcSÌ†72:_¡.K­·!ëBøİÉ>0‘-µ›æ`% q0T®&(ÄÒF5£ô¾XËe¿=ş|à§k”ÚrÿĞÎıû£îJ\%1HÜH«ìv‚ŒÂwš]‰E¤ ²-~–1$JgY4º­¼ öxP½^1ãJ#cry™ÀÜ—\º»1táBgÜÚ’»­®9˜eùSÓ}Xº6†…6]­<½ú»‘G½úïŞİ>	>ã£—oqFs^ªl/´®ŠGªE­ÎšhR	ë`,ì¸âD›z 0h^0™W%4t…:ÍÃ7â]ĞøC@biFÃ]R0¤yGèc¨¬H”Ëx’ÁŸ³ä·ÕÿÉ§åã0Ñ‘TÃÀ} ÔœŒ#õ©Îdj?+gDê‚‹ñÜÀ}tá‘ gY?PÍ‡şà³è;ŒÈ?pÀô°|ø0ôv%ş”qQh¾t´™Dø&#îój`³')Œ8Š<šLÇy°J™O±?ò/‡ñh‚ø~º±nÿ*BËßC¼Ü`nduOô7ÀÒáÕú$Á§Q\D| øóà¹øÅ®üğé—“ä„†¤§Åå{]h§»W¯éØÆÑğ<Oòƒşi<Šù£‹uí{¿ãÂğy°ÓôÃöø]Ü/¨§£ùß]öˆ²”=‚é{ìüW8T‡?‰åÕ>¾¢²FºÚ=ªö²H†ì%_ùiz„ìçIñù´!zZPs+Î²4kQª~–&ƒŸœ@mğ‡ÕDá¥G1ÕÖ¸ÈÎÙ[ yM”Wzdı8Œò÷ì‹„«Ùà?yİÆ rúw#š(ò`ßÔõğhOéß$B{ì—ş¹
-œ=BÁn]¾aÙ,ğÚbÕ4¸*¦G~rÂ1–‚
-;x›ıÓUºÙ»ƒ˜Âj¼N7ñª¹zÜí´ÚnèUİÓ‰	äçÿü©ÁÈBbÛÈqÒòŞĞß¥LsŠ
-„Øu%ø¸‘âÇÕo¿d–×/³aí-›x}”¦ zcöşRÌƒ¾ÉÌ/¯^]u„ê(í#õÖ1bû¨í#£ÇÄÈ€„‰½	]˜„Ó6&¦?„~¸î4à–¶uH·ûŞîÁaë'‚.)Ó€ˆä‹Ñı(e”äñ*¼¥­qôÙ#ÏÙ:“²—ÏËw§²÷ô7ûT"Øùgö[ìÏ>/As3õ˜½*˜¶Gt<*P\÷ÂÌäülôW¸ªgx¤‘Ş£Ÿ¬øjKb‚Íëè¼¤Føä‹ş*¹Ô¤»„ÍNt¤InéÒ·N“¼H³¤ŸÒµ¦h›şTMÿ'q¾‡¬\Rfxlpz&Š<j+•¨Âcé)TéŒ±Pï!ÀÇ\G¢È]>
-¼._pºQ>3t.Ÿ)}“O¯—Õ§?-‹,NP£P:ƒ€w–ås	–J¯†'Qù8LOÊâÈyÑ›|uT}@Æ}æ2b}<*‚l|Èäk™Ù¶ÑÙa³nğ³ú,ÆuzX-¼á‡×r–µeBÎp?ÌŸ9[*õ¶\é0é'”`>Å±¿zıH¨nğÚ†)åª×k•î>¨us·JUµ>¥W¹ìŞBya åC$ìe¡i°Øôa&êØrú ¨}šG¸¬“Ñw»ä`z”÷³ä¥)a'{$5/ÆîbD{ÉG3Şjëø¶°v·*8¥“\¼Pp"B—òûË¤¨^bÙLücÅÀ×LÇ¶=€µ±»³³µq¸½ûâ s°»³½±}¸¾±¾ûæéîÎ³uí–•ÂQDkñß8šä§i!nÇ„­ó/•K{Vªú¢2ÏÓ¤}®¿˜Â¯JÂôÆ®¼ít°\}ù¶çÊ—ssx>ªC——'…S#p&}X^˜5rtNdT%™ûÙÉ!g»Í“£šœäâuNTÆez,#ã–×LÕ"O ÈQH~ÂÊ,°æZ­Æ#®n¸6@¹ª¶I¹_h•r){nXBÀú­İÚÂ?„oUB õ¼×š'¬‚; F&î“˜^E	‚í9qW&÷ˆvGÆ\nÆıdó–p™òóqŸó/|7öjà2ÏÙQÆYö½d]ØäÀ9DNãM‹Ó»9+ğĞTîY”/ÔqªC%v½È€)ch+C•ñ@¨ÊSwŠÂõŠçŒU TªáOr™‹7T7^¾îÕûFİ{P7^tA[Åå-àıø[Iû~„3/Êt”>G¢°Ï°	µ”ÕÎ+É–«D_µ=´ïèUæÃ˜³öÔ¹)s±Æa£;ggpº„}-&%öQö"?ş–jCoˆqiLL¾½#Íù' 34„'^ûíw{.!1ï1sœœ1pŒZ—·ewå)[¼âsy	\<ğ„tkóäÊŠÕ66ÜÙb«°M-WFŒ“f'Q*ğF¬hcíà…9?è—§«Ke£¾J/ÄbĞÒŞàx¹aÖŞ¹é{’¿œpô<$¯Ai¬¢‚- %V¨Ä±`¨Ù5ÄÖ ÑêŸïlã]ÇÖ0FìQM#
-OÖJgøœ?î¼ZäúYEàK-àk|ÛÁ;FòÙøˆ`w'ƒãV¹drövÉqt–RæF1.ˆ²_¦ÉYJö6ŸÖ—h_JN¢2ó*¡â86LèĞ»|'9Âù¢»4¡üv‹~X *Û™;Ï†éQ4ücš½³]vdì| OYªz+ÿúƒñ»¼Ó¦ÓÁ1ğ´q§ŸºÑ»ècw˜å8wy÷ÛY3ìÌª»¤ŸX•@LÑ»üm9EY?™Û•ÉŞÓ©W>´+xj•ye›°¼€•¦íc §U~9×™°s›¨zT†uµJœ	6iã§Ş/ıV×°•Îx:ÚC¼úşû¹?5oj¯°C˜¿(¤—S›Ì¸(sC6Ì~Ù`ßÚµB˜éõ–—ïPá;ãÙğ'G%°ğ©Ö¹Î»4·[¤¥TG‡ü=,ï¿ÈŞÕ_Nà¬¨.¹$ğâ_ÇoÉ÷ekß“Ö¿"EáÈU_<ÍiŸiÏ¤$ªSdQ2¦âö:™Ô—q%ËÁêU~/?´+_cÇ kˆ~a7–ß"®¦¹®şs€"w²Î6`ÆHA‹ÙšA6:Vmb$°•É)P•ÄD=Ÿì¾ÙØ}ñtûìm ÄãÖœY´T™’2*OBäşP!`·AQ~¨ÓÁ` I`^b`aDd£Ï:“Ò ë@»0†û7­¦DËD™ŞÖ)ôrwFL{ù¶F£è%ÉpXâ;fÔÙÖš_u5z‡§û½,>ƒ³?ĞÊgƒFÁ?b° áüqªIÆXA³PÔL1[•*â;Q´HM˜SgIM™YÉ+&X³ñ¨”ÃÑ¨Ü0ù¦vü>¾f#äkURrv¹ñ”Ò\mHßHŠÛ¡÷‰ù“â´İJF ]TõsÜx=.2Ã¹“\z!G‹šĞ]meÜtö	ŠãóíCşíc>²”r™¾~|Sy¾6^B§Ã³Yo”"ZÎ¹pRe‡,‹MíÓ*¹ <Sÿ¬ç›@	_îï´MYÒ1g³Ú1rTí~nş1:ámÒ¡êÍü¬Te´à1"=†PRÍÏŞœk·X†V¥~QüùúŸŞüq{óğPÃ½ÅE{¦?lm?ûÃ¡9ÒöÉ -¼hÇéoS¦Óãò\ìá§ªj7.«ìÏo²ÎRsÉ1˜Í¸x£ß­)ƒíc1‰ÈÌõLU«]ö’7ÿH™Es?YÃ¼›|º»DÌ’u\jş€®V˜BGGÚ8+<lÏÜ%ÅGd§X	 œ·[Ëƒ:âô@ÓtÀëÎ ‹>°Íà2!‹à?ÚÃyõs9 nÑlXv¥HÅ®åèo2>¶ØyxßP	Çm^M-‡uÁEAº÷9İ¤îe§ÃåwüÊ£VŸö|iBÕR´’1ÑCjoPæÏéqÃİµÔ¥“…µyY
-¸*'¼
-ypO rÆÿi’.Y¼JcËÒs·ÉDJªÛS;|Gü#¶[$àäŠi4LşŒ|ãíñŠHÓ#k²Fgåuz®r‹5–*PPíû­±fdL…S-ØŒÓlÈ~Ó~DrØâuqãYßVù¬±—BcC2˜’ë*;Åu)D¿ø£Ş5:"øÅnJPnF»ÇØU€ıÍ :ß=şc¿‡Wè}<ˆi´/ü~YmŸ]ÆÉöÙ£¡}9=Œ«ãéb{Œ’â~”–“‘á-Ëş<*&c-oõ•Ì¸ŞÕœê»ê8˜†‰{2Œ¢HŠéPéŞÔ=EĞÂõ:N#Òx¯ØOÖì¢Ø>òâ<´@4N×Q_3I³ğB€û‚ûT¡O#fC<{WÉÌ6]z‚%›˜½ŸlìP\Oùd˜ Â8lÍ½Z|]–{šŒšâóø/‡›8(9hŠzäº>qÿ”]øò×—ê©DìF”;«»ŸµİXWºªoÈ>Š ñğåù‡4ÈJ7^sÙF£pËñ:¨/¹ñÔ—ÚBéf^xä„éVº"Oúk·@wÂsQ)4­aO}ã:%WGÄç_Ù€[ê­*]L?x›Ø¼n ·ôwµU¨j“ù:Îõ_Ôºù+­ëükaÕš^ÈGÃ®c"Ì&›%Š¸}a‚hoób`x+7‘á[Ä£db¬ÊòEVgùÁOĞU‹ZWõ•¬¤ú!Šã>`œT-]}%KW?À¬¤ù³,L#Jn”y1½/g¦şÕˆS¤J“
-ò¥ò­¨aİõŠ_(/´JU­òÊƒ×1GºŞÅ0¨7bï2÷å#3ª/«xÅaL.)¬ŠwÖÍn+/Bn~ ·ØBõ«4˜Üªˆ)â@¾Ûd.…dÂpGsEÉNË-Æ¥ŠÊ¥¤¶Ÿ˜Õf[É­~WXëÊ«—Ó2(›²^ÜmNítuš:®çÑ;ï/_Ëd„¿KVm0˜FÁ?êİw”(¿š:ì(XÍ£uQ"SùGªP¢÷ÓQ¬üZ-WÇrÎZê¨"D#`+9}÷UPÉb…¯cF½¶òO}%i´Y•ÕTÕ”³é@ş|ëpıÍæöú<Ñ«Dõ´ÍÑJùJ‘5Ès3–%›	ZûDåÙ921Õ˜Uoè°±EƒÌ¡Y&57¯É:Nm¤TÅrË¼ãU\­™Ç+/5¨m@ÓÁœó:#"à×üÅÅ±*-ü¯ÖñÕÇ!±ê«œ¯×ôÚÊ-±šª\¯ÉôÚÊ9ñY4qIbmß\\”
-6IQM”3ç*pùeB¿ÓE<’Í(Y±»`4[¥òt4²s9_
-§¥å’ïË¬’Ó2ò·N¬(s_/şó³7;ÛÏÖ7v·$j,{1rüçg‹3o->É"&—}CøQÜm£H}ÔŠÇÑ Y¼
-c­–¨^½6 P™÷ÛQÈŒû‘™]¶dÅğB¹,şŒé‡7¯l·6£¾â:‰N S1Ú{fñI…©
-ˆÖËÇx›¬^ÿª›˜ÁÊ€öÁÅ»	 æëšxû¢mÚ¡æbòÚlóİÄlS!PŒG²r¢§åLÏsz+LgÕ#‹¦m‡˜æìåÁÖ>ÌÖQ„²µPƒ\;t…êxV&üe>eÆÔ%Q¶.ñÓük Lqp¶Np”yk€–ó! ;şØN“-aK£Œ¥1õ)ıc´t†]Àô[ÇøÏ$E³äUAóã8…N©Jÿ–V—4l#(‹jBrrQhç¯ş¦ïƒ‚Şì«@ø¤>M2jSÙ£J¦ ŒŠ”wa†¨æ!ª’lníln©ßß~{QÂe÷ÛtSşÖMªäÍ_1í&õ’K7ÿA#GÜë¡Py¬ÙEàMë¸³ıâŸJz5PRNø…˜i.è Œ›Mİn˜ë†ˆ3ícHŸ¤NÛ7ÕÕä“ö*è2ïv¬?rß°º›ÂÀ“İçÚ—ÕÒ©àkŠ±Ë«4å}à½³iİ 2²©màÄZ½!€âŞl‡ĞkñˆrZüÍ'¦HõÓ÷˜¢X£»Lº³Ügbjr§©Î\À>mUXW>¿~Û¹kÅµÑíì[Q{ÓûtwkcıàPn]Q‘mó>U|yˆtí+gÅ»EÎÚÁbàÁƒ¼Æf”ƒìg‰k'Ê!:Of3Ş¡‹²ïÑ1îÒ1ÕïÓEæÚº:93ì7	–á«ºÜà~…­½õ/¶ö«‡EG¾*Ã‘EŒÍˆŞ5M–,>˜êZ>\\š>×\QŞ¿&Êt‡>Å‚níoïnî¾ÙXß£¦¦•åzN×^Ù8»úÒµ´¬-'š°*Pa2+Q•ÅªZS¼ŒéµE¡ª,Q}ás
-3O¨g‡Š^y©7«ˆY¥s+±äwr…i¢o^é$“tE›Pİ`Ñ5–ğ¸B]T—X˜Ln±0=\I•V®‰:L¸ºıøÙ~õ»/:LxŸSEßy¦5@–ç^—pŒÆ=İVñ]¥«`µ‘)U8~¹¿ÃUğwP[u±y-käPØÄêEÓŒZCÅâÍ ı ¬Ş2o¢ñI½¡KõæÛ‹0vÙÁQ¼µöapï&(™e''±EŠàY:A¦Ño–­®©ç;éŸWó ŒA$ìÁr Ú{Rç}˜ê(ÊĞ½¯ê£öâ•Â®\P·¥›8Ÿ¢ÃOx%$+øı…ä=òŠY“ç0q†»kçêoĞ>†´Â'îL¤gFßeTˆTFlËŸs­×*_.{£9B){ô”½f½"m@MÓQšÏ}‚ş1çJÏè“§WŞíV§l¾æ´ÅÜIî§ì¤8ëQ…4*¾û3Ç}Ë¨s'_}ò9|ÊŞñ«Àèî§Šûò©t…¾ù=án„*½‘oï¸GŠc¥²GÚÅÅİ÷I¸—*;$¸ï,½$ûâ>®”N	Æqği1ô¯Uv«Æûá@ñî;¥:õ*ûuX¾Eï‡wß-æ™¬ì
-—srõ?Š8ù,Hõb¦tOØğ ”í 1Ñ'¡3Ò9šFjàíís5¡óVóíVvu£üDÄ·OŞ_îOa)G<ögÑøêßì8N«òµˆ·Uà‰ë›‚z¤£>±øÏ2â›î´:y˜›c.)Šè¨7Ø´ˆ†qƒÌ¤Š,o §/¢©>Û,?šâ¡S/WrêoñÇëşË©ÛtÆÁÓY4©º„ÿöBkB8îDpèn‚u§’]8µ,Q“¸öÑÀú¨GÊ°"JÀ ¬PFXòùÆ×k½|«N˜îTœ®… 5O=6ÒœÜHõ,~¡OLyv!¿ÿ½
-«9“Ò„OÕj(Åyë¨^=×½›æ²ââCµHUïü§+u¿äo0Ñ}ßGGyœÓëï®TZ4ıªoUï¹0¨™R›ƒ
-¨½L[çÚÑ½ä<»"0æ•¸5üT'e8Í]A¦YÌ¹éY*§×PÀö«îY¿G•Ã.`éîîy<:8Œ1S¸PœÆÑÀ¦È*K%·ºõÈy·APÚm£|„‹¯õ½¡­v‹Óf¥¶Ğ']ób{O›:ŒaNÓñ½äu†~FÙIÚ¼óxÚ¼Ü:;7™ÂÛ¬ÔÆP«º}VÀ˜X8'ü‡-	¦æé…­Ñö²ÌğV„kEÏˆæĞŒ
-Ùîm¡>[u’§ ~:L³¼5o)<íĞ@<ñ iî¥,Í±ŠîıEKcH$Köb`Y<KoŒRE#V\q„Í®Öòaá!9Å3'•x-µ¸1#Õô?VˆÙÇÜÂÖÏbşi”­íEkNgNú¹‚&˜ªúãê…+©£°Áèš~± ‚d;áê*}§=Í¿“öû“cÊÓ/ÂeŞY'&§èGñf»aß”,¢¯^x ,@c<È=òØá«7Ë«UåÜ6Å•ºfC=ñ~ô*Ïl(“#Ø¸} †ø;åäœ4¥ˆ‡bäI„‡Z5öÖb%Şa\‘-¸°7° |1ZÀ¢ÄãÓé(Zí²#¡[iYµErüRÂÁøÒÅs¸êõöxÎÈ˜ÁêMá§ëï	”|Â­€ÍW÷J°†ıtøEì‰æ›á‚]Ü²áæíıİ­.ÉšÁu&Á:óAuö+ j û+ëàE1aKËØÒ’ÎWÑU}µ´8ùøÚt"³²¨˜$›ê\ƒÇ%+y<úôÀE,1R<Š³h8(‹XŞŞ=ëÊ¹®ä»¡ÓO†)``êEºÉYj¥Ÿ.îì&a!˜7ô“µX²‹T‘Ó¸±™ÅŸ¼~ò•«zŠŞaœ…4×.º~¦)]º0€&q2÷çTNQàè¹m†'’ˆ‹¤Bå,Î{F€şGöü.d¶úOñù>vAˆ’DIJvKx%GS0¨Ø&Mg&ËÌÊxÄ•Ã±µq–éÅn1­ãÄ‘ß9½XÇò§š['Ì[™Â±U|Sb.ƒàb$&Š°µ¾`.šJ5(İĞĞ½¶'Ë—nB‰H%†§¬D¼rvØ	åştº±çGŒtd”r<öŠ<’²r÷²¬¾ÓøÍA@Œöt=_…;Mªs	/nUÙ¦hŒ’¸`M
-şæzøˆ›İ	qşŒ(é0‹òÓÂI3HˆLâZKùPX[½­ wîÓŠ·;ıÚæ¯r;ÉGØÉèG$ñøqå¢o•Y:Aùa†‚›?ã*zÅ†»µ:Jq±;Ğ~møÉ8Acãµ‹’¯•çÔà'ïGx¦[ìüxßÄqDcàk¥–d©%SÓ}#¿Eè•¬áşƒW/+uó·zûÈÛ¸æ$K¥7Âlõ&’¿wà7›CLßE@ËÍß  êÓ„,›óOæHÓêm;ß²çWQ­ÅPQ:>˜’BÈ=,|¿ÍÔ¡šx`hk“©¿SOğü±‹ÀP‡Tâ¬ƒ•±H)ãsÍa‰ÆÔªD´‰²Û-|×š+4Ûˆ=ßVÓ—!¥©¼Zš¾)İŸWËÂ«’¨bÿ"J>ÕJô¯A=9Îâ½äc­;ü}HPå“,UëïCê8Jæe«Z‰üR‹:ëuğ×!50Y^ßùË^šAÍ(K€.chRyXgo÷ùîáîş›ı—ëfötXeyTêÄ!õNŠjGÍ=2#·Ú©C¡ÕìüQöÂ¸{ï
-‘†÷êÑˆêì<ÕÒˆ&e…ëâÎŠ6ÂèhaÉ*+ATv› —™Zx'Ú°¥S	Æür ª5†œl ÿL¤õœ4`è÷g&	UWÇu“X×õ0ªÏXÔ³ÌZ/"YÈ“eÑîz1©¢Ç­,"Có6dx>ñe™y¡×®¿å•ŞØ{JÚ»jü34‹C®»äH/—¸¥¶J‚oÚµèQˆü£F^ù4gÙú0J>…)³µÖââb‡ÿ¿`—Öÿv!r¶ƒ˜”<Öm^…£s"$ÏÍ¡ToÁ°¿İ•ª|¨?.¢"½åfçÆkH‹İ–ÙÃÚ¯‹gnt*X¬½¸8G³¡±/ÜÙ^'íç°îÉÂf|–ôãÛ¼òœÕúdÑO‡<*°çÙû÷—–~‰´Ræ–n|õŸ£8Càp°€	œÔ¤?ü½"	.–]âÁŒ]ı…¤¢#HN„é¡¡ÃÉ$¦$O ó("“(‹l2‡Æ…–üc+ˆNö0ZfÔ± Éä³{®ÿDÚ{0j¢[‘.yºùsi‹4Ë6p*±} dwAâİÍì"$Äæ^ZïªêiJ4èHO|Z2U5úäÑë©h«Ñ"ŠÊ{v_ñLö&<½·iø¸ô{>›íA•ûoì©Œ«1Ì»ënİ[aÓ¤sf…aMÈõÑ\j/<Úh^ZB®9ræ®ñ ° ½¸¼İBW=É ÍŞ°‰­9”:kjõ¥E¦KíÅŒJ÷ì²D–¸»‘WÎLĞ¸n3êËí±õGôŞ¨ Æ¨Ma’»Ù4
-¨>Gcôm“zò¾.ÍH«Q!õd`©&>Õßxçú3½ğ±~sè©|¡J¡_ÉØa×$"m²ÎBQ#[IT¸%vJ^K4¦-ò¦ã“*‚ù(¦æß}n(rŒö^®ü|­y‰“t™­›ö§Õ' ‚7»Ï·ö7¶×w`j—vhàz6øñà¬Ù‡Ô*OltñìÙî˜^‰6ıÍ¤æ.5¹_9ØÀ»\²·ı§[—’‹KãÆ›]”üd{OçÙåÑ|)†I§|×‡qT\ı=K,j½Ÿ¿X	oäIûûàªñ¡d{sî¶áC*4†Qò³‘0™æïF Â¡¸Ä¤ü9UÚ1·UŸ ›…ó…•›vŸ®ätÀ<n2-yfAnœ#»¢
-¦kj|İR¯ªœXy5w©©%šç’ßÿ^«£m¶CvDbÇ¥úN÷FCıh'+!–e(ıb…FQÖOsØÉGôÑù(ïƒÛ9
-¯¢Áö¤ãi‘%ÿp‚ï;pÂ¬-5”Ú\~*-MÚ¸CSÓlÚš˜fĞØÄt{Z›˜,ˆöfµ7‰¢¶è´Dr(#t=?Ìf¯í%'§÷˜è†6è9Ì¯‚©GZû1P€SY—xÑ¬oÊ¿Öo	€TW	´ë† ñ¼İÄQDT€;NÏ"8àhèñî[#bc¼ñ[Ïü¼İŸ%(&ñEŒ[Å¦Œññ7ášFã=ûä 5ŸÙ@]µ×hªæĞñÅ¬çK]çZMc¸ÓK3(òª ³yr Ôuï•oü!óØè4Îe›²ê„îîwd—ò–zd3ÉàôDÄêvSM¾ë:E6…æ2•ªÍÂ™{€ac¸ªs™šÛ'bR¢kÙÓ7ãŠµ¤ï´©Z¦3ŒÇ'Å)Y%<e}cLÂ§µ7#J9&À„JÓñVsÓœ< }@}xç¯ ’VÇ²û³zçhöìéÒ¼yÊD½™Q}Y½0Ÿf¾ºõxf¶ÄXK˜¢	ü@mPà8.ú§AKĞ&	àÜa“L7hºıÃ4Š‹Ó=<îíÕK:Š³¼ØŒõm`K.`Ô´–İ‰¼/]†eCË¦©øµí+¥g$ˆ¨@X‰²…{µıZ‰¸iêæ·ÜX—†uª_n…v‘ë'0ßıdù,JË!-Úb¦úa'(æBò€ÎÜO>tQİÏ‡ÀYÈ=-^vßğS)AòçÃ6„×}¢Ğì]·ÕŞtK†İ ¥"†P63p0îÄÕŠöÔzv´D€çâä,ôÁG[H‰€ñËPË0Êa*Õ6‚:õX+ÒÉ§Gµá»´¼8×§QÛ%Ì. ËŸ£?Ãy&¤ãÅi–~ 6[µ8–öôvWb$«i6N§ô(BÊHÉøìê/Ãd‘öŸï@—¾½`³sÙétZs²ç)1d
-Zi?Í²˜Ş£äçf@]‘&9Ûì¼pÿ™¸ÂŠ„	N$Hê I]4ÎÑÛkH‘¢jÃ] 8ôÚHËÀ	g€áÏÏÒáW†åµ¨ĞÚÙD81Úl‡ìAáãè,ÍæÉ´Hàä é„uªµÅ´´¶ä1j_=FµHt%ÓyòpxW%pfÿ/dL‡Hb"bZ`$•„}t¼ü'Fçß¼½!@ör?Œ‰e( ´s¶Ù0‘ `üp;Oš
-‘^%h.p±Şa à<v† Ñ ­Ù’~üàBiP_µxÎ·Y­¡¸ÙÙoGíŠ¥<B%¦i@Ÿ [ÑšË”èù¥ÊúNO+—¥;Ãa7H# &;ÎïNŸ:š¼ÄaàW&ÏıíD]ïº›€zª4VP¨	¤£îy_Ê»|øAqQ¬\ˆˆ,uîÓø]è-‹‡ÑGàkİı§=ÒTšÇ£¤”…bË=’P‘Ìpéïƒ]ÆfëèQGï©Ï‹Gú*\U¦—)U†Z	LŠó"M‡ï“¢5²ª´{••èÔ¬(cYêºšû‡]‘ScU?:dáÕ´Îı‹©
-‡v"dNë½Eùqs ¢%ë{Û-âoWf+Ÿ<z–¦'Ã˜lóe$‡lW»ü{“:ùë'yD#¿S.g€‚kxœ"‹õ˜HÂš¬oc˜NŒ!ÂôI‘@½*[Øä()¹KBcÓc”=³"}5…¯¥É¥şƒâb’zô7²âğ»ô>/ĞÑrùú|Ş%,wîÀªÍ’ 0fŞZë´(&y¯Û4æÓ	:Û>¡‹„w‡(fÊ©¬©²ÏyüLó¡ğü,‰?<¦İ/ÖNğş2…§…,ÅK>×Neb–Hk­7GÃhü>¼`ğµÖ8…`„¥1°ÌÇ@ªí6/õ¤,]2&ãxÁ{™)Vq	µV¨OF *êÅ¼áÎ½¼ª/±“ëšA8v\š||:šP°!<dAiºOŒp†Éêve¹Ã±´y§3ìzîèËŞƒ˜†¡Ä‰Ü[^ñº<+Ó¯c_œdq<Ö7{õëÚRW»Aé¶B>ùVò8ÍoœÑéØ-°9Ã­ÓÀó\G/ˆ2¿ÀK{*åğØ¡|§ds©á•‰é’a§ı{Âã¯¢Lš†Üfr‚›TSKh®ş6NF©vh±ÄTW ®Ş†øyÎ¾½E2ù©­Ø>_[âTU$ØÀPñÙ½¬>PV!1–å"9>ºµ
-d¯gGL~UÆ2à¸p4ŒkIM¼á›è&
-‘•‰¿‘ˆR¢ï²ôŠú²PÑ{Õ¤â_5®<ğÒ“4¡Nøœ3á|ÃÔzİbbäiai§Ó	#0~_¤´ö ŠÒÌQrµï›\¬ÄÃT)…KÚCÉåª·EEó»L-Õ^]Y*ÇKYáƒ+ªíõÜh¯MOğpZ¿(Ñ™(s=†VœŸâzOFE4³…ıŒqÄÔ”N=ká_ôÛ™_ì!+”¹÷S]@z(ş+4†½–4†=>4ˆI—9ér#)©SşÆüÑÏ¯ùÙI‚p0ş)ıw”	Á¬õ¼u”Ş3Øq2¤G(?Åß“ôãZk‘,’å{ğŸ¯JÙŞ£yó ¹Çšë¡ûÕITœú/h»;À<ô£	šˆÃ²ûyµ²Ô; L‹ı1§k@Šı,Ô`­õ|i™üx¶<Z$÷N;‹K£…WÂÃÒJçáı}`Áïá,wî/.?şàÁd©óÃÊòÂÊä€ä^¡óÃğmee8€?Şã¿W:÷@Ù•ÎÊ=²ô€f#ôSgéÇe²Â*"+¾6O@ëÎ²SRQ  —ªù€¡8å’«©%Şl£ÊıYš3‰¨ˆ×Kb‚\ÇIÆ|^à}:u;’Ï“È/reÏÌîö…X¶"®õÍp¨˜úê¯ØÂæ:F—Ş9ÃÕÉvÉƒ¯9Û)œŒÊP¡à,í_ı;™¤8É	Æé‰2’jš~DMguºº6u,š¢Ò—åheËÖ5u¹ša	k
-_ı[
-ç7XtÚKœ¡)WG¹ÆQJã±3½†™§ËI
-íG{E½x¹ÇÌøJíbØ@qáP.®ÒIAÜœqCtşéc 	kfüğ3…àT®ş:b0Â]ùÔöıÙñPH„fon&cã&;j²l®AIÛ®2 1 Çı!=÷¡C5² …Ê·› £ï¢€…”¨ĞkˆAÚ–¯Ü2ú±W©Á-ñğëq„© 2]HÔ@ô’nXº‰Cn‹£iq¢aŸ‹Ñ/o¢%¿eY\ºü°?T}¦0Eùpm¦€¡\K“i&}ŸYvø^aåS+ì8¿»¾†®ªÈ±î«at¨]&¢Ê%ÛªH²4úÅ%N¡r&as+Aâ·üZáNl¦ÖV{ak±Êò_Îµ+–Ä‰ßşk„=}pR¯ƒŞÿ”–§F(½‰'Û
-\r•ÀßXŒ“ CÀ»tÂíò}aD\UPÕª1P\0—Ö"H­«Š€ ;EzÀ,˜±OËb1ãb»]²‘Å }½o æ"ëÀòÁTPDP<šLJIÎÒ/NÆø9ìlm©›‡z7¨ÍAávòÇxÕ>íNÑ“â”2ªë%÷êbbdo×=L«—/m--¯Ü»ÿÀÕÆ´°A0»À=f>ÕÖg ƒ®øÆ(”Fç/h ;[7.­½àpx	ËµF@ó9«•°¸¡İ	ÄíôXƒöYsÆ»,4ÀOÛá‡o{•P?h‡Fò¶™9ÃQ‡X†{¾tš3^/„ÓÍ?RÃµıñ¼+ Cµ½1Œ¼uÉx¡”âÛó€õaz¥å)2;f"¾ÁzÑ£@g‡ ly&m‡I%Ã4ÍJYÂ*qû#{4%ä¾ùq<Ä¡W?m­[%â5#™zšdÔ—µM`+$ÅfÚ·S|Í“İ­Ãíİ—[ûó™9¦^¦-“İ†Õ{(o	 £&·à·ê“hÁYnze¥f6Ö–Öá H?¥ûÇv§äi ¡?Œ£1 ¥{Q ’İiÑÖ¶¥ÕİäµEùúÎÂ–œ´qùÏIüa®×r‘à~ŠèeøË±Ë™D„eå\_Àñ“å¥?›Óu/Ô(ığ¸Aná:Šrè<³
-jãv)^ˆ†°ßçÉx˜…9§äú1iQ'üŒñ~wõ4ñÄGxëã,Ú+Nä™”]78yäL6°2¼ımív£­ıv#İ°;³63Â¹?·@í·»vŸ6Ú×pfµôyƒË—Îì·»fŸ(È×h_£y|>ñ(¾Fó¨øÍƒVúëöäÿ¹GóøŒ¢q|¿QåkøíCE7 •˜	şƒÃ9@êIdó?î6½=Q½Ö£îÍñÂ:}'ßHˆÃk9$×sèğ:ÛÆ½qÜÚTŸ şE–AÛmw¹‘ñQv±^·äd–PÊö¨¹ŸÉ8H·H¾H·½~_ÆJxâİâúøBÍæÓçµ´¿íCôÎ©Xy›á…Êo9Y…J—
-ÃQM³£#Ü'.¢ƒç-]mxõ9}‹×À„eX»`/ÅëÚÿ¡(SÊ˜Ù@…îÜÔû"c¬Aö{öF7“¨Ú¢ÅÚê¡†8VùüÕ‡ñ–Ó 2Œ,¤a¡ª/Ó4¾yG¢i‘V°”Ñ?›3| ºzÔŒëë‹ğgÏÙÜ ï²!@ù~|‚ƒTó“MsxºŠ *ßÏ˜â±±d•÷0© ç	NË†±ØÏ8«¢Él–Í1q.^-¦['i†NÌ9Ì1Î}Äxv›hi:‡vLk½³Nö2tMÅ·˜?ŠÊÖrtZ+Ï‹A@Éı˜z™¤Õâ™øP	vû %“j×õ—îî*€!ÖPÃPJ`e8êYHƒ?¹ ûÊ”]VÊ¾úŠc'¯şÚ'ı”÷ò0¦O¨±·èîªVúT²ì°V\ö8¨
-áWÏeÑ`Ê¯œ§9{ÙBÆ`¬>¸öMu•; ¬ÆË9‹ ;¦øñF?¶U2ÏÆòÈzqböíSÄZĞ»ı€2Æ’õ/«L“â
-OõjWc¸ëv@ˆ}—BPyÂÍôÃx˜FÒ‹Î=$ì„METw1ààêg†PW—×¼nªf˜ãĞ_NêßYî<g0r†Š–fŞ9ê÷ãI±Öê|æç	şñ2Ùöğ€u¹„Sİ° TuH!>ç;¯_»”l¿Áls°I	¯§Y:b;	ËÌntƒÛÊs)‹MX1,Ú¯¥QıO˜®| é1aÕ»îíüöÇt Pß«2­×sÔŸE2Z_Dâ¼GÚç¦@>×e5”†|{*Ñ#/¦è¦MËW’×sNŒ*’ÆzèV9•ÀÜˆ^¯‘	¬¼Ê§Ô§ ÂT„Oƒ«b×Ót:\õ[y¢àiá<H}>Ç>Æª4¶©éĞ5Ö™ªàÁrö¥>XÉí„ÖX—Îy5®±JK<^•«1lú*GÔ`ë[+6ómQ€µ~CØÈl6'˜¬6$,1Eÿh0@ë`†LâP³µx¾u¸şfs{}n^ |; AĞ¾ÿŞ­wRZø4}t³,0£ş†ãªƒiíKbü=iÁú21AÎ‡Ë˜Óš/½MX»a7¨İ“´Z?¡ÕâB3wedµRQ‹œØ(­ˆYÌ)ìò‹ ùú0ÑZqùÏ`îgEF406íãö\§H·v…m'Ÿ“¢İ:lÍogÛ:gaİ~†ÁšÏÈXs×éº«Áy­Ä×ÑI¬\=ğgª?G›’b¸ÚôgªS G›:nv®wXNÖ·Ág9>(/,ª®ùù0ìÈ»úƒCôJ2HÌ‘Bl‡ÜÊµºÉ-2uH ¸€cÚ`¯|g_š$ß9²[We‰Œ½ÕÛ%_ı°^?Z—‡C®ıLò_ÚÒF4ŒÑ€N9gW×YH	ZÖ».æ²ZßÙ½´:î	½gw»Ò¹Óè¤tPÎ×—Ê’ÍT6P™ BH§Ó)«Ÿç BD-jV^W•ÛÊ•ÛÊFÇ]w›F
-nöòaºtP=’ıâDt0êh€0óQ÷¡ÙQKµi¿G¿š“cåêœ{66î#DsÒ³±õı£Z8˜Ûvx0®õKCŸğ;‹ª]úÁdê‚3ù
-è«ŒÅùŞÊjšJêt»iiNz›S¥ãvMC+¶	Ô3T}jq°ûXßV°ëd€Wxõ/‡›·QÇ7 (m¶¸5æ±qñ™`ªros'@õ	¡Fîov”;“&àc8™4[MË©bÆJf(ãMŞM•ñµ9ØÇEİğÅtF}Ÿ÷Ğ&EÊ5MgÊ¥A¶çé 2mfO	z‹%„+7áá°t†Ø]Z4–Œ€Yj©„É˜¶-dÓĞ1Ÿ\Èm€.CCyû¼UdÂsPª2i†|¨˜AşäÃ€vä<ä5Î¥·\£ùòæÀ‰te¯Ì`2$'©˜AşäAWrê\™Œsf/Ğh²8‚qNU+åÚ%P7Ÿ©òJÜ3U®ŞÈ©re2N•½@£©RåÎùª‰¼fl2Í&C¹9ù“ÁùºT¢8_N3’s—ªMßk®€…»Ëb8±jòJJ˜õ-×Ÿ^w'÷´°$6õ?å°Ø5V4ûù¼grñn‚XÂÒ pÄfUÄÇIÁÅ4ÒÕîé½L™*â¡•Û±l
-f"}Záx·Õ^§dÙÙ$ÍæÈw¶]Kœ‰zÆ”É²ks{ÃŞÕ„>¯Ø2Fúh MiSğ§ÌóÚuõlevKÀ’.8rf•x-/ï*+®ò#¿Û6g¹™0xwh<qc›ì¤-Tw¿ĞÔèß10‚¯[FIŸõ–)UÆ¨‹}›ÆDµı$¹5×®šğ>›í&øuÓ)©©%˜9ÄA=¶’MıÁm+æ¶yO/£èD+s}µA0UËı”aÒl²5¿Á5Ù9ˆ†ÿ{]Ä6ûØ¢Ü“yƒŒtlb?óvİÄM1TSŞb8­CV+}W¢g9­³šYfUc<¸í²n: ƒÉ` ªÁÖ`®ş¡l–¯S…Ö‡QÕÍˆÑ ÊGLÆ> MG†p8Aå¬¹PÃx|RœÖmº&Uˆ0(1T&].‘ÑtòTê;ŸMg|,ƒ¢¢–]41Ş+¬§q40¢±"«À™¼øµƒ‚™uPÎèúE’….V„-ª”°Ú-NCKh!vèïˆÅ00úûşbwÙ~Ññ¤óR—ÃÁNÏ]zèRÇæè:]ô^Şİu‡¸ÌÚÕ%]”|7İâ‚`W·¶Ö7ï¦/!—fº<÷núÅ%šNhªˆMo½cªxğ¾½_ìÒó–;Óz´ÎØ[ğ>31uü¹Z¥ƒsµAÀî€äÎ	ÿQAš:ù±­S…ÎPƒïEkìøUS—Å'ûÈÅğ6k?1è“…‡ux+q<Ş’$ıæÎ…˜c1©­°c”ÊÀ0@`şÚ¢Ââ)›m1]½_Á±iä>Ëuò4+ÚíhQÙûÕJëPw–1zŞ²¸ÍTÕ¬®h˜üy'³„*Òb}İéN«ÒT„÷à2w‰”à·aÎ¬mW»S*Q3;uèáË‰ALáíòÙ?ĞÚkP‘ğÉ©*²„™iz…úçÇpİî²å^¹AÁğ3kj4)hš=kén—<Ù!¬HÉI\°‹D†1ìò$‡¯¥Øë,·êyab+5ÑHó´5ÒÆşõ“gÍ³{Döàõ·KCµàê>Âbî`²ÜÁj«Ê»T‚¼îsi{«´=½Î,Íã¦jHFp—õãU;ıÉ®ïü¦”‚P2pÇUÍŠ«áüº+‹!Æãer‰ÿ(9¯27ÆÃôC˜H*.`²˜qú!‹&Î Ù˜.¤é‹'#ßÇHâĞ’épq±Gÿó:ÔE“šJ(±nYÓšOö[V·z|èV*/sÔ'§Â† eef:ÁîxËcØÒ:M6S^÷Àİª~>¢ç‚²Û+ØíîŒ•U¬C(Ôå0
-ºIC'£B†-ÄÖ<ÿ  ÿÿì}KsÛH–î_Is<=TH=lW»5åRÈ’ìR—m©$¹«;|eˆ%”I€€¶<j­f1ÿáî*fÑQQ«wÓË«?vÏÉL 	 $eQ¶3º]"‰LäãäyåÉïÜüt8Y¼ì¢R’-—¤¥Â”âÚÜ  FÓm)):®™òG\$A%Ài'Î6ió ×Y™Û°³Eİ§×Ë¶uÔÍ¦e,·€|fÛÿvˆêë`·cäÈfÑ1n‰:ñYkÒ‹³¨;â:xÁ‚y™€İQSÕ(©–Ùös$ƒ[´ßUì¢î€ëØô·aÜ¸ó)(©šúDVµÜ˜7UÜ"FP;RYÔ]q-Û2ød	dÄbM#M Õr3n‚ë ’yœ„äçSë«
-ÂÓÌ¬ã‚G*\~
-û\„|"›º¼ceXÀ²Ÿ0'´Ê
-mº°Í… ïæ'ŸZ$RŒ;”l™aÊ…|X-u DWdÑT*“o”EÀdågÀ4î]ÅF¬'P›©`'Nç5Æ¢W$VÕÕ­ÃjÔzXLŠ¶½©|hXL SNĞtPp$ËÎ¦ÓRn¡™WK‚rÏF	¦RcO7W¹™)Ì¥Òà²Ö¦\ŞiŞ]Ï4YMø‚Ú`³¡L«WbÑcvNËJ¦ë…¸\VVØQ/ğşHÄ³(²dEéÙğ©úû ìGï»	oâ8"‹Œ4[@O«åÄ?óŞ¸CôÎY$
-m´ğ¨ÕRÒ/ÖğºÜz÷AùÂFå¾İƒU5¿F51[‚QOµÕÕ›v2,Ü&Š[Ó`Lä®r«$ÆD#µ'›+/2?EC‰”!é¯…ƒ Qk1ÖÚÙó“ÇüóŞpÄlìÇ#/DenÄ3Êû	Ş­3¡oÉÏ–/ºôq^(96Ô"0×ûşĞO}„]'Wdˆ½Şäq¨pBQt˜ïÍZÁ˜M*ŒşüQûÄ’¡¹7èHKsİTŞo@‚¼ú­uÉDÖ ³*şóÂtÒ›nœ»1ŒW¶Ï²-ÕdtĞ‡â¿–	¡É‘ Eòé\ŠğoBŠˆÅ››± WØ~ÓUQ,™4?hüĞ<^äªßóæ—oµ—zÕ/*éH+Ï˜³“ş|ú,8õz‘_KjHãYF±oÏ—´Ór¼/ »Í\C_=-aáÕ®9ŒËx£¸sOHÍŠK0õõÕK=Œ¶Ş…•A|/ÖÔÓÁ¶j²‹~ÿ”áófĞK~Ñr]J†ÑZ'¯97GşwvâQ“„
-£‘³aı '^èm°WÆgQìÅAdng–”
-#36ÉB›¯ğÉ#ı`‘“.äv-i®µ›v˜Wİ€-Û2/¼ ZÔõa†,	Ø«™²$äÒÅ2‡<	Ê–”xBù7Ër7.`®53(5]B%C=®.ë{`%&I¤ÍúÜ,¿Â“ëNà%8 Á®NÀ:x¶bÌOEl-JëÈ?…ö:?ˆ=#GoûñÕßO}?ñâ”ğTºŸ:‚Év?tõË	hSæv¢¬‹é‰ßÚ<z«(‚BŒJ/¿¡mnïÛ2ĞÔ1_´tYd+¹a+÷×VÜ~4k÷H¸ŒöÎüŞÛ“èÜfñgü~…]æŠC7Áòéû	_›GN+
-z¸rV);á6Å©ŠQQª\ÚYAÕ™*•‹iYÆÇœIU]Î×Kæi-Ö t0JŒâùh÷ùò÷Ù0èú.¨=,N§”s"-¿Z½
-?{¸n*i‰!`¸‚ñ5=,ú LÖeÑÔ$9XìüÏm`¢ÔE4Áü[Éÿm££QgÎ¤¬£ÙRz»NZdóÕW4Af¹¡XVqMn«æKUdõ_ÎÄRåA¹‘}9_(KÕUt#h–…÷Å€]YvúxèéùHØ”_°'óò,HRÏkóD½²Ëàp›%FÛ`…³¸!ü¤mÚ¿ Oæ]¬¡O¢ 	Ğ\ëÄ½Î­ìfU39ı©#ÛÕ¨øšÁíî/¸]Ïë{LQÒK¼äc¡Ûóÿº‚BgtCX’h(IsCH²˜td$»AÁcöŸòwYÏ*ë=±¿p+½İ áÿ e¹j'Ùdå§»?EAØÆòöz•zó©*Éè@©|x—¬¦ÀTš>.œùÔ0`[w.F
-ÖnîŞùœ˜ùD¦§HQªtI¨R%IB|Ï«r-sú…ò»Ì§ƒEÉÍ?•0gõÜhâ'³ÈHMÌ£ÛD¦û(!Œx®¾>=¸3v‘n2Å®š;<j®¼/A¨9îÆ,R|cv1=îéµq_s€wqbpÑğÔãñ7yÍvøÎŞ$A–¼LüøeĞgØLg]åÛÍî$èÿG­Ş~:ˆ£A ¦Ô#ş)é€´Ûş¦	Vãİ)¿¡ŒQ*Ú®i¿èÿ<ñ“QD½ş(³Ï™ïºû?k¤DÜQú“y¼aâÿGíYåÑ.ğ,_LÚ¾‘=e,¼‰4[xvõXc+OvşÜª„ñ;aLİ$‚İ¬dúaŞÜ‘7ä¶ús/¯~ëM†^‹ıíoµúmcJTR0¾zOxüÕÁÁVI½ÂÀ/k“Sy^?WOa]£˜mƒ yêÖúĞLcİœ×díüÏ¥2/™Ç"ğÉÓÌº­‚¹GÙ3‘í¥nÓŒı°j×6pŞ6LuiÏ{Úƒ7î&©—NÑãh§´t²»$MÙúÆ÷Æã{öoaCÕ3gó‹cÿ'à‡óxñ¡ß›$æ+_j	†;œ‚ş£gRÁm;’Y·h‘C˜0ç[ßC/ãô,©äËÉ_c.JFäà"R8¥ÉëYøEÍGîz‹°î½‡qÑ Qmà*€øô•$¶~>4ù´¶ù±’Œf¼¯f´çšsÊÙÏñtÑoâ€Ët~eÎU!w[ÕÓšõÜ|¼§ï"f±}zÙ›Û/p¡rùf‡¿ôwû~˜ÓŸøD¥?tØâŞĞ_¿Íd˜ñŞ&Ã’0ùìè„WN…ø7‘ÿ"èï6“_&o˜üJ*Å|ÉOûeõÛu2É_Öüt’GD‚všÿ;Ş,A½ŠS|®´+ÌyÄ-4¨9åÌW—tÊ)Ê‘ÔÎÅYRO¸¢Æà«_5Ùö²•ªŸxÊ_\ç£0J;«İÆN&èÑÈÙØ‹=V7õ —Ñh­ù	oêoL˜S0LÑêH4‹¿­ğsƒÄ0æ±…À5¿ öú„kÛŒ§2T£Àò6t‘¶®èÌ5~¿eM€¨,ÿyb
-Ï5ù¼jGÀoğ(¡0xTD1^c>\ntè½?â”i`?brxíø1ÓÀšCWõè%~zÄ-1íğrÊÙÔÅCkÅw×æ}O”÷rûi`õÊm²–šÀU‰qQäg	ºÈÚÜkU¶XíÚÉÃ’±ÅË7¦i3»Í«dw/NoWûşby¨¨o©ş0ÃÉ²õz›äÈ%öŒt±^‘è&¥ãĞ 9Û~o˜©Œ<4Í•Ò//Fø¶d„ß½ÙİnÊe\Utq—ºQ¶½8öO½°±¤$/º]ıéucu ®k
-B˜@]\gK¥?Ï·TœÚ{ê ÿ‡_ÜæÎ5l d¢şyp€R°d¢?¹b‡ôN‚aĞ÷ %øŸ>¼mİìYfˆ2®¸YkÑ=YS¦Ÿìwc¤O…eÕÕhcÜ«Q%³ŸìViÎA¹ƒİº&ı6Ïq@ ‚?µä¸Z;Æ3Ô>ğA»)<}âÜ,èyiğÎäjFˆÒéë;â’duËıncŒRöæ™"•ì!æUvd™Ò­ácµ>¢Ñ"¤>¦s®—KÉw«6c;º¶êõ-£'D9÷slIg{Äde½;Û~Âµv(mOCk¹2Jkí@øóå¯%Á–•ö­?£tHJ^ŠÈx>{À^ØÙYyş|å¯P]µÇ˜³ö7`í0¤›VÂô”Œ|YÈÏDÀÅÓÃ~7ƒ´İê´œáò¼ª*˜ï9ê¡¦ûæî¯÷jıõåJö÷šò÷êëË7Îv6XßáX6Bn@,®ü€X¸Y’‘+M k Üƒ†©±¸I=&ªàËÎª%YëÊÓã)¸[|ßyÈÎàÿJJYÉÍì0®–8£õk–¯ËÇP-ùr*ç•¼ÙíyñVÚ^]r3á¢´^jâöµóâ†HÉ%?iÒøu¸Ü7I&óDÑ†kw[Æ¡Æ€›£éç2*<®¾Q‘—œø ˆÎ¹f†@Æ¢úU‚_Eîo#¯\UÜ,…ÕQì·ú[Ô’­]
-z·Œ/vš)+Â3Äã¡¢0ÊÏ°]{¬–Â³“·Ã?‘[1»_ÔB£µun(ÍR	yF¢3ßütjç-k9C90óË…ªŠej/G9Şñ>–+[L
-•8‘Ái°xéÕ¯×Û·ëšÙ'Áh®Ó:+M¼óÎ{n%Æ“°‡*¹dLkió ¸B™ƒ|ş¤æ¤Éí¹uW_ÿ²åVš± Cê”‘…—"uÎÖ®Q®ÆlC9"‚%rö/>6”"…íK®”½OÉó—ã‡F¯ÎD˜ˆ8ÊÛoFˆ)^…ßıN†—H_úk£©iŠ?ÛùËtmd^Ş%ÒªQ3eÄ|…KŞ¸'-QÌ‘´˜oÚwÕ€ö
- ‚WÔèŞÂÚr\hÕèœ±ÇTŠ:3qó1ø BD¦ëµ÷‘-rJj
-Ù&ãY”òik†’İ´è}_úS›Kòh†¬u’3ªmÈ*„"¥ÕZdWº-’KõTX{u¤$ŞÒ±|†M•ôÅÕ0cz]¾mÅ*Åıd sùü'NêÚ`mWù¸¤Åî×¢üÀÇâ’ù_f!q±:×Jâd§’ù–x­Éé|odñÃ7IĞ×!i:3ï|Æ<Í_d;¸4vÃpİ-ÿ±~é-ûIPG©İˆÓVWº¹Ô6ß“;‰F;GÄ©~x8ÕÒ>¿@ÎÚè†kD®n[™áı<æS§ ?o{q¿¥Avæß7Áq–-_/ˆ³x‰ÁY>g2«Ó -ÀËŒ|t…í†aÒã£G^
-_fnõ¼>üÍ.m@7fiÂ£-¤~{úf0¥ÏôõgÁ¡¶£N×°ªoeºô•	dZĞT„iM´`nÏ†êá3bí}}cîå8Sî_ı§-Ã=.Ş¯~Ã½Âú‚%°ß›ÄÂÏàgç+A ïo°í­ƒã­«ÿ¾ú¯}öø%;8Ü=Ú}±½·õŒ­?è®é”«ŞO¬[WìyÍ’€ıÊ|Eb÷‰Ë9?¡@P;vÍ<Aøä16¯FúàV’²Ï¾õ? ƒÍù¨–ÓrŠ§xóc< ]€bàQŒ«ÅG¢[~âğ=šÚ–fï-jÎ¾šªô´X¢2ÌĞ¬ıT¤‚µ¯[aÄ¬~¤ş¢ø±vôĞô@¥ƒœ¢eÿ$u»'!¦¤úg¸€\[?ˆG²f>Ø·0f¹å€?Ê•0¹g[Ë,k†L£‘k9ñÙ}r‚‡?¹`òúåÃà3¯t?»O¹GÉ™`ê…-nÄ
-I[;9©(Ex.ÌÁšÅîÛ{q´Í~o´‡,p¼&Š@'x:a6û­Ø´X¤ ³tv›9O&àû¬(„÷gà?Ñ€ş“7bmƒß»ñB[ÚÆ¥.ªÆ¬÷ièèæ"šf=b/ø´Ë"Ùj “LQJâßúä+ez_o8(¡á6yåæ±vrõÄ“ Ûâ —8aÁ…ñÎ•jÖhğ-kaA“2«JëUÉšxÃ|[ÅìÊºyVö|ë˜=Ù{ñ…›ñò‘¸™°Ÿ¿ğ³OƒŸeŞ/-
-GÛÚŞÚùÂÒxùx,ı€_xÚ'ÃÓ„[÷Skù±Tœ;åÏÍ/·„î~=ôTU(Î¬ŞÊI¬´%²0own™í{u´X
-?Åü×p¶†3˜À¿ º;!ÂîbY7¸X.Äñ¨ğwõ oS8»°šáYÕZ½=]wxM“>ƒæ3«/%¸ó2Š1ÊS’Jµ5C¸ÁV‘ˆ5õ¼!†›ñË”|]xÄ¹áPŞí¢ŸÙ‚ñìñHdxñÚY-§@³!ôìŒEY6›ÜRpyü³«?°Í«8t‡Òñ,¯¤|c«(dyüÓü¨MşÎ	ÁÛ(ÆK[}]¹8ô`Õ×M‰}2*ïH>FßÚCcl“=‰HÍ^ò!ì1M§ñ«Rè½÷‚Ì¼r½õìjèŸ,³íıgÏv·÷ö_uï?ÿqgok™I¾ëPî\
-jÔ›SØ*wxsâÓ* U!ÂãÈsE¾áJÆİ¥?‚ÂáJú?áßb¸à%¦­‰#à ^÷Í”İº„‰L{g¬íÇ±=·eÖıÖnG˜ŞÊãÉ¯bö.H‚#¥‹(SĞTÛ®¥›vQ£íU…K2$ã&F›ÚLÔÊz<P‰Yè±C¾ |eöùÊÄ¸,ò[Ó@íó
-1|½ûÁßJûŞ_—¾3‰ËÆâ@2^0eA<j·vüÄÿ	áw8°=óĞpqx›­%;ù¹8KÆ[ú<%€“·Ì…»8òÃ÷tì¢w°‡»vÀuCn 'Â•q¶¶/³¹åc íG›Çb–½Z¤T(mÓ,¥ÂX±pg…Ç±—œÍ(›Ú¾åo2c¢„|¥ñ+iÊ`¡t0NH¹õfËg…6ğC­b*óVá²+9«ê0U…Ùë5K¢†ØïAW>ÙÔºU9¿Ô'rò” Ô'ù|‚¼áá§ù7MBPó–¯75{;5ÒÄìDn$sjqÛ›ç‡füÂòR7öö¥%¹”aæ·–^­Ó	ÉÛÍ³6#m¢¿ï ax-šà?p-Ïp{Ìï5…©ùÁÏ/ô´RKˆšQUuç”êë"XKp ıœ©ë v¦N%m<âDû/ĞÌôCN‹€Ñì}ÆÜ{F Ï#²/–åŞŸÈè¬özì­7Î'×W×ïw5HŸ¦ĞÑÊ—Ä èY	Ø›ÇöÂ«ßzšdãÍ‰F¸ùÑ¸×MW3’*úÜËÀ`+äF0”ìâ7NŸHiÜ­¸€tâşú¸W®O,[,É¢ÅYT¦úÔLK$æà…fdR¨s‹ÁTõRğ…-¨î0SÀàrÓ`1èM±T¾ÛlL®0æèÊ¶æbP^ÕşıÉoÖ°™’Éi‰¹§Ï8â
-q‡ÈlÇâªùKtÁí—Í^Â¶Òàİ|‚c\)ÉÌéhÌéè‰Ü	ŒiªØõ÷%ˆzCÌÀõæznğ~s]ĞÃX;Sa—¦i!×D¦©ü¯:0MÅ\ u§{íÔUŸzãé+x= ijnqïŒ©¦7Ä˜Ê A-_¼	˜¼Ö¤›DqÚn{Ëì„{Ü=îjë1HÊßFc/öÛ'üKmÊî,ÀÀzV›åÛ{HÇO16PÌ ö[5>ˆh†ğÒB‰e+¥ÊKì÷fëO‚s¿ß^³ám°Öª¿è;’“³ó…&1å Šæ>ˆSo,ÆÀÔwj/6‚å‹fú—ú	ÇÁÆ\ $ıÅÈPw¼ğËÈB<Èä@®¹å»Í:³Eo¿yTë®u’[VLJ7ÜÑs/=ëz'I[NŞ,ÿnä·×–Ë“aÍRÒ8ÅÎLö")š#ï€-ã@“tæ{#Lƒx_wn’†P”é ¥¹ÉØ%b iŞ‘ÂUë òIñáNË…½ÛV-ñÛÎŠ‚°İZi-]^´˜è·ã~ä"ßÒ·gà×A0Îá[œ”c÷òÍ»_şÈ½aŸÖ5«?hÖ9^OÁ~®äd\ØåL 
-Œ³´â¥Î±„r-4‚œML`¬Î”âw¡Û‡Ê3‡ó>]ş«}Nœ vó"JÊ+Şñªà]¤½•)hÖY%tÊú–
-Öz|÷"S±¾y	[Zê*âÖÜôä¶|ßÇX	²¤úÜåJßz™îºX	ùú…íŞ«l‹K¾’QMÓÀ™hKV¤¸>ËE8Š«F«
-½6?’ÌõZ=õĞI–´ÚÊ‚"ÎèoVÀUVGiÅvA¤(µ«"¤şÉë$¤gëWNæÕ{Ë5Ó¬\ëM•¢¸¶nõöÊWd^*¨nc¶@g/Š;=+î»E›şdÿpw{ëèx™Ü‘éE¡æËPîÂHaŠb½SÒî#^“)Ê›<”õîÅ`n7föš~‹¦(ÇéºvCmF\˜çØ¯‹+Í÷‚OQ\W}Š’Ñi²´·‚H5›Ü*ŠkRİXİ/2¬\<¢°l:d¹z}‰Ø²kF^àE(%TnKQ÷´îRUv¬°Iİë„§¨¬.ßÚ*Êe$Q2)w­r¡C¼ÕU”Æ÷»êo'OQíJXFtyÑPbç’’”bŞ’eş×ÑŠBĞwËWÔæ§ğ:³GØ-y[®Ãbêò#2#hs"Ìñ~Ùxè…¡ßŠëeÍDô—Ëø•¯1èÊœÖ¢Chwddc×Eæc^„ÙJe>x^ËM9‹]/{1gÆø9Ù¦#|N>eL‹ vèËÍ…)hê1†$y°&1~âÔ§×LW'Ğ‰y’T…xXÖş—[
-k,‡FÚ‘?òÂ&D€‚ÛÓQA}©ûŞ‡ıÁ¾ÿöºÖ:Áâ-¶>JJ;ÈÖ‘
-/ò:?ˆõ9à¡c?¾ú»ã™ï'^œ:Ÿ	B×3G0*×#W¿œ˜2½IÜ}–¯£1WXxIÿ2#ş¥I»0Ä™|½"ZÒÕ«C	ø3‰f.2<yzmëKL3ñàQNÛF—Æé$®ß´ùÖ\}¹áXDÏT¯™8MeÔ}>0[i(Ò¢líq² ?1¬ÒŒgKMüA‚xâÏD”|Î)¦d]¢J<fWò‘h$m~äµÉä¤Äiî@»çûƒ¶W¨EK¬SşíDù­©#CO\-‚ØæÉÅóØä9ŸO‹Wg®A#0«V*ßi÷3¢;]1NĞ§=¯¾¸"M¡/6£l–nXßK9­˜ê¤‚
-×†Á:N¸6Q¦pîëÜúÏ¶^¼Ø=\fcšWŸàƒÎ=ù{0š&^|»ÇÙáşÎh‡¯¸™Úí€¶¸Ù³¬71nÆŒ ´'ğY9åM7Øš
-fMeŠ§õ'‹	ÚŸ¼>+ä’¶ùú<ÍÙT~4‡ ˜Şy .É¦
-‘ø|‹ğ–fYš¤=c:™İ0aë›½0éÅ4t¹™ÅÖ1$º5ÃÀ„L5&ˆ)±6–5Ö5v ,Ô4õmğ(Z±=ÏAOÚeX*;Í"kË{Ğò`¥‹´3,kÇ¬Óhwò½òNåÄº“ÏÆ‹>‘²´ÿæ¨×tŸj¡(wŒšlÕş}4«—8·B=÷RDjû"‚ä7"‚óD{‹¸‘Õş}ù¦éö¶ŸÅ%Ø¼sŸµŞr±ƒyø¾ÈùãMÉ\„EÜÇ¥~{ù¦)÷IE%Ù¢wŸ½6=óŒZ¿‰!™ÔàııD’³7÷” ŸcxĞ´¨‡ŠÓ™µw/™
-½PúflåM,VÔ‘<YLÜÑ$æXg$É<âHŒç·sŒ!AØàÁ¬ÇÈÍ£$4¹h‰&ú´ãê¹ÀÒ¥ËØ–ê	µ\b5fÚ5Œ0EëPË°€E~+{ˆFmì±å¡Z3T:ñÏÇ]ı3õƒª„(ŠeÆn		?Å¬Ô•µ²`¤Uä2+õõËú+Æí@4³¸€ı+H@ôö–Ñ€3oŠ0<T %Fo,5ëMd£;ˆ¯qŸ6€o÷pogÿÇí­ƒã­í­}b$Ÿ3/âËšÈ‘|6:³Fñ]{Ÿ5 ¯Iü+zÏ¼L‘{·÷şÌKo<&î}EÜû”,ì½0õOc™’îqÖáÓı;rÚØ	÷@‰Ñª¿0»çƒ7fCùçøâ^4‚ôeœ^ı#ìóâ4€,¨å«1p‚½?®¬¯î4ˆÿ -$cõÇZãÑæoµkØ<¬/Ÿñ»êã1;ô‚á{ïkoìáw°T:Æmñ¼j‡k>!9jq(&>UŠÅ;KÓq²±›yÒ=Ù	£N,FÔÅ-jh¢ï¼É0ı³ğéD© î$š}¹‡“8¨¾C¢‚ĞÂ,®/ã!{Tñ¿vA]µ-BÂ!‰e³¿ûå™;â¡n/N“‚ô¬Í§
-fªµ4]Õ„×5V´Ëó|*ŞdMİ½ß]¾±IËJ$è#Ù¹ŠY~â¬fİ 6^Zô%y'ÈÜ®XH(+‰Ÿ:5}ö÷ã·÷_<Ù{ºÌZ’ßrh(.İ	Æ´!çÊ¥êé¶¡Lˆø†ıíolà',¨Àìo¥ˆT Bé8!ìıhÜvŒÂßwÁF>,şL>F[­xåºšd{(¼t"P@½;6}­!f	'éM†”O>ôjƒİ½€7taŞïÔ¿t €‘lc2übÔ=ÍaÕ÷(aÕƒ¨7I6ĞD­TùcF“t„>ğîĞ·aÎ„\öPC[ùÄ
-w ¬yktìØc“‘Çåë¸¼Ä`,gf¥R2s6oÊî¦0PÁ¨ÀrÂ6ØíÖŠ7V`¿¦“ÄŞCu 3(†ÇqUï°#Ş4’8v¡!!oií×rz2éõ`OLMêùöÛæ}‚(,x{%öáŸööşáÑÊş`€C]Ú`û¹>5àgdƒ1<É}Ï,B>/ÿ€®~a?Oü<ê2dœ,>+ÈÎ0süüDSËÊŸë«š3Æ­ a7…ÑûØSÀc1Ù™Çb¶¥9`°8Í¶ª9<¢n£ÈĞ‡JÀÃ(5*á’_n:Q6%Åîú­V!“8êsjûçÚ3İjäO Vw2î*ºğRW;@ÏJZk¡”lŸ·»Oİ6%oâŒ™í3´˜-iÁìığd
-È¢öşÁî‹Ãı—Ç»‡?Â¯?~·û×¦ÆÙV–ÊFò†®'Ì’­’¼íDqçİZ§Ûíê7Ù%Q>$àØßù8ÿ48,*B4€¢ˆ64T¤BÍk‚BİvuwÉ¥eÛåUÃƒ~m×®«£ÛóggÔÓjÉVµ—¬![d Aìµäó4[¬P¤¹³6®èE"ûÒHÙ&t»ªh÷Œ£h¤;E®y€ÚïÂvQ´n}Öäß.P¿\“«_A†Ñ;´fàÇÒS7ö@>Fğ]„D%sç£ßÛÒ6Ø}xïÕÿ‰ƒ(a>Âd2Š’% ÑØ{wõkR^óOU>Ås(§	`>Ş¦‚Ïˆ—ÇB*ƒ€¿Õ.–²XÈf‚I4\M·\„ÈùÚÈxËeG«Dt¹Hˆ,¾•ëfö#¥G_Ø»ä'ÙI“Ï\+÷OlùVë›#d6:e“Ü>ğú1ØWì©?[—­wWÙàÙ’îhPÑÏŸïïì>;!k#; ’ŠE8ÂµŒ#ñ–P°÷>˜CÁl}Õ@2#<!ÿm.Blã3ı[*›nà`NLzÊE¤—Àºúe$~’v!PQò©Ê8Å‘ÿ9†8½kKçË¼m<ói”ñ,ªns7›¾¼¸ã½’¨™	˜ÊAÂ˜ñcîà'U••¶½³ŸŠùWí”eñ¸aG‘I®[”Ë¾eú"ÍoÀX+9+ÁĞ}°Ş`Uü°?@æ ¦…Ü«\`©áÒ„hri›Ë›ë&ø4)Lõ“õrùáYî¹¨	¾óLD¢to‚æwæı˜øüßÉØáï°|ïÇµõ{Ó	»[áíÔuöSvŸ”§Sº3{i!D^©‡_ß
-¾- ¼d„I8ÿör0qsíÁRW¿¼^BÏhu‰c<.ß´-æ”FÙiñB-]ßO“$:'"Œ¾œ.Y‹ò(+ÇjŞCË……§xâù?\—8j¿ú¿`Øş€q·²Ø~2#èìøï‚¯HÓÅ•Z†i‹Vt‡Û7¶×…˜¸Â?úÍrøµıëùqêÿ'ºğ•GóÇğ<4?ŞßÙ:B×B’-@/Æi¤;À;³›¬Í=ø2Ä×{§ú%ĞmÏ=û0 Ñ8€â³$‚
-Rş ÷óçºĞ‰”_Ä…ÿ…Wÿ.%Kœo¶›®{”†>3­eúğÈOÏ¢şkì;Ø¹ó+“óïµ¶0‹§Ç_ırôxœÊ!öxk ’-x+×eÇQ]FÊÒ".úpñ'_†§OS¿‚wÜÈ¤˜,ÎQC¿aşEøŸ´/\ó4E‚CòÄæZn†{Xˆég¹=büÍr¯¤Òƒ¼®€dHµZh²6Q6h"(™PÎüÛœ©lçLÅÄœWO¨Ì\°qèÆÑYô~/üÉï¥ÏaßÛ¨Zî·iB¤fœPTDóÅä3Šîÿt´ÿâÚ'‘*¥e6Y6ÆvlÉÖNpŠSe2•)q-1b¬­ı1+ÓÆÆI“o2rqÑw`—/&£P‹á8º±ÏãöÊÿÚY9]F“Ğ¾¯3@4BÑªzZMW±ĞKFGú€úBB(Q®‰º#e±ØÑğgP`µC`× 0†·Ù6ÀÔ-hÉ™à~ºÃ‘TÒ„BÇ½j`³­Ó‰£}3<„¨3`†TØØ÷‡À)9à\YaO¢¸Ç³ryÏzg~ï-óhhÜƒ—Â¼÷ÍwoEf¾°ÛÍeSÓFÏ+’:+¸yk¿ûoµ+ŸPòa×”£¢¶û½…Â•Çør™İ[]]½IÕ«ˆ(qÖ>­ÄTw»İOT;ÁæU{Ìª>ü»HßğBHÛ©Ôs0µÁ©ñ'¨wußúô¸fä¢ÌîĞOÓ3î]e›&ŒÍ}ÒQ	Ø0?£à…r’)h½öR<R”³ô}aòAÃkxwÈ(7{ÁÈÓ¹€Œ˜KlÃ4X;X¥!ã…iØÙüûa¾v	0^ÃH5íW¹([fA8ˆ^5AxC}³ø‡¤;Â¾Y´'V=Q&İBºZïAb‘ÈJ%b‡ôçd8²)kCSkªR}†/Mšø`íÚ¦ò ±>­ŞÄ‘ÀóÉf·Xä×âôã?t{9+ÎìkXŒSÊ£ò7»Ä˜ÊX¾hÅ]ˆ´õ[ÛštjqQÖóXr¨V¼­VœK›Y§	õ5-˜Î&@İ)©Qàä•á0‰gokshqå×CGÂ	ÏÆï,ó”Y¢`çÕË¡ŸŒõŞµ^®`7‰³®ğM“8Ô¼A;õÜD…/#„ ïù2oÔ«µ8eä±—ú)"òX{k’F4Í·Ù”˜E¥¦]0A½¸¡
-êÅ ÒèàI¨ì­£²·–«ï;÷J'fkÚã3ñæ¿Ö’ŞóÒY?B>Ò«–ù1Ea¢4D_¨—üèçN®+T[±(ÂPÇâÄ\„jé7¯•NÜ6Pµ¢·#¢šÖ#dW,—f‹€åÕ›LiéŞUÔ›×4N\.’–šöÚéÑ)’!o[±Â	¦½R‘ú¨5gcQ,îñ¢…>õ1§f .Ÿ[zKí¡ˆ!¶xéÅ›‚OgÚdî[¨w/ĞÚìJo–æ[ ¹ã?¿]›ñ-hõºc/@ÎŸUb¼kSÔ–Ÿeõì 'ÿYÙ´.ßP¨‹¨Üì¦ÑKÔ¶A{j/™@$¸ÖÎîğ¡ow·÷vö­}Y¡+”|¶Y™*¯mVĞzEivŠ¯–7†}q4®Uyö#}÷*Ü$øÌ²BUÓ(yz³ÒTªÎ|D¯–¦~zµLá³W‹Û¯²ÏT-o²#?u½³³şnƒuo(¦öÆ«¥¹¶UöÒ7ìsğê«Åä¦—î³fÍ5rÜ—*.³5·_ÿ*¢;_-Ó‘ia!Ù•dVĞPª…èåWK“9">I{¨ƒÕ@@At ª4WŒF)ï•ÜJ%TPš%—éŞºUZ”%2ˆ‘Ò
-Ñ1Ó,Wx^Í™3¼x’ Sš%Ô¢Ñãr]¬„j|MEqUİc%ŠÖ’Ge”ÂBó¥—ª®ÆwYÒ…§ò¾ï¬­³3üÇ¬`~¥øQ¹ækvrÊ^ŒpãÉ0ñ©»C ’şlû½$‘õûd¡:ë‡F¦dİ.àí¢ˆ“t~ú„?ùâœÃüˆ½ô.@0åÔñ“ş@¨:–¶u0/§ğçMÑıyûY 1À0’`E {z'Á0H9®ÕËÄg©¹|üì`÷è;ö,ß•ğk®ò M‹ÜP2efHÔP ›ŠÅ”›Š8Ä†ã?Íb¼ko&z~w!‘Ğ'iÔ9ôÇÃ¬½·E±Xms6ô›Ù3Z‚™rÚ›Ä1tvK m6ÑRÛHlâÆ÷‡¥Ínà\ó©–mnNßš7E#”®4åØlììNi2¬g‡å²²ÂöÇi0
-`sô¤•\¹¢˜·Ç±ÿN 4Ñt»İ.Vl¢`*§¥Mù6¥…fêpõšÏ~³ê5Z›²¥òåÒR‚˜“!NO‡şMx—EpEÃŠ3ÂüH¡¡?ücxKö¶„¶Qö–A°à¥/ùSÁ¿6Ykÿwªî?yâ4-—[bó±ÇL71lsùpèƒUÊ‘×{ÛÌs5Ù0•t˜I>Ì.!
-Öpg¼aÚÆ2‡ëğİPTO82‡€›®¢u°÷?–UÕò)QWs|÷¢MPŠP×–ä1QÑ‘
-å.âIÕ¡Óä8­:™r‚ÂYçF>ˆ©ÂûåÌ3©(SY<:¿©ãmò¹:ï<à“§~³F=ò*İµÅŸ¦6‘ƒvHsGlkF«C¬™˜„„&?IrâºÍÖ9v;×mØÁM×ğNã»´ùšhYšm¹šÔo2•Sü·3úüï8z[=@³ÍœĞ	Ëó×G"ş¡û?»—¯{«áş”)°<õc?ì>]ıs˜ãa”H\¼¤Œ<$\†—Z>â@ç€´¡,èæ¶¶z•„Ïl|ÒYÇÕƒÿ®JÏ{Ò‹£áğÄ‹‘¼ô>î‹WÚÁ^° Ê³ I¡ÿ½lRåß}ß!Ô-ÿş7Ø×ßòç>”ÎML;Z6¸ó‰ÒìcùY¶¸ã¥‡¦oĞ$ZiğéÖO®|õQ©¯OÁœšx¸·½q“æŸàö”·</Wòoå+Cÿˆ©ñ|ü$½óz^T™öìê·Ÿ'Aß+^R=Š°½åµ@·„)µ¥d¶z#yÔ;4`IÌ,ÂRE+&±W¿å,dø2·İ±wÒoÉÄ´;#ÄEÏ’ÃWã¦›#ƒ‹YWãï5nèR
-CM¦ˆœÉ[ìI¯:Fî¬ã´ˆË²®¬ŞÅ’/Íò`Ø”¡`+W¸rŸºñX¯–VÛÔ¾aqŒ·zøˆ|@¨\©áqê¿´©96ÕTŸµqJ-€–|OÃIuFt•¯jÑqZÍc#£¸TºŸõ¬ù!2‰úã®aì¼äÜ–?6>Aës•ùÏ¡Ó\6Xº\•æ¾S“Ùä‹aŒ%““gØ…dƒé%qK*<îÒzî¥ñÕo½ÉĞ+úï±ıïLÏï…}x ?Ş§ú¶5œ&®JKË¼—äçô“^•¸¤ù.¦Ö23NCM¬;¶"è§Ş>5Í€º^×étÂ‚êŒ#.±ñ”Î(Àjb­nKÅ#«­›'q0']¹	{$^Á‡ª%áM–%Â}.ëä½ğİ£.¶ D¬è­Şfß`¼cİœ&06îÕkqµ´ÍW´­ş¹ã UôAıg¯¹&ï^È_şx÷Z°åš”ÃON¡¢f`ö»§õçı˜
-©PŞ‘´bˆYCo7‘`¾ïc|6ˆÂ.äøßâf§­Jü±‹lÉŸƒ17ØhŞüè¥ P&(	€Ã±û}ñYÙşhŒªTòJÒÅkİ+Êí<ç1*Q‚XnmïŠMd”íPµS%2)~ĞM„~ Ö´\GV‚¤}wRêZı¹¸(Nò{h+<”íA®á¯×!óLröûè”èláÕ­©	l[ÅÀ¶Ò`}z;T×!m…)bwäÉ²(â¼·.oÉå£<qv¿æo9©\c-á2*7]ŞocVƒÃIyvßÑkm^C÷õE¾sVÄ¥tµ“%Ö’q^ıöÎ¶ìŠ#Ì±H®PR"U‹}È1D¤Ş¨o'tKŸ¬ÈÌ*‡²À-g¥Èæ#îb:V¡î_È8q³ÃUòjÎà7*7=İxJv:°OKe	a©r÷F÷·â"Pá#¿LFÁr¯wÙwbsR86$!¬=JVŠ)2¾*+LAvÃIEzç£rÔ…w&¬]M¸v0÷L$2ß¾‘Ù’¸NÊş­¹isªOQS´‘¥ª±<¤Î3x•89eÀdCL®¨öVÊåõûä›Ö ×ÅI5@†~¹Z½RıÃ·[ÇG[?>ß=:Úzº{Dk„x/š)"l É©ÃÖ€]ÿW‹°ŞpÌ¨œÚ+¢XP>µÅ^ìO™e>+¤`RÉ¼Ä–F1BŠXO\CbhLÏ×Mf›ò¤•=››òªæHp¥WçQgòµY&7juÙ—˜o‚¤øş5˜¬ÅiÀ¸*åM"XèqÉHï·'Gvï*ŸeWÍˆHt0œ$ÙšUçJŠEYud»†l¹#µroÕbWÇòº³‚¢\¨æ¾9§Ú·I­¯§×ñm¶¯¹ä‘5+Ò„÷K!æ¨a£!e	b0H@«»æT5•©P=Í@z*ÖPC®µ¹L"Q@Jõ÷Ã!hw
-MŠR±a~Ôrá@ÀÅûhèÁY™4N“Èû©ápá4ƒÀ™ƒ¦&ŠJ;t«şÍ…Ô¯²5#‡Éd§À‘!ÅÉcÔRÍ*³N±¢ëy¶(Ñj¹ã8ü¨—M%€6÷AM½IœD1Xæ)* Ñ{ßQ«^›fÏ!œÜSBÛ¹úZÿœKzx÷Ó/<î!:Ã_IñŒVŞ*ùÆß·ı ¾T0_Z»ç½á$ˆÕéÜlÑ"^é7C†¶ı/|X)d>L¾m@2›Ş ñ˜ıˆi@šËêE¬9oÂz¦/òø	kS+ÑïmU3ŠÇş(Bğï.zå„Uk”vHëN lD‰¯€n º†ø¦ÃFöºfEzÙæ§XxXHÑç%D‚­Ç+/ĞÂÑíÏdAÄòÈ}·¤Qìx/wğ–·¹kaGÉé^¿i¥ „eô†ØR®Êİb®ÚÜ ytñ‡„ĞxeNk_Èõv;ƒ£ğ%Ws¡Fï"ì9¸£2 R§tŠnBPU|i[5³e`i7 Š®™=¾Óø|›É±¹H1²$j ³Æ½¿ÚeÀŸè”áœŠè5…éRİôú³;‚É÷
-I"ç’ùÃÄ'®Á”¶o#ë£Óé´ºÖuĞ÷Ôd9mÖZµÌ•¬š8Í¥²”§®ı¸®z‘³ö£:è­Ú‹Ãft!‚Û# l?èŸX­zN3ÿ°Ë³«‰Jú
-£’¾ª]q-œ®P$·3Yê[G?O¼8ô¾·N8
-piÓ®¨ñ
-b™³£šPÌ 2òÃ‰ÈŸ’ADü«¿#Ø©£=µ10°Ù;Ä cãøê×w!	K1èYb€ŒZ²¥ùve}‡]V^`»E©}¦ ººa“Ù™VŠÙ–`Ã4ª@Z]ßL‰EvêÄÕº4º“Y½Ï9ã]Èãb:dñÊÄW/=Nuİq¬G èHÈ4–D'1O6ñ˜?‹?‘$ûƒ OAƒ/ÇÈ¬„õ«ô¿·Õ­tr\¦*±hæ×tÒ¥@´6•\³•4#£-n×6<Ïç¡ï±]1üêõGG_c5àmu†PrcÊÙö~];áåÌ<*&Şxõ÷(Y\øï8^ı–ò»ù‚h]7‘!‚°sÖyuO ùÕúTNÈPäôIcŒİğTÎ¶éØ‹œ!?ZÊ¬.ÁƒQ[«/p#U©	ŒÈØQ›µj¶O…2ø©EGÍjSn™ëÀ¨!šõ©Ê6”Y2k‘Ó(©F¥ô¤'¬„¸ÇbzÌ Êå:`ºµP²ŞéÀ-zSV@™"¦Èé™­DúŞ×%oõ«šòäe¾/Q\5œoxÌû~âáµ%ØŒÛgÑÉO>GÜ`nD!'–aQ‡gQŒŒËÇ[Uµö*r¢&4zÎƒgƒ­%eØúŠÑk›¦hÖ›Í!üÍ jA$é”÷‹ oÖaªsØÆı!n¤Æ’!Ş&ã d5å£õ¡Õß·5™.µwTÄëù°õÍÁÎc³UÖßÑ-ß"0Ş0Hp•S Ğ-ô§öÖú• Ê% ©*¢ØÓ¯Ôå¨IMÆÃÈëã}K0"¼d=lè‡P¤ MàÉùNªoĞAaá`;â |Ø€^èŸ_ıÒr&ÔS4”Lpm,$OŠÇQÀ‰Ïpótˆ¯jçá´Üá\ŠFÑ-ù…L´Ê±2[X.LF?0çˆ`œA0Ô&òz=œ>juÇıîwe’$N‹æ¡"şÓú0Œ—|ÙuæW?H¼“¡ßTyıá:O×é›£«ôEÍ3]Ãèô‹µe˜q4}"fÏ`JøÕ9ØÁğwVæ~.vW•YxØõ©?ÂT¯#/î‰Ô*°¿özĞÖĞÃN±SğG¥É4âù²6I&W¿ÄA”ÌnŒQ»>t ™CõwÊæmÔ1öRNr$‚Z³®¿9Ûlõ_ô™BU9I 9XvßKÎü~iÃÀ\M§°
-»®úŞÕ+¶A"Ì‡lĞM1¤H¹yOÜ*îTš†7òz5,¥¹ûT„ıdîÄŞé>ÔÏî€”xŸ‡'Àdí£Soíás°ÏÇÀ…1¿?™Ó«ß¦ÎDcRèäœ»“Ù¸(Ó¸u‹^9ä ã…x wÕ^6.>cv¼Uˆ2$A7RV‰ºú¦uÓd˜»¾#`OPëé‚å¾;ôñÏÇöúm.¥:Ø—ù­¥Í.f¸~K^<-<˜9¸×®AàµøGµ>é©lpæ¾ò{ıC$£qìn…b¤?ÄE+j™^LG2ZšÑXó…H®e°Ã0pZ3ËE…¡ZBø	æ*#‹íék)Ôœ©I´'F—?ÕüÊ]€'Æıêt™å¢ıK5ÈÖ	rg+½„ÛFI4„ÿF¹™…Um½é"8ÅgbhjÀ„PMã†]è½ó1eQ±ÄŸàpPuñE†3R•Ì‰#¹¢02ôoKÌ	:bğÀ*ìCg’vğâé2ûÓÁSìÿÑŸŸ²ösï¼Ë<¬‹ü¤êã¯.K€(ü÷ú ÙšÖ©÷OÙ£iÅÏZ#féy[;"ïaì{Caªó(BMûafBŒ}ĞÛBé¨Äs@ W<E‰ØÕo˜hH‡£mZâ¦M¹6øé^y÷µÑÿj92wXQÜØ¢ÌèÌÅ"Àm —û¾¨#^‚ä Åq Só¬ öv8­ÏçÎíÜŞÌ¢P‘w°d‚,ÑbÑ0´‚ĞŸ»»3jÎh™ìì… »o7‡všÔP¹@m¶4<»Z¢;lSm5ƒZ	ç-¾ûJâ[ö¨ğoùıBõ<o½ÿ[±u"T/+åb?ç®‡ÜR;àÅbØÕ
-}À€Õc óğê_V×Öîß[}í0 kp@Ow«G•ª‹3GÑ¯úªD´™¸Ôâ:ğN@™àÕ™ÑFãàô,¨£÷òÔˆÙQêÊZuuó_ÖUÍõ~¦e½úc~g¥}+T|õ˜A#9ö¿|¶uõßWÿµÏvvÙ³ı§{/ô²›8Æ „}×á^‚W1ì<oØ9Åÿõ·ÿeÍ¿ç=ô~\Ÿ/sÒDV˜âç¥×ìfÈ8åıí Şº±öÕøüGüç5¸¤IRo‡Ğ‰XÔn}ØÈ¶P(ŠQIO1©õµ‚©À)ÑsŒNÍ2:î=RßkEó†`Bf½C6g×W»çwø	•ğºr>¥¸ññ\è<t'Æ@ºÒ£;êk÷ÑV%Æ§g¾C½{=ÍÁVb RÀ"ĞÎ><j…Q'ûÊTÉ`Ä˜C”Œ&’ÕPÌ¶“F4fƒ8u’·„Ë6ª›Ë±Ø;<µ™“ü¾¨å°•_İv\|»?œA‚)Ïe!¸JŠÌË‹¤ˆ%ºÏ¯ŒcM× ]{:m2'û£Î;ÔÎÑÎõè;YôR2ñŒØî#f»$-§Q’±”uoÊY×ºŞR¬"ßŠg ËrŸèÃÕUW
-VL Ju‰ÌõÔIÊ_ûÇâµ(¿Ö:{põïkº ï@õõ5ìÕCMîQƒÅ»ëƒßß=:Şeß¾|q¼{Èşß¯l}uı+·ôœç]¾MšœĞá±M³S:!Ö‰§rœVÕ®_Ôğ¼ÆÇs˜‘5aWÿ;õƒ¤ÎQ.0°U~xJçV0ù
-^hĞmv‹ÆÍf<÷ÂÏŸÉ.Êƒ!Ê&ñPü1ŒzÿS{-QcXèÏï—†Î]ceÔÎŞ+ïĞÄ;zaôß˜Á9Jt´uª~IàÔIgAŠÂ£ÉÉ(H³ò­~çê²FI¹&ŸŒ
-ĞOÚtTÕùìK!–Rxìÿ<	@<T¾–0¡XF~A¨º,UÂò²w»]YyY’@9î°-mÅî»¶8Íòt¬4Ñ—‡Ï¦›PØÓÏ'ßHŸât>CÆÀÚûcÜ2\ªÎme9Ñ‡ÈÒ'S2£[8ZF.çÎ`ªÓg€Ô*5Õ‡deâ`Z9Ÿuœ{•ûUe½%¶É¾>òŞù¥kÓ`ÖÔq³ª”:sşz¹¯M|ª¬°_İ.‘Üı!­èq\óÃ_p]D¦kA4µaüõP{ºQ:ò1,›ÿé HóÏŒİbĞzK¯ÓksßY‚SLgdC­Øá¯0B%ÁŒ($ÆŒëÍB½'¥`o™°âå¦Dm¦NSs´VC“Ó'3ä2wÄ.üH¥-,¿şdÉ~¦TÑÍÚ(H@J¼!JÍœaUöoÄ·p{©Í
-eÎšË»yÖUÓÍ4ap[à¼”rS4r)ÏñÜ¯ŠD£;§z¶÷â»#˜~L#a\Ãâä¹·;d–å1c€ÌkyJS,5ÑÒ’Íjh`&¡ˆ
-¢šY¼Õáå?ş{å­rá]È?ÔMB<Ê}¯ï'.ÊŸ‹'WÔ.ş   ÿÿ ö,Sxœì<ÙnÜH’ïşŠt¡a°º«J‡-»»tA-É=šµ-A’³;UL©Øf‘l’jÔú˜Á>4æ¡Ÿóú±È‹™I²Š:¼èÅá£HFDFFFFFDF’¼nè(.Ù1=#ëëë¤3JY6
-&,Êã­¨ a‡¼xA¼gD^kÛÎû-Dú5!ÙhÌ&,[¿¡§Y‰·LÑK¶~#şß² m¸²œCŠ_M°òg÷ö™üåvì<N'EHÓ ÎÜ>½-_ı°+Rd,]¿IÒø<Ùó[àã8¦Ylğ·mÚ;££/Eâ6•1€Š#2
-i–} ¶Ş9»è§qÆú+‹$é¿&i\D>óû/¯Cr§>Kåjiq‘Lèuÿª¿ “ë>-ò¸³aHmmüÒ$Ÿ³ë¼ çq”÷ÏâĞ'ü	'ö;ë¿²ğ	ù‘³N9bEJ£»ß©IaüÒj/©4—MŒF^‹F^;üÄRFŠ	¡é¯Ep“¿í #`’E~LòØ3|Š?à	ŒzÎ&”$4¥¡L3Iâ‚L‚‹”Şı~÷_ñÀâ9±XöƒK“éó]ü§?ŠC’M†üw_‘šTÄ³vVäyYÏPY·Ã`ôeıfL#?dB†·Óf‰Àè_ƒœ9«ùex\b2í¿Ôº‚ª0/Y:TÊ„j’ƒT² Õ­OÃ÷@K“¬?‚éÔ)²<8ŸªÛ,¡#Ö¿î/w,®7œ>¬íÄWQS†äï07—ù €X´cLS©Nkü‘-É!ÊZùÖKKˆËKˆ®µTŞ<J*•>~LÚ‰áe9-P;¨Ím%±¶ jZ> 4a<ÛcuWŸ5ZX ı~ŸlƒLÒ8dÄgä€^Pn±3Âí¼`çÎ¡k²„B ƒ4N2rdG4„)‰Öqk³lH¶4>9] 4™ğê#üw ì¦x.-æx“!Éò4ˆ.z$ß’NVŒF,[üé°4ÓN—¬oË8ğQZßM‹&ÀFEò~²ë$Nsr^DÂ¢ÖwÃ«éY''§=Å´¾“¬öÊÆ{Ïn‡³ÄÓò‰£,''£éh|ÌÒILR~¤oO¡hé(§9ó:îj‰Ã&	,§ômÂ`p´]ó‰‰¹ÖmåÂúépi…ÿ8<xÓÙkÙ:PrxEf?2X´KH÷ „…º/a£"£>•74şw€±áq³Å”]ÀP-l9HT{Áò †ˆâ€xÀz
-ì¦¥Î OÆ=W•ÎvpN¼ç
-üöy.@»$ey‘Fdi•Ã‰fzS`™ĞXß‘ÎñââÿRğÌ„„g@ûÁùù18G€ôæã=Ë<6€®áC¯Kú$+ï*˜;tš)ÌBO“[ ôEò-y­ÿY~Õí+²w²¯ØË"Ö%›d‰5q½5dĞ)jôa|•‰±yÏ&±çÂp ‘Es˜FÓ“S>_$ëö¼€‹µKGcÏ£|Jtä0‰çPñQQ˜C“8Å éWâËÀáÁ#´˜j,W%±™À%ÉÇÀ·˜ Gql%,-+‘É¯ƒNÀ³`#X±&ÄÃIÈ¢å®\¬«)8á`šÖæà[=-9ÖˆRæ”¥ûg¿™§ÀpùWpV‹Aø¼YÎıªƒî9…†æcK%üß­pâ³œ!¼„å®ÖAc—p˜JA"×PZ¤ñj§VƒWå³Û²#àÇaš.r²n I½È·ÊàÖ°ã§Áo¦ÅZµ†Éh=ò­ÔV0^]³}Û‘¶H¥yò´´rº u=b<zL*ƒvIÃ8ÕÚ®åm?†~,ºˆ\[yL#rÄü1"¼²¥Ê	›íš@	Ù€^uM*¯pf¬çµ…óC+œï-0nm–m¬•ÅÊˆÁb•ÇÇqNC”—¾o5V>C
-^6N¾ò¨y‹Ç>ªİÏ¥}rÚLhâáÛ0'_aO=˜¶]xk÷c®**qî_‚W˜Àoˆ€‘W‹“ìæ€»q\ƒßîüL¼íxÂÒQ@Ãn¹² ~OZƒtŒ†õaÎI‘=sB‹®ïùC¥=oNje¹`¹qêÕ¥£òŸû H¡s?4Mâæ ‚Gé„p°ÂÀØç8µøã8r	$øŒS8b2b!FöõØÁµƒ;ÃhÀc¿çğğ1
-r‡hÆe šcyø›&ŒÁ&Ó­Ü[ìòøc’°t›fè*|çDµÈDœÌ[êZ°`À4‚„†Çr:Ôjs¦™¯³r
-Æqhµa«¯5¦v*} Í3~ÃE>vº¸I1¿ÄAäuz¤Óu†5HˆÒmÁÎ_á Í’jèŠ¾W˜Â0¥ÊB¹zÏ›Õõ•é›|çúŒMÉ»ûŒœ¥yğˆN‹4‚v,ÒKŞTWAÂ¡³0š Ê"›ÏJã]ÜOa–ÍÏøªf)­í=ËÅŞpG´]T¿ÔÿÒ‘6’;Ì=râ8º=¡&§Â§—Ãœ»'é(Û»?.Yaä‹dO[‘˜à²ÆÚ/¢ œO%ÍöÁ!˜’¡ÈË×„ó³áI¦G¾ô~ÓŠÿL£ÕEšêûîóZl¥)ÎÎ´®’ŒÑr)å]Å_º·bMdşŒ€C¶fuH¬¤^_Y=4'4E°mø’ ;00®ïâ+e\`ÃÂg™Wí6„5{˜š&d˜Ô{ÓÒŞ‹Ñu™00ún%„İà‘ı&dÀ< jyÆ×Âjtùü1Z0M8³ƒ™x5íˆi`¢‘=hjÇÔ\c"iIµ2•åÅ[€ê^öVİ
-¦Ì)á¨=æ9ÊÌ›Ñ±R0&k§fò#Èõ÷£p*{¯²_¥í?Ü·{4 ûıi{ÿıîáöŞÖ;¥ZMÀG[ï¶>½ß:>ÜÛşønKMÎ÷wÿã1·˜
-Üö€5_32aø®irbŒ‘£yŞFC@Òk×ÏU~¨îŒ¾êÑxI¾âïLSa˜4ÇÌ|·ÎÕ¡\BVMÃ× FB«kÄ¶N_Iß–±Jc:¸¬4 2~…1)­f<­­¦M­
-­÷Ì"+ûk=UL: ‚ƒÃE>°5fÂÃ·jÚ˜Ö(pØ˜UÊŞ@”?Fr÷¬NdFP©~“˜/ÄXÛ%3yâ´Ô«<:‹Œh£47ãÅEÊ‘éÀò÷Êä‘2r3Y*jMS«ãsò <skÓ"ô5RkƒÕ@éò;U’z­éÓ+(ú;ñÈóñïYlï¿{·»}¼·ÿáh°½õn÷ÃÎÖáŞş§­íıİ£^)…ÁJc†6ÿš-C™÷:²ƒà\%z¦¡›%'ë(¬À…ø9Æj›Ay50„`Õ‰ÇÒ´œ‘šønšµ’`*9¶š ]¹e!©>³«bp—ïPì^x€ïÍÔ0ôcÀÖTÂœƒôæŒx}WEÜ©ZÌËqí`„›¦JÀ3¢ö˜…ìœ‡Ñ%«Kƒ½¿YoƒëòİNp÷Œ* `vşÂ3U ¼-å'Ÿ¿¹IEë–p€Ï%Æ‘qEÃ[2¨rw|j‡®íÆğÇà¼qàRùsÔBíÿñ«oàÛ ‚øKÁXÁMçgŒN&©¼Ãoº¨îtÄº%rU®.’ôöÓ»ßQÃmš"2€Ëù¡§‡v¦^9Ã\·ò*N¿dcÆã¿½;úÛ È1¡óKGŸòøå™úÚ]­àŸÅñŸ|‚ğÅÓĞîKš$`[%}İE­g=á@¦,kw;utk·y•9/ŒÍjå³"ù©¤÷é›½„ùš½£ı#¾æÀ]–„ãN÷dñôvpf×Ÿ+Ík;sÈBšßı7¬#DìcâÀòQ˜‹§±b’t
-kjn–í’~‚Š["!¶Á§FÇÍÂ·ä/à¶‚oşí‚*t˜]Y1ñËÊ
-ømm»Ã½Úy?cùcQ¥øbÍÚÇJ—åJéÉ²]ê’ÒÑ ~\ŒsQ3,xé‹³¡_¯Cfsãå–…/¢•J˜ÀAËÅHàËä ¸4± Æßö”/8åz© ı³ùIÌê »X R£âÔ§‹“Y¤â]«Ê¬Ë`–ÒĞç¥ºèB=|ÓX¯qİ_©mdc˜W\˜v±†’qÆÂó>ß½Eµáw¼JwÄ&§^eé{§PCiìªÉbÌM.·\Ã-Õ’7fEb-ÿ8Ø#Û4õ³“ä"ÏÿÁI’õ—°©¼]&á…qûªvZ˜ä©.+²‰„^bqYfVÊ[Ír»Ø…¨ZS–¹5e‚ú+ ^`&ÀÊxp>ÂxôÅ™¸œƒïgd7d"yf©¹[.Skd„¦A›a±Æ²ú¾¼TVnRêöèûÊ<†q–¡ò€?vWmO“mÉu6dÊ¦zMÇİŠ SóşDŠ@'gĞÆÊ}AøB*bƒÉ£¢Ï?‰6ˆn½®Ñ†ÃoJ…°âf¸{\3ß[îR–„À†×á‹p¯Ó§5ÿW†[™ùx™iYÀ…÷Ï2ÚÆŠ6¼uş_¸voæw‰çúZ<ö¯F…Bş$#/º÷¦Í¸ó|…1¯S t-Şòı£YÎÄ½5¨ª–sQ+9 ®U	tôÄÈ7)†%RÕô¸YqFA8n×<§	<ÁY^R•Š‚KæêŠØ pFŞÀ£gY áƒVH'ı¥…eÒçş*—Ä”?pw‡¦öG­çNñZ%Eî`æÓD…K“kß†…¥ë‹l-8¶:Ô“Y¬•7’-ƒÁÀ¥tIÃØ+w7Übvˆ( –¸ ñì”Uöê±xÓ,pBİ¥ğWıó¼û$ı„¨B‚å7nÊÔÔªó²¡Î×expŠl¨'‚¸Å8|iãFĞxY­	—mDXH9Z~Ói'×TWƒU~ø#d#w(¥˜­£6’¶*…ac}¦md~ı8i«µ!c“ Î`R‡¦Ü
-q~­¡Áz§ı$æ…ísN0Ä	ÏçÑóMÅã«Ìà”kF<,[—äğàMwmA Ì¡Ä6tfo[bòZnwõxx uèIUÏÜ¤l5Çø+Ş(8éT“¸m©<zkãHn{©'mµOí‹iêIkj/Í  ı/j²¹ÁŞF“Íã	X¯ş­Âí,ë Œ™&º±ŠŸä.¿[]xÙô6UC}kü­ÛoG¾«Òk`¬[õÙ›Tµö¶êµÓ3ğ5£XOäÂ—î;f]ÏCø=|˜ı„Ó>}§îMÍf=ß¼^$›–è«1ç’tk­,ğ´ÿ²UÈU¦ùmxQ› ä‹ÆÅ„WÌ`jĞŞîı7gÏÜø¸#Õ2ñæğSQ„-âhíÄ¯=Y‹×6Kshæ-²…‡Gbë8‰ÊñƒïòJ8<n"szÄJfáuÒÈØ$xH9Q}&E·˜ÀC|0¤j^g[d):İyÒq´¸K†3Ç^+X­lÖrz²;)Õ—W¸'™<éŠ±“’}õde>fÔw¦„²¯o”‰íŸU§'y²´˜\ŸŞ?=]aYIëŒ
-phÍ
-¹ñJ;qkùø~ˆ*B»?¦ÚÂ¿?æ6¼c•û}QMĞÙPYœÇQáµ ÷ïƒYÏL¼·;?wBƒWÜqK.q÷ÅÃ‚Š+Å­ÌÎ†.2xËm©-uÉOqåu?¾k²Şá1:E&Aæü¼/°‘~·^™[÷VlB‚éª´³ØŸšü‚i‹ÓŸùÃ±`ZúbX&ÌŠIMnj*…â«	ükçäcyÉŠ#ód«qLÈ…›‚Šg©ğàê[0çÿ	÷³à'À/¸DVFp¼÷øÌãÇU»ƒ„b‘Wš{Ë=ÒYìÌ åÓ©CH0{9ø¦S<µ»uGØ™Ûş77œIü/o?7cÙ>¬y>¬Æëµºƒõ—²ş‡¬•m½xÑ=»HtõY¢U—á^°>Õ>'ÂMÆZ+hUãa—­ªé€?m¹ı\u¥$´ÒŞŒ¢z&ğêè]½P¯X!¬ÿqšY'Nì«ö‹Äø,ÊÂòJ#V%LWıLÎ¸*ø.ıo÷ZËızÓÒ´a!£“Õø¶µ8ñÂ–1¸„¶—´ÏÏ]*ÓËipff/÷€È]ÍDÁóQ8,I‘&¡a«äı›j‚Û½†_l£jtq‹Ø³8nh¼šÇƒ¿²ŸÍêâómîoÔMLŞ h”>`ûP•ªË Ô8ı2:Ç¼rÌ<ØÒj˜ÔÀ)/,}0«Ú[Ík#+³û@D”/
-Ò"Á(Èxğdi™;”ó 1av5¸nâ±­°š)Ì•ŞW}À¨šT‹Ç™–µ¿fXT
-?ÛÎgE”ç6il= aÙ˜Q¡|;·EU¸üÖf/8Ò2"-šyÉÏR­(ß¶B3Úr4ë¬¿šU•ù§êMÙÖÊ”_i=åU1ùçû<ôù“ƒÉGÙoÓ¡˜¥jÍ%NMèÒ`e¦ÕQê/ÍD©Û¨‘‡rÉEÙ¾ªËîw°4ÜK~ÔRœ&_p‹3*í-ÌmYšÃÑ=>¼D~òä‰Ù.^ÚgÉ½·ò#s+æ×äæùmx‰“9ËİéÎIšßı³Nˆ°¾îXÎ¸±â“Ù9/ÀËMIëa¡Q0A'şËÆş~éÏõ­…=‚P2½û#öc‰Q].ŠÓfÓ˜7 k[!Kóí …LÕ®¬Ô|ôÎÁš¹
-à5cäfÊ\»XÃy¨_!²d¥™lãaj­:òsê°{ôÍ<=ô¤½+káÌä ˜¨J›R(4}9Øg£HmGW¾ú:«)x´{üˆ…½õW1Ÿ„ì’½¥¾ğ=~ZY¦íÑ«şyÏñ%næ­Ä'eV®gœî™‡ù‡Èx¦p&1ñÙ(/ËS²æ¥2ü›v9Ã<móêR—æ…gìÏòhÇ !‡i^:v¨Í7ı`oªY‰'³Ğ >i^x"ºìaw®LÔ÷Ü*§ö[8.ºûßÍï?—sšÉ8¸¤÷Ú;óän|ÆLq]~	à+1]ºxË_‰7íÜ<ˆµÊ‡†5·@d°(ÙIk//b^{>Çíf€şìx”Ïï7!Œ®’‰Ápù—jYÍÅ<•_1ÿñÜÎÜ‚0¯úoc×]|{"›‘>(/}t‘Ÿ¡o¥sÏ-Ù¶B©ùÅüşŠËÜb™³•8Æ6L[´,oÙÆÈ´‘½dXÖá¯ß”mƒgD½JSç£µÛ›ê*ĞJ ıââÙ¿…áXí–ã³y”¡á^Ì—Qı7Ó«WíhyİÎŒ—Ÿ6¾OdVN‰”‰ñ¹|LŞÍÙ(+—2º)½—†oí?*ç¡2ª$&øt£°¸ûÃ§=ó³%AQz"ÕåùÓGçË·Ö~Õ…y!»Ì_ll¬2^‚1/„o¡1‹òŞÔÖfÕh~UÛK2Ü¢d^Ã6«DN×l–Ïíğÿ   ÿÿ À¿œ
+                            <span className="text-[10px] text-blue-500 font-bold px-2 py-0.5 bg-blue-50 rounded-full">
+                              {entry.semestre}
+                            </span>
+                          )}
+                          {entry.periodo && (
+                            <span className="text-[10px] text-purple-500 font-bold px-2 py-0.5 bg-purple-50 rounded-full">
+                              {entry.periodo}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-600">
+                      {entry.nomeBase}
+                    </td>
+                    <td className="px-6 py-4">
+                      <select
+                        value={entry.status}
+                        onChange={(e) =>
+                          handleStatusChange(entry, e.target.value)
+                        }
+                        className={cn(
+                          "px-2 py-1 rounded-lg text-xs font-bold outline-none border-none",
+                          entry.status === "Pendente" &&
+                            "bg-slate-100 text-slate-600",
+                          entry.status === "Interessado" &&
+                            "bg-blue-100 text-blue-600",
+                          entry.status === "Convertido" &&
+                            "bg-emerald-100 text-emerald-600",
+                          entry.status === "NÃ£o tem interesse" &&
+                            "bg-rose-100 text-rose-600",
+                          entry.status === "Sem retorno" &&
+                            "bg-orange-100 text-orange-600",
+                          entry.status === "Contato via Sales" &&
+                            "bg-purple-100 text-purple-600",
+                        )}
+                      >
+                        <option value="Pendente">Pendente</option>
+                        <option value="Interessado">Interessado</option>
+                        <option value="Convertido">Convertido</option>
+                        <option value="NÃ£o tem interesse">
+                          NÃ£o tem interesse
+                        </option>
+                        <option value="Sem retorno">Sem retorno</option>
+<option value="Contato via Sales">Contato via Sales</option>
+                      </select>
+                    </td>
+                    <td className="px-6 py-4 flex items-center space-x-2">
+                      {!invalidBaseIds.has(entry.id) && (
+                        <button
+                          onClick={() => {
+                            setSelectedEntry(entry);
+                            setSelectorOpen(true);
+                          }}
+                          className="text-emerald-600 font-bold text-sm flex items-center space-x-1 hover:text-emerald-700"
+                        >
+                          <MessageSquare size={14} />
+                          <span>WhatsApp</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleContatoViaSales(entry, entry.nomeBase || 'Bases')}
+                        className="text-sky-600 font-bold text-sm flex items-center space-x-1 hover:text-sky-700 bg-sky-50 px-2 py-1 rounded-lg ml-2"
+                        title="Registrar Contato via Sales"
+                      >
+                        <PhoneOutgoing size={14} />
+                        <span>Sales</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingCandidate(entry);
+                          setEditFormData({
+                            nomeBase: entry.nomeBase || "",
+                            nome: entry.nome || "",
+                            telefone: entry.telefone || "",
+                            email: entry.email || "",
+                            cpf: entry.cpf || "",
+                            curso: entry.curso || "",
+                            produto: entry.produto || "GraduaÃ§Ã£o",
+                            numeroOportunidade: entry.numeroOportunidade || "",
+                            semestre: entry.semestre || "",
+                            periodo: entry.periodo || "",
+                            metodologia: entry.metodologia || "",
+                            formaIngresso: entry.formaIngresso || "",
+                            numeroMatricula: entry.numeroMatricula || "",
+                            status: entry.status || "Pendente",
+                          });
+                          setIsEditModalOpen(true);
+                        }}
+                        className="text-blue-500 hover:text-blue-700 p-2 hover:bg-blue-50 rounded-lg transition-all"
+                        title="Editar Candidato"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteBase(entry.id)}
+                        className="text-rose-400 hover:text-rose-600 p-2 hover:bg-rose-50 rounded-lg transition-all"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {filteredBases.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-6 py-12 text-center text-slate-400 italic"
+                    >
+                      Nenhum registro encontrado com os filtros aplicados.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Editing Candidate Modal */}
+      {isEditModalOpen && editingCandidate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden my-8 animate-in fade-in zoom-in duration-200">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-6 border-b border-slate-100">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <Edit2 size={20} className="text-blue-600" />
+                Editar Candidato
+              </h3>
+              <button
+                onClick={() => {
+                  setIsEditModalOpen(false);
+                  setEditingCandidate(null);
+                }}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleEditSubmit} className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-slate-500 mb-1">
+                    Nome da Base *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editFormData.nomeBase}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        nomeBase: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                    placeholder="Ex: Junho 2024"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">
+                    Nome do Candidato *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editFormData.nome}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, nome: e.target.value })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">
+                    Telefone *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editFormData.telefone}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        telefone: formatPhone(e.target.value),
+                      })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">
+                    E-mail (Opcional)
+                  </label>
+                  <input
+                    type="email"
+                    value={editFormData.email}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        email: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                    placeholder="exemplo@gmail.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">
+                    CPF
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.cpf}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        cpf: formatCPF(e.target.value),
+                      })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">
+                    NÂº Oportunidade
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.numeroOportunidade}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        numeroOportunidade: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">
+                    Curso *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editFormData.curso}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        curso: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">
+                    Produto *
+                  </label>
+                  <select
+                    value={editFormData.produto}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        produto: e.target.value as any,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500 bg-white"
+                  >
+                    {uniqueProdutos.map((p) => (
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">
+                    Semestre *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editFormData.semestre}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        semestre: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">
+                    PerÃ­odo
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.periodo}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        periodo: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">
+                    Metodologia
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.metodologia}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        metodologia: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">
+                    Forma de Ingresso
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.formaIngresso}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        formaIngresso: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">
+                    NÂº MatrÃ­cula
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.numeroMatricula}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        numeroMatricula: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">
+                    Status do Candidato *
+                  </label>
+                  <select
+                    value={editFormData.status}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        status: e.target.value as any,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500 bg-white"
+                  >
+                    <option value="Pendente">Pendente</option>
+                    <option value="Interessado">Interessado</option>
+                    <option value="Convertido">Convertido</option>
+                    <option value="NÃ£o tem interesse">NÃ£o tem interesse</option>
+                    <option value="Sem retorno">Sem retorno</option>
+<option value="Contato via Sales">Contato via Sales</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Form buttons */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditModalOpen(false);
+                    setEditingCandidate(null);
+                  }}
+                  className="px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {loading ? "Salvando..." : "Salvar AlteraÃ§Ãµes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <WhatsAppMessageSelector
+        isOpen={selectorOpen}
+        onClose={() => setSelectorOpen(false)}
+        leadName={selectedEntry?.nome || ""}
+        leadCurso={selectedEntry?.curso || ""}
+        leadMatricula={selectedEntry?.numeroMatricula || ""}
+        messages={whatsappMessages.filter((m) => m.tipo === "bases")}
+        onSelect={(msg) => {
+          if (selectedEntry) {
+            window.open(getWhatsAppUrl(selectedEntry.telefone, msg), "_blank");
+          }
+        }}
+        botConfig={botConfig}
+        onSendBot={(msg, contactName) => {
+          if (selectedEntry) {
+            onSendBot(
+              selectedEntry.telefone,
+              Array.isArray(msg) ? msg[0] : msg,
+              contactName || selectedEntry.nome,
+            );
+          }
+        }}
+      />
+
+      <WhatsAppMessageSelector
+        isOpen={massSelectorOpen}
+        onClose={() => setMassSelectorOpen(false)}
+        leadName="Candidatos"
+        messages={whatsappMessages.filter((m) => m.tipo === "bases")}
+        onSelect={(msg) => {}}
+        botConfig={botConfig}
+        onSendBot={(msgTemplates) => {
+          const templates = Array.isArray(msgTemplates) ? msgTemplates : [msgTemplates];
+          const selectedLeadObjs = bases.filter(
+            (b) => selectedEntries.includes(b.id) && !invalidBaseIds.has(b.id),
+          );
+          const messagesPayload = selectedLeadObjs.map((l, idx) => {
+            const template = templates[idx % templates.length];
+            return {
+              telefone: l.telefone,
+              message: replaceMessageVariables(template, l),
+              nome: l.nome,
+            };
+          });
+          onMassSendBot(messagesPayload);
+          setMassSelectorOpen(false);
+          setSelectedEntries([]);
+        }}
+        forceBotOnly={true}
+      />
+
+      <AnimatePresence>
+        <MessageTemplateModal
+          isOpen={isAddMsgModalOpen}
+          onClose={() => setIsAddMsgModalOpen(false)}
+          tipo="bases"
+          onToast={onToast}
+          availableVariables={[
+            {
+              key: "[nome]",
+              label: "Nome do Lead",
+              previewValue: "Maria Souza",
+            },
+            { key: "[curso]", label: "Curso", previewValue: "AdministraÃ§Ã£o" },
+            {
+              key: "[unidade]",
+              label: "Unidade",
+              previewValue: "Unidade Central",
+            },
+            {
+              key: "[data_contato]",
+              label: "Data",
+              previewValue: new Date().toLocaleDateString("pt-BR"),
+            },
+            { key: "[saudacao]", label: "SaudaÃ§Ã£o", previewValue: "OlÃ¡" },
+          ]}
+        />
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function BasesRenovacaoView({
+  bases,
+  onToast,
+  profile,
+  whatsappMessages,
+  botConfig,
+  onSendBot,
+  onMassSendBot,
+}: {
+  bases: BaseEntry[];
+  onToast: (m: string, t?: "success" | "error") => void;
+  profile: UserProfile;
+  whatsappMessages: WhatsAppMessage[];
+  botConfig: BotConfig;
+  onSendBot: (tel: string, msg: string, contactName?: string) => void;
+  onMassSendBot: (
+    messages: { telefone: string; message: string; nome?: string }[],
+  ) => void;
+}) {
+  const handleContatoViaSales = async (contact: any, origem: string) => {
+    try {
+      await addDoc(collection(db, COLLECTIONS.SALES_CONTACTS), {
+        contactId: contact.id,
+        nome: contact.nome,
+        telefone: contact.telefone,
+        curso: contact.cursoInteresse || contact.curso || "NÃ£o informado",
+        origem,
+        createdAt: serverTimestamp(),
+      });
+      onToast("Contato via Sales registrado com sucesso!", "success");
+    } catch (err: any) {
+      console.error(err);
+      onToast("Erro ao registrar Contato via Sales.", "error");
+    }
+  };
+  
+  const [formData, setFormData] = useState({
+    nomeBase: "",
+    nome: "",
+    telefone: "",
+    email: "",
+    cpf: "",
+    curso: "",
+    produto: "GraduaÃ§Ã£o" as "GraduaÃ§Ã£o" | "TÃ©cnico" | "PÃ³s-graduaÃ§Ã£o",
+    numeroOportunidade: "",
+    semestre: "",
+    periodo: "",
+    metodologia: "",
+    formaIngresso: "",
+    numeroMatricula: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [baseFilter, setBaseFilter] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState("");
+  const [produtoFilter, setProdutoFilter] = useState("");
+  const [cursoFilter, setCursoFilter] = useState("");
+  const [semestreFilter, setSemestreFilter] = useState("");
+  const [selectorOpen, setSelectorOpen] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<BaseEntry | null>(null);
+  const [massSelectorOpen, setMassSelectorOpen] = useState(false);
+  const [isAddMsgModalOpen, setIsAddMsgModalOpen] = useState(false);
+  const [newMsgData, setNewMsgData] = useState({ modelName: "", texto: "" });
+
+  const filteredBases = bases.filter((b) => {
+    // Gestor Unidade filtering
+    if (profile.role === "Gestor Unidade") {
+      if (!profile.unidade || b.unidade !== profile.unidade) {
+        return false;
+      }
+    }
+
+    const matchesSearch = b.nome
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesBase =
+      baseFilter.length === 0 || baseFilter.includes(b.nomeBase);
+    const matchesStatus = !statusFilter || b.status === statusFilter;
+    const matchesProduto = !produtoFilter || b.produto === produtoFilter;
+    const matchesCurso =
+      !cursoFilter || b.curso.toLowerCase().includes(cursoFilter.toLowerCase());
+    const matchesSemestre =
+      !semestreFilter ||
+      (b.semestre &&
+        b.semestre.toLowerCase().includes(semestreFilter.toLowerCase()));
+    return (
+      matchesSearch &&
+      matchesBase &&
+      matchesStatus &&
+      matchesProduto &&
+      matchesCurso &&
+      matchesSemestre
+    );
+  });
+
+  const uniqueBases = Array.from(new Set(bases.map((b) => b.nomeBase))).sort();
+  const uniqueProdutos = ["GraduaÃ§Ã£o", "TÃ©cnico", "PÃ³s-graduaÃ§Ã£o"];
+  const uniqueCursos = Array.from(new Set(bases.map((b) => b.curso))).sort();
+  const uniqueSemestres = Array.from(
+    new Set(bases.map((b) => b.semestre).filter(Boolean)),
+  ).sort();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const cleanCpf = formData.cpf ? formData.cpf.replace(/\D/g, "") : "";
+    const cleanTelefone = formData.telefone.replace(/\D/g, "");
+
+    const isDuplicate = bases.some(
+      (b) =>
+        (cleanCpf && b.cpf === cleanCpf) ||
+        (!cleanCpf && cleanTelefone && b.telefone === cleanTelefone),
+    );
+
+    if (isDuplicate) {
+      onToast("Registro jÃ¡ existe na base (verificado CPF/Telefone).", "error");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await addDoc(collection(db, COLLECTIONS.BASES_RENOVACAO), {
+        ...formData,
+        status: "Pendente",
+        createdAt: serverTimestamp(),
+      });
+      onToast("Registro salvo na base de renovaÃ§Ã£o!");
+      setFormData({
+        nomeBase: "",
+        nome: "",
+        telefone: "",
+        email: "",
+        cpf: "",
+        curso: "",
+        produto: "GraduaÃ§Ã£o",
+        numeroOportunidade: "",
+        semestre: "",
+        periodo: "",
+        metodologia: "",
+        formaIngresso: "",
+        numeroMatricula: "",
+      });
+    } catch (err: any) {
+      onToast(err.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const [selectedEntries, setSelectedEntries] = useState<string[]>([]);
+
+  const handleBulkDelete = async () => {
+    if (selectedEntries.length === 0) return;
+    if (
+      window.confirm(
+        `Deseja excluir ${selectedEntries.length} registros selecionados?`,
+      )
+    ) {
+      try {
+        for (const id of selectedEntries) {
+          await deleteDoc(doc(db, COLLECTIONS.BASES_RENOVACAO, id));
+        }
+        onToast(`${selectedEntries.length} registros removidos.`);
+        setSelectedEntries([]);
+      } catch (err: any) {
+        onToast("Erro ao excluir registros.", "error");
+      }
+    }
+  };
+
+  const toggleSelect = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedEntries([...selectedEntries, id]);
+    } else {
+      setSelectedEntries(selectedEntries.filter((s) => s !== id));
+    }
+  };
+
+  const toggleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedEntries(filteredBases.map((b) => b.id));
+    } else {
+      setSelectedEntries([]);
+    }
+  };
+
+  const handleStatusChange = async (entry: BaseEntry, status: string) => {
+    try {
+      await updateDoc(doc(db, COLLECTIONS.BASES_RENOVACAO, entry.id), {
+        status,
+      });
+      onToast("Status atualizado!");
+    } catch (err: any) {
+      onToast(err.message, "error");
+    }
+  };
+
+  const handleDeleteBase = async (id: string) => {
+    if (window.confirm("Deseja excluir este registro da base?")) {
+      try {
+        await deleteDoc(doc(db, COLLECTIONS.BASES_RENOVACAO, id));
+        onToast("Registro removido.");
+      } catch (err: any) {
+        onToast("Erro ao excluir registro.", "error");
+      }
+    }
+  };
+
+  const handleExport = () => {
+    const data = filteredBases.map((b) => ({
+      Nome: b.nome,
+      Telefone: b.telefone,
+      CPF: b.cpf || "",
+      Curso: b.curso,
+      Produto: b.produto || "GraduaÃ§Ã£o",
+      "NÂº Oportunidade": b.numeroOportunidade || "",
+      Semestre: b.semestre || "",
+      Periodo: b.periodo || "",
+      Metodologia: b.metodologia || "",
+      "Forma de Ingresso": b.formaIngresso || "",
+      "NÂº MatrÃ­cula": b.numeroMatricula || "",
+      Base: b.nomeBase,
+      Status: b.status,
+    }));
+    exportToExcel(data, "Bases_Renovacao");
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    importFromExcel(file, async (data) => {
+      try {
+        const getVal = (row: any, ...keys: string[]) => {
+          const rowKeys = Object.keys(row);
+          for (const key of keys) {
+            const foundKey = rowKeys.find(
+              (k) => k.toLowerCase() === key.toLowerCase(),
+            );
+            if (foundKey && row[foundKey] !== undefined) return row[foundKey];
+          }
+          return undefined;
+        };
+
+        const normalizeProduto = (val: string) => {
+          if (!val) return "GraduaÃ§Ã£o";
+          const lower = val.trim().toLowerCase();
+          if (lower.includes("gradua")) return "GraduaÃ§Ã£o";
+          if (lower.includes("tecnic") || lower.includes("tÃ©cnic"))
+            return "TÃ©cnico";
+          if (lower.includes("pos") || lower.includes("pÃ³s"))
+            return "PÃ³s-graduaÃ§Ã£o";
+          return val;
+        };
+
+        const normalizeMetodologia = (val: string) => {
+          if (!val) return "";
+          const lower = val.trim().toLowerCase();
+          if (lower === "ead") return "EAD";
+          if (lower === "presencial") return "Presencial";
+          if (lower === "semipresencial") return "Semipresencial";
+          if (lower === "flex") return "Flex";
+          if (lower === "hibrido" || lower === "hÃ­brido") return "HÃ­brido";
+          if (lower === "digital") return "Digital";
+          return val;
+        };
+
+        const normalizeStatusBase = (val: string) => {
+          if (!val) return "Pendente";
+          const lower = val.trim().toLowerCase();
+          if (lower === "pendente") return "Pendente";
+          if (lower === "matriculado") return "Matriculado";
+          if (
+            lower === "ligacao efetuada" ||
+            lower === "ligaÃ§Ã£o efetuada" ||
+            lower.includes("liga")
+          )
+            return "LigaÃ§Ã£o Efetuada";
+          if (lower === "sem interesse" || lower.includes("sem inter"))
+            return "Sem Interesse";
+          return val.charAt(0).toUpperCase() + val.slice(1);
+        };
+
+        const batch = data.map((item) => ({
+          nome: String(getVal(item, "Nome", "nome") || "").trim(),
+          telefone: String(getVal(item, "Telefone", "telefone") || "").replace(
+            /\D/g,
+            "",
+          ),
+          cpf: String(getVal(item, "CPF", "cpf") || "").replace(/\D/g, ""),
+          curso: String(getVal(item, "Curso", "curso") || "").trim(),
+          produto: normalizeProduto(
+            String(getVal(item, "Produto", "produto") || ""),
+          ),
+          numeroOportunidade: String(
+            getVal(
+              item,
+              "NÂº Oportunidade",
+              "numeroOportunidade",
+              "oportunidade",
+            ) || "",
+          ).trim(),
+          semestre: String(getVal(item, "Semestre", "semestre") || "").trim(),
+          periodo: String(
+            getVal(item, "Periodo", "periodo", "perÃ­odo") || "",
+          ).trim(),
+          metodologia: normalizeMetodologia(
+            String(getVal(item, "Metodologia", "metodologia") || ""),
+          ),
+          formaIngresso: String(
+            getVal(item, "Forma de Ingresso", "formaIngresso", "ingresso") ||
+              "",
+          ).trim(),
+          numeroMatricula: String(
+            getVal(
+              item,
+              "NÂº MatrÃ­cula",
+              "numeroMatricula",
+              "matricula",
+              "matrÃ­cula",
+            ) || "",
+          ).trim(),
+          nomeBase: String(
+            getVal(item, "Base", "nomeBase") || "Importado RenovaÃ§Ã£o",
+          ).trim(),
+          status: normalizeStatusBase(
+            String(getVal(item, "Status", "status") || ""),
+          ),
+          createdAt: serverTimestamp(),
+        }));
+
+        let imported = 0;
+        let skipped = 0;
+        const insertedCpfs = new Set();
+        const insertedTels = new Set();
+
+        for (const entry of batch) {
+          const isDupCpf =
+            entry.cpf &&
+            (bases.some((b) => b.cpf === entry.cpf) ||
+              insertedCpfs.has(entry.cpf));
+          const isDupTel =
+            entry.telefone &&
+            (bases.some((b) => b.telefone === entry.telefone) ||
+              insertedTels.has(entry.telefone));
+
+          if (!isDupCpf && !isDupTel) {
+            await addDoc(collection(db, COLLECTIONS.BASES_RENOVACAO), entry);
+            if (entry.cpf) insertedCpfs.add(entry.cpf);
+            if (entry.telefone) insertedTels.add(entry.telefone);
+            imported++;
+          } else {
+            skipped++;
+          }
+        }
+        onToast(
+          `${imported} registros importados com sucesso! ${skipped > 0 ? `${skipped} ignorados por duplicidade.` : ""}`,
+        );
+      } catch (err: any) {
+        onToast("Erro ao importar dados.", "error");
+      }
+    });
+  };
+
+  const handleAddCustomMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMsgData.texto.trim()) return;
+    setLoading(true);
+    try {
+      await addDoc(collection(db, COLLECTIONS.WHATSAPP_MESSAGES), {
+        tipo: "bases_renovacao",
+        texto: newMsgData.texto,
+        nome: newMsgData.modelName || undefined,
+        createdAt: serverTimestamp(),
+      });
+      onToast("Mensagem de renovaÃ§Ã£o salva!");
+      setNewMsgData({ modelName: "", texto: "" });
+      setIsAddMsgModalOpen(false);
+    } catch (err: any) {
+      console.error("Erro ao salvar mensagem renovaÃ§Ã£o:", err);
+      onToast(`Erro ao salvar mensagem: ${err.message}`, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInsertDefaultRenovacaoMessages = async () => {
+    try {
+      const existing = whatsappMessages.filter(
+        (m) => m.tipo === "bases_renovacao",
+      );
+      if (existing.length > 0) {
+        if (
+          !window.confirm(
+            "JÃ¡ existem mensagens de renovaÃ§Ã£o. Deseja adicionar as mensagens padrÃµes mesmo assim?",
+          )
+        ) {
+          return;
+        }
+      }
+
+      const defaults = [
+        "OlÃ¡ [nome], notamos que sua matrÃ­cula ainda nÃ£o foi renovada. Vamos garantir sua vaga para o prÃ³ximo semestre?",
+        "Oi [nome], preparamos condiÃ§Ãµes exclusivas para sua renovaÃ§Ã£o hoje! Vamos conferir?",
+        "AtenÃ§Ã£o [nome]! O prazo para renovaÃ§Ã£o estÃ¡ terminando. NÃ£o perca sua vaga!",
+      ];
+
+      for (const texto of defaults) {
+        await addDoc(collection(db, COLLECTIONS.WHATSAPP_MESSAGES), {
+          tipo: "bases_renovacao",
+          texto,
+          createdAt: serverTimestamp(),
+        });
+      }
+      onToast("Mensagens padrÃµes inseridas com sucesso!");
+    } catch (err: any) {
+      onToast("Erro ao inserir mensagens padrÃµes.", "error");
+    }
+  };
+
+  const totalAlunos = filteredBases.length;
+  const renovados = filteredBases.filter(
+    (b) => b.status === "Convertido",
+  ).length;
+  const naoRenovados = totalAlunos - renovados;
+
+  return (
+    <div className="space-y-8">
+      <div className="flex flex-col md:flex-row justify-between items-center max-w-xl mx-auto gap-4">
+        <h3 className="text-xl font-bold text-slate-900 whitespace-nowrap">
+          Base LÃ­quida
+        </h3>
+        <div className="flex flex-wrap justify-center gap-2">
+          <button
+            onClick={() => setIsAddMsgModalOpen(true)}
+            className="bg-emerald-50 text-emerald-600 px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-emerald-100 transition-all text-sm font-bold"
+          >
+            <Plus size={18} />
+            <span>Inserir Mensagens</span>
+          </button>
+          <button
+            onClick={handleInsertDefaultRenovacaoMessages}
+            className="bg-slate-50 text-slate-400 px-3 py-2 rounded-xl flex items-center space-x-2 hover:bg-slate-100 transition-all text-[10px] font-bold"
+            title="Inserir Mensagens PadrÃµes"
+          >
+            <MessageSquare size={14} />
+          </button>
+          <label className="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-blue-100 transition-all text-sm font-bold cursor-pointer">
+            <Upload size={18} />
+            <span>Importar</span>
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={handleImport}
+              className="hidden"
+            />
+          </label>
+          <button
+            onClick={handleExport}
+            className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-slate-200 transition-all text-sm font-bold"
+          >
+            <Download size={18} />
+            <span>Exportar</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-center items-center text-center">
+          <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">
+            Total na Base
+          </div>
+          <div className="text-3xl font-black text-slate-800">
+            {totalAlunos}
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-emerald-100 flex flex-col justify-center items-center text-center">
+          <div className="text-sm font-bold text-emerald-600 uppercase tracking-wider mb-2">
+            Renovados
+          </div>
+          <div className="text-3xl font-black text-emerald-700">
+            {renovados}
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-orange-100 flex flex-col justify-center items-center text-center">
+          <div className="text-sm font-bold text-orange-600 uppercase tracking-wider mb-2">
+            NÃ£o Renovados
+          </div>
+          <div className="text-3xl font-black text-orange-700">
+            {naoRenovados}
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-rose-100 flex flex-col justify-center items-center text-center relative overflow-hidden">
+          <div className="absolute inset-0 bg-rose-50 opacity-50"></div>
+          <div className="relative z-10 w-full">
+            <div className="text-sm font-bold text-rose-600 uppercase tracking-wider mb-2">
+              Gap
+            </div>
+            <div className="text-3xl font-black text-rose-700">
+              {totalAlunos > 0 ? naoRenovados : 0}
+            </div>
+            <div className="text-xs text-rose-500 font-bold mt-1">
+              Faltam{" "}
+              {totalAlunos > 0
+                ? ((naoRenovados / totalAlunos) * 100).toFixed(1)
+                : 0}
+              % para a meta
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-xl mx-auto">
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+          <h3 className="text-xl font-bold text-slate-900 mb-4">
+            Novo Registro em RenovaÃ§Ã£o
+          </h3>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <input
+              placeholder="Nome da Base (Ex: RenovaÃ§Ã£o 2024.2)"
+              required
+              value={formData.nomeBase}
+              onChange={(e) =>
+                setFormData({ ...formData, nomeBase: e.target.value })
+              }
+              className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <input
+                placeholder="Nome"
+                required
+                value={formData.nome}
+                onChange={(e) =>
+                  setFormData({ ...formData, nome: e.target.value })
+                }
+                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+              <input
+                placeholder="Telefone"
+                required
+                value={formData.telefone}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    telefone: formatPhone(e.target.value),
+                  })
+                }
+                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <input
+                placeholder="CPF"
+                value={formData.cpf}
+                onChange={(e) =>
+                  setFormData({ ...formData, cpf: formatCPF(e.target.value) })
+                }
+                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+              <input
+                placeholder="NÂ° de MatrÃ­cula"
+                required
+                value={formData.numeroMatricula}
+                onChange={(e) =>
+                  setFormData({ ...formData, numeroMatricula: e.target.value })
+                }
+                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <input
+                placeholder="Semestre"
+                required
+                value={formData.semestre}
+                onChange={(e) =>
+                  setFormData({ ...formData, semestre: e.target.value })
+                }
+                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+              <select
+                value={formData.produto}
+                onChange={(e) =>
+                  setFormData({ ...formData, produto: e.target.value as any })
+                }
+                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+              >
+                {uniqueProdutos.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-1">
+              <input
+                placeholder="Metodologia"
+                required
+                value={formData.metodologia}
+                onChange={(e) =>
+                  setFormData({ ...formData, metodologia: e.target.value })
+                }
+                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            </div>
+            <input
+              placeholder="Curso"
+              required
+              value={formData.curso}
+              onChange={(e) =>
+                setFormData({ ...formData, curso: e.target.value })
+              }
+              className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50"
+            >
+              {loading ? "Salvando..." : "Adicionar Ã  RenovaÃ§Ã£o"}
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <h3 className="text-xl font-bold text-slate-900">
+            Bases a Trabalhar (LÃ­quida)
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            <div className="relative">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                size={16}
+              />
+              <input
+                type="text"
+                placeholder="Buscar por nome..."
+                className="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 w-48"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <MultiSelect
+              options={uniqueBases}
+              selectedValues={baseFilter}
+              onChange={setBaseFilter}
+              placeholder="Todas as Bases"
+              allLabel="Todas as Bases"
+            />
+            <select
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500"
+              value={produtoFilter}
+              onChange={(e) => setProdutoFilter(e.target.value)}
+            >
+              <option value="">Todos os Produtos</option>
+              {uniqueProdutos.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+            <select
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500"
+              value={cursoFilter}
+              onChange={(e) => setCursoFilter(e.target.value)}
+            >
+              <option value="">Todos os Cursos</option>
+              {uniqueCursos.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+            <select
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500"
+              value={semestreFilter}
+              onChange={(e) => setSemestreFilter(e.target.value)}
+            >
+              <option value="">Todos os Semestres</option>
+              {uniqueSemestres.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+            <select
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="">Todos Status</option>
+              <option value="Pendente">Pendente</option>
+              <option value="Interessado">Interessado</option>
+              <option value="Convertido">Convertido</option>
+              <option value="NÃ£o tem interesse">NÃ£o tem interesse</option>
+              <option value="Sem retorno">Sem retorno</option>
+<option value="Contato via Sales">Contato via Sales</option>
+            </select>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                <th className="px-6 py-4 w-12 text-center">#</th>
+                <th className="px-6 py-4 w-12">
+                  <input
+                    type="checkbox"
+                    checked={
+                      selectedEntries.length === filteredBases.length &&
+                      filteredBases.length > 0
+                    }
+                    onChange={(e) => toggleSelectAll(e.target.checked)}
+                  />
+                </th>
+                <th className="px-6 py-4">Nome</th>
+                <th className="px-6 py-4">Base</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4 flex items-center gap-4">
+                  {selectedEntries.length > 0 && (
+                    <button
+                      onClick={handleBulkDelete}
+                      className="text-rose-600 font-bold hover:underline"
+                    >
+                      excluir selecionados
+                    </button>
+                  )}
+                  {selectedEntries.length > 0 && botConfig.url && (
+                    <button
+                      onClick={() => setMassSelectorOpen(true)}
+                      className="text-blue-600 font-bold hover:underline py-1 px-2 bg-blue-50 rounded-lg flex items-center gap-1"
+                    >
+                      <Bot size={14} /> Em Massa
+                    </button>
+                  )}
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredBases.map((entry, index) => (
+                <tr
+                  key={entry.id}
+                  className="hover:bg-slate-50/50 transition-all"
+                >
+                  <td className="px-6 py-4 text-center font-bold text-slate-400 text-xs">
+                    {index + 1}
+                  </td>
+                  <td className="px-6 py-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedEntries.includes(entry.id)}
+                      onChange={(e) => toggleSelect(entry.id, e.target.checked)}
+                    />
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="font-bold text-slate-900">
+                        {entry.nome}
+                      </span>
+                      <span className="text-xs text-slate-500">
+                        {entry.curso}
+                      </span>
+                      <div className="flex items-center space-x-2 mt-1">
+                        {entry.telefone && (
+                          <span className="text-[10px] text-slate-400 font-bold">
+                            {entry.telefone}
+                          </span>
+                        )}
+                        {entry.semestre && (
+                          <span className="text-[10px] text-blue-500 font-bold px-2 py-0.5 bg-blue-50 rounded-full">
+                            {entry.semestre}
+                          </span>
+                        )}
+                        {entry.periodo && (
+                          <span className="text-[10px] text-purple-500 font-bold px-2 py-0.5 bg-purple-50 rounded-full">
+                            {entry.periodo}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-slate-600">
+                    {entry.nomeBase}
+                  </td>
+                  <td className="px-6 py-4">
+                    <select
+                      value={entry.status}
+                      onChange={(e) =>
+                        handleStatusChange(entry, e.target.value)
+                      }
+                      className={cn(
+                        "px-2 py-1 rounded-lg text-xs font-bold outline-none border-none",
+                        entry.status === "Pendente" &&
+                          "bg-slate-100 text-slate-600",
+                        entry.status === "Interessado" &&
+                          "bg-blue-100 text-blue-600",
+                        entry.status === "Convertido" &&
+                          "bg-emerald-100 text-emerald-600",
+                        entry.status === "NÃ£o tem interesse" &&
+                          "bg-rose-100 text-rose-600",
+                        entry.status === "Sem retorno" &&
+                            "bg-orange-100 text-orange-600",
+                          entry.status === "Contato via Sales" &&
+                            "bg-purple-100 text-purple-600",
+                      )}
+                    >
+                      <option value="Pendente">Pendente</option>
+                      <option value="Interessado">Interessado</option>
+                      <option value="Convertido">Convertido</option>
+                      <option value="NÃ£o tem interesse">
+                        NÃ£o tem interesse
+                      </option>
+                      <option value="Sem retorno">Sem retorno</option>
+<option value="Contato via Sales">Contato via Sales</option>
+                    </select>
+                  </td>
+                  <td className="px-6 py-4 flex items-center space-x-2">
+                    <button
+                      onClick={() => {
+                        setSelectedEntry(entry);
+                        setSelectorOpen(true);
+                      }}
+                      className="text-emerald-600 hover:text-emerald-700 font-bold text-sm flex items-center space-x-1"
+                    >
+                      <MessageSquare size={14} />
+                      <span>WhatsApp</span>
+                    </button>
+                    <button
+                      onClick={() => handleContatoViaSales(entry, entry.nomeBase || 'Bases RenovaÃ§Ã£o')}
+                      className="text-sky-600 font-bold text-sm flex items-center space-x-1 hover:text-sky-700 bg-sky-50 px-2 py-1 rounded-lg ml-2"
+                      title="Registrar Contato via Sales"
+                    >
+                      <PhoneOutgoing size={14} />
+                      <span>Sales</span>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteBase(entry.id)}
+                      className="text-rose-400 hover:text-rose-600 p-2 hover:bg-rose-50 rounded-lg transition-all"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {filteredBases.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-6 py-12 text-center text-slate-400 italic"
+                  >
+                    Nenhum registro encontrado com os filtros aplicados.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <WhatsAppMessageSelector
+        isOpen={selectorOpen}
+        onClose={() => setSelectorOpen(false)}
+        leadName={selectedEntry?.nome || ""}
+        leadCurso={selectedEntry?.curso || ""}
+        leadMatricula={selectedEntry?.numeroMatricula || ""}
+        messages={whatsappMessages.filter((m) => m.tipo === "bases_renovacao")}
+        onSelect={(msg) => {
+          if (selectedEntry) {
+            window.open(getWhatsAppUrl(selectedEntry.telefone, msg), "_blank");
+          }
+        }}
+        botConfig={botConfig}
+        onSendBot={(msg, contactName) => {
+          if (selectedEntry) {
+            onSendBot(
+              selectedEntry.telefone,
+              Array.isArray(msg) ? msg[0] : msg,
+              contactName || selectedEntry.nome,
+            );
+          }
+        }}
+      />
+
+      <WhatsAppMessageSelector
+        isOpen={massSelectorOpen}
+        onClose={() => setMassSelectorOpen(false)}
+        leadName="Candidatos"
+        messages={whatsappMessages.filter((m) => m.tipo === "bases_renovacao")}
+        onSelect={(msg) => {}}
+        botConfig={botConfig}
+        onSendBot={(msgTemplates) => {
+          const templates = Array.isArray(msgTemplates) ? msgTemplates : [msgTemplates];
+          const selectedLeadObjs = bases.filter((b) =>
+            selectedEntries.includes(b.id),
+          );
+          const messagesPayload = selectedLeadObjs.map((l, idx) => {
+            const template = templates[idx % templates.length];
+            return {
+              telefone: l.telefone,
+              message: replaceMessageVariables(template, l),
+              nome: l.nome,
+            };
+          });
+          onMassSendBot(messagesPayload);
+          setMassSelectorOpen(false);
+          setSelectedEntries([]);
+        }}
+        forceBotOnly={true}
+      />
+
+      <AnimatePresence>
+        <MessageTemplateModal
+          isOpen={isAddMsgModalOpen}
+          onClose={() => setIsAddMsgModalOpen(false)}
+          tipo="bases_renovacao"
+          onToast={onToast}
+          availableVariables={[
+            {
+              key: "[nome]",
+              label: "Nome do Aluno",
+              previewValue: "Maria Souza",
+            },
+            { key: "[curso]", label: "Curso", previewValue: "AdministraÃ§Ã£o" },
+            {
+              key: "[unidade]",
+              label: "Unidade",
+              previewValue: "Unidade Central",
+            },
+            {
+              key: "[data_contato]",
+              label: "Data",
+              previewValue: new Date().toLocaleDateString("pt-BR"),
+            },
+            { key: "[saudacao]", label: "SaudaÃ§Ã£o", previewValue: "OlÃ¡" },
+          ]}
+        />
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function GapView({
+  gap,
+  onToast,
+  profile,
+  whatsappMessages,
+  botConfig,
+  onSendBot,
+  onMassSendBot,
+  calendarioAcoes = [],
+}: {
+  gap: GapEntry[];
+  onToast: (m: string, t?: "success" | "error") => void;
+  profile: UserProfile;
+  whatsappMessages: WhatsAppMessage[];
+  botConfig: BotConfig;
+  onSendBot: (tel: string, msg: string, contactName?: string) => void;
+  onMassSendBot: (
+    messages: { telefone: string; message: string; nome?: string }[],
+  ) => void;
+  calendarioAcoes?: CalendarioAcao[];
+}) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [cpfFilter, setCpfFilter] = useState("");
+  const [produtoFilter, setProdutoFilter] = useState("");
+  const [cursoFilter, setCursoFilter] = useState("");
+  const [periodoFilter, setPeriodoFilter] = useState("");
+  const [matAcadFilter, setMatAcadFilter] = useState("");
+  const [gapFilter, setGapFilter] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<GapEntry | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [selectedEntries, setSelectedEntries] = useState<string[]>([]);
+  const [gapSubTab, setGapSubTab] = useState<"dashboard" | "lista">(
+    "dashboard",
+  );
+  const [duplicateIds, setDuplicateIds] = useState<Set<string>>(new Set());
+  const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
+
+  const [isSelectorOpen, setIsSelectorOpen] = useState(false);
+  const [selectedEntryForWhatsapp, setSelectedEntryForWhatsapp] =
+    useState<GapEntry | null>(null);
+
+  const gapSpecificMessages = useMemo(() => {
+    return whatsappMessages
+      .filter((m) => m.tipo === "gap" || m.tipo.startsWith("gap_"))
+      .sort((a, b) => {
+        if (a.tipo === "gap" || a.tipo === "gap_0") return -1;
+        if (b.tipo === "gap" || b.tipo === "gap_0") return 1;
+        return a.tipo.localeCompare(b.tipo);
+      });
+  }, [whatsappMessages]);
+
+  const handleBulkDelete = async () => {
+    if (selectedEntries.length === 0) return;
+    if (
+      window.confirm(
+        `Deseja excluir ${selectedEntries.length} registros selecionados do GAP?`,
+      )
+    ) {
+      try {
+        for (const id of selectedEntries) {
+          await deleteDoc(doc(db, COLLECTIONS.GAP, id));
+        }
+        onToast(`${selectedEntries.length} registros no GAP removidos.`);
+        setSelectedEntries([]);
+      } catch (err: any) {
+        onToast("Erro ao excluir registros do GAP.", "error");
+      }
+    }
+  };
+
+  const toggleSelect = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedEntries([...selectedEntries, id]);
+    } else {
+      setSelectedEntries(selectedEntries.filter((s) => s !== id));
+    }
+  };
+
+  const toggleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedEntries(filteredGap.map((g) => g.id));
+    } else {
+      setSelectedEntries([]);
+    }
+  };
+  const handleContatoViaSales = async (contact: any, origem: string) => {
+    try {
+      await addDoc(collection(db, COLLECTIONS.SALES_CONTACTS), {
+        contactId: contact.id,
+        nome: contact.nome,
+        telefone: contact.telefone,
+        curso: contact.cursoInteresse || contact.curso || "NÃ£o informado",
+        origem,
+        createdAt: serverTimestamp(),
+      });
+      onToast("Contato via Sales registrado com sucesso!", "success");
+    } catch (err: any) {
+      console.error(err);
+      onToast("Erro ao registrar Contato via Sales.", "error");
+    }
+  };
+  
+  const [formData, setFormData] = useState({
+    nome: "",
+    telefone: "",
+    cpf: "",
+    produto: "GraduaÃ§Ã£o" as any,
+    numeroOportunidade: "",
+    curso: "",
+    semestre: "",
+    metodologia: "",
+    formaIngresso: "",
+    numeroMatricula: "",
+    periodo: "",
+    acao: "",
+    acaoId: "",
+  });
+
+  const docLabels: Record<string, string> = {
+    rg: "RG",
+    cpf: "CPF",
+    diploma: "Diploma",
+    enem: "ENEM",
+    historico: "Hist.",
+    planoEnsino: "Plano",
+    contrato: "Contr.",
+    carta: "Carta",
+  };
+
+  const stats = useMemo(() => {
+    const total = gap.length;
+    const matFin = total;
+    const matAcadOk = gap.filter(
+      (g) =>
+        g.matAcad === true ||
+        g.matAcad === "MatrÃ­cula Gerada" ||
+        g.matAcad === "OK",
+    ).length;
+    const pendingDocs = matFin - matAcadOk;
+    const conversionRate =
+      total > 0 ? ((matAcadOk / total) * 100).toFixed(1) : "0";
+    return { matFin, matAcadOk, pendingDocs, conversionRate };
+  }, [gap]);
+
+  const statsByProduct = useMemo(() => {
+    const groups: { [key: string]: number } = {
+      GraduaÃ§Ã£o: 0,
+      TÃ©cnico: 0,
+      "PÃ³s-graduaÃ§Ã£o": 0,
+    };
+    gap.forEach((g) => {
+      const p = g.produto || "GraduaÃ§Ã£o";
+      if (groups[p] !== undefined) groups[p] += 1;
+    });
+    return Object.entries(groups).map(([name, count]) => ({
+      name,
+      count,
+      percentage:
+        gap.length > 0 ? ((count / gap.length) * 100).toFixed(1) : "0",
+    }));
+  }, [gap]);
+
+  const statsByStatus = useMemo(() => {
+    const groups: { [key: string]: number } = {
+      OK: 0,
+      Pendente: 0,
+      Aguardando: 0,
+      Desistente: 0,
+    };
+    gap.forEach((g) => {
+      const s =
+        g.matAcad === true ||
+        g.matAcad === "MatrÃ­cula Gerada" ||
+        g.matAcad === "OK"
+          ? "OK"
+          : g.matAcad === "Aguardando NÂ° de MatrÃ­cula"
+            ? "Aguardando"
+            : g.matAcad === "Desistente"
+              ? "Desistente"
+              : "Pendente";
+      if (groups[s] !== undefined) groups[s] += 1;
+    });
+    return Object.entries(groups).map(([name, count]) => ({
+      name,
+      count,
+      percentage:
+        gap.length > 0 ? ((count / gap.length) * 100).toFixed(1) : "0",
+    }));
+  }, [gap]);
+
+  const filteredGap = useMemo(() => {
+    return gap.filter((g) => {
+      // Gestor Unidade filtering
+      if (profile.role === "Gestor Unidade") {
+        if (!profile.unidade || g.unidade !== profile.unidade) {
+          return false;
+        }
+      }
+
+      const matchesSearch = g.nome
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      const matchesCpf = !cpfFilter || g.cpf?.includes(cpfFilter);
+      const matchesProduto = !produtoFilter || g.produto === produtoFilter;
+      const matchesCurso =
+        !cursoFilter ||
+        g.curso.toLowerCase().includes(cursoFilter.toLowerCase());
+      const matchesPeriodo =
+        !periodoFilter ||
+        g.periodo?.toLowerCase().includes(periodoFilter.toLowerCase());
+
+      const isOk =
+        g.matAcad === true ||
+        g.matAcad === "MatrÃ­cula Gerada" ||
+        g.matAcad === "OK";
+      let matchesMatAcad = true;
+      if (matAcadFilter === "MatrÃ­cula Gerada") matchesMatAcad = isOk;
+      else if (matAcadFilter === "Pendente")
+        matchesMatAcad =
+          !g.matAcad || g.matAcad === "false" || g.matAcad === "Pendente";
+      else if (matAcadFilter === "Aguardando NÂ° de MatrÃ­cula")
+        matchesMatAcad = g.matAcad === "Aguardando NÂ° de MatrÃ­cula";
+      else if (matAcadFilter === "Desistente")
+        matchesMatAcad = g.matAcad === "Desistente";
+
+      const docs = g.documentos || {};
+      const hasGap = Object.keys(docLabels).some((key) => !(docs as any)[key]);
+      const matchesGap = !gapFilter || (gapFilter === "Sim" ? hasGap : !hasGap);
+      const matchesAll =
+        matchesSearch &&
+        matchesCpf &&
+        matchesProduto &&
+        matchesCurso &&
+        matchesPeriodo &&
+        matchesMatAcad &&
+        matchesGap;
+      return matchesAll;
+    });
+  }, [
+    gap,
+    searchTerm,
+    cpfFilter,
+    produtoFilter,
+    cursoFilter,
+    periodoFilter,
+    matAcadFilter,
+    gapFilter,
+  ]);
+
+  const toggleDoc = async (id: string, docKey: string, current: boolean) => {
+    try {
+      const entry = gap.find((g) => g.id === id);
+      if (!entry) return;
+      const newDocs = { ...(entry.documentos || {}) };
+      (newDocs as any)[docKey] = !current;
+      await updateDoc(doc(db, COLLECTIONS.GAP, id), { documentos: newDocs });
+      onToast("Documento atualizado!");
+    } catch (err: any) {
+      onToast("Erro ao atualizar documento.", "error");
+    }
+  };
+
+  const updateMatAcadStatus = async (
+    id: string,
+    newStatus: string | boolean,
+  ) => {
+    try {
+      await updateDoc(doc(db, COLLECTIONS.GAP, id), { matAcad: newStatus });
+      onToast("Status de matrÃ­cula atualizado!");
+    } catch (err: any) {
+      onToast("Erro ao atualizar matrÃ­cula.", "error");
+    }
+  };
+
+  const handleDeleteGap = async (id: string) => {
+    if (window.confirm("Deseja excluir este registro do GAP?")) {
+      try {
+        await deleteDoc(doc(db, COLLECTIONS.GAP, id));
+        onToast("Registro removido.");
+      } catch (err: any) {
+        onToast("Erro ao excluir registro.", "error");
+      }
+    }
+  };
+
+  const getGapWhatsAppMessage = (entry: GapEntry) => {
+    const docs = entry.documentos || {};
+    const missingDocs = Object.entries(docLabels)
+      .filter(([key]) => !(docs as any)[key])
+      .map(([_, label]) => label);
+
+    const applyReplacements = (text: string) => {
+      return replaceMessageVariables(text, { ...entry, missingDocs });
+    };
+
+    // se ok e tiver matricula
+    const isOk =
+      entry.matAcad === true ||
+      entry.matAcad === "MatrÃ­cula Gerada" ||
+      entry.matAcad === "OK";
+    if (isOk && entry.numeroMatricula) {
+      const msgOk = whatsappMessages.find((m) => m.tipo === "gap_1");
+      if (msgOk) {
+        return applyReplacements(msgOk.texto);
+      }
+      return applyReplacements(`PARABÃ‰NS [nome] ğŸŠ Agora vocÃª Ã© aluno EstÃ¡cio ğŸ’  
+ 
+Ã‰ com grande orgulho e muita determinaÃ§Ã£o que esse novo ciclo em sua vida se inicia! ğŸ¤“   
+
+ğŸ“ Anote sua matrÃ­cula serÃ¡ importante em toda a sua jornada na EstÃ¡cio. [matricula] 
+ 
+Acesse seu portal usando os dados abaixo:
+
+Seu e-mail de estudante: [matricula]@alunos.estacio.br 
+
+Senha de primeiro acesso para usar com o e-mail: os seis primeiros dÃ­gitos do seu CPF + @ + a primeira letra do seu nome maiÃºscula + a segunda letra do seu nome minÃºscula 
+
+Aplicativo de celular: Minha EstÃ¡cio 
+
+Pela internet: https://sia.estacio.br/sianet/Logon`);
+    } else if (isOk) {
+      const msgOk = whatsappMessages.find((m) => m.tipo === "gap_1");
+      if (msgOk) return applyReplacements(msgOk.texto);
+      return `OlÃ¡ ${entry.nome}, vimos que sua matrÃ­cula acadÃªmica estÃ¡ ok! ParabÃ©ns!`;
+    }
+
+    // Add logic to include registration number automatically if it exists
+    let message = "";
+    const customMsg = whatsappMessages.find(
+      (m) => m.tipo === "gap" || m.tipo === "gap_0",
+    );
+    if (customMsg) {
+      message = applyReplacements(customMsg.texto);
+    } else if (missingDocs.length > 0) {
+      message = `OlÃ¡ ${entry.nome}, tudo bem? Sou da equipe de captaÃ§Ã£o e meu contato Ã© referente Ã  sua matrÃ­cula no curso de ${entry.curso}. Identificamos que sua matrÃ­cula ainda nÃ£o foi finalizada devido Ã  pendÃªncia dos seguintes documentos: ${missingDocs.join(", ")}. Ã‰ fundamental regularizar essa situaÃ§Ã£o o quanto antes para garantir sua vaga e evitar o cancelamento do processo.`;
+    }
+
+    if (entry.numeroMatricula && !message.includes(entry.numeroMatricula)) {
+      message += `\n\nNÂº MatrÃ­cula: ${entry.numeroMatricula}`;
+    }
+
+    if (!docs.contrato || !docs.carta) {
+      message += `\n\nACEITE DO CONTRATO, para isso vou lhe enviar o passo a passo aqui a baixo: \n\n1Âº PASSO:ACESSAR O PORTAL DO CANDIDATO: https://candidatos.portal.estacio.br/acompanhe-sua-matricula \n\n2Â° COLOQUE SEU CPF E SENHA, CASO SEJA A 1Â° VEZ, COLOQUE ESQUECI MINHA SENHA. \n\n3Â° CLIQUE EM CONTRATO EDUCACIONAL E EM SEGUIDA EM ACEITAR E CONTINUAR`;
+    }
+
+    return message;
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const cleanCpf = formData.cpf ? formData.cpf.replace(/\D/g, "") : "";
+    const cleanTelefone = formData.telefone.replace(/\D/g, "");
+
+    const isDuplicate = gap.some(
+      (g) =>
+        g.id !== editingEntry?.id &&
+        ((cleanCpf && g.cpf === cleanCpf) ||
+          (!cleanCpf && cleanTelefone && g.telefone === cleanTelefone)),
+    );
+
+    if (isDuplicate) {
+      onToast(
+        "Candidato jÃ¡ cadastrado no GAP (verificado CPF/Telefone).",
+        "error",
+      );
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const prevAcaoId = editingEntry?.acaoId;
+      const newAcaoId = formData.acaoId;
+
+      if (editingEntry) {
+        await updateDoc(doc(db, COLLECTIONS.GAP, editingEntry.id), {
+          ...formData,
+          updatedAt: serverTimestamp(),
+        });
+        onToast("Candidato atualizado com sucesso!");
+      } else {
+        await addDoc(collection(db, COLLECTIONS.GAP), {
+          ...formData,
+          matAcad: false,
+          documentos: {},
+          unidade: profile.unidade || "",
+          createdAt: serverTimestamp(),
+        });
+        onToast("Candidato cadastrado no GAP!");
+      }
+
+      if (prevAcaoId && prevAcaoId !== "manual" && prevAcaoId !== newAcaoId) {
+        try {
+          const qGapOld = query(
+            collection(db, COLLECTIONS.GAP),
+            where("acaoId", "==", prevAcaoId),
+          );
+          const snapOld = await getDocs(qGapOld);
+          await updateDoc(doc(db, COLLECTIONS.CALENDARIO_ACOES, prevAcaoId), {
+            boletosFeitos: snapOld.size,
+          });
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      if (newAcaoId && newAcaoId !== "manual") {
+        try {
+          const qGapNew = query(
+            collection(db, COLLECTIONS.GAP),
+            where("acaoId", "==", newAcaoId),
+          );
+          const snapNew = await getDocs(qGapNew);
+          await updateDoc(doc(db, COLLECTIONS.CALENDARIO_ACOES, newAcaoId), {
+            boletosFeitos: snapNew.size,
+          });
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      setIsModalOpen(false);
+      setEditingEntry(null);
+      setFormData({
+        nome: "",
+        telefone: "",
+        cpf: "",
+        produto: "GraduaÃ§Ã£o",
+        numeroOportunidade: "",
+        curso: "",
+        metodologia: "",
+        formaIngresso: "",
+        numeroMatricula: "",
+        periodo: "",
+        acao: "",
+        acaoId: "",
+      } as any);
+    } catch (err: any) {
+      onToast("Erro ao salvar.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCheckDuplicates = () => {
+    if (showDuplicatesOnly) {
+      setShowDuplicatesOnly(false);
+      setDuplicateIds(new Set());
+      return;
+    }
+
+    const seenCpfs = new Set<string>();
+    const seenTels = new Set<string>();
+    const dups = new Set<string>();
+
+    const sortedGap = [...gap].sort((a, b) => {
+      const da = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+      const dbTime = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+      return dbTime - da;
+    });
+
+    for (const entry of sortedGap) {
+      const hasCpf = entry.cpf && entry.cpf.trim() !== "";
+      const hasTel = entry.telefone && entry.telefone.trim() !== "";
+      
+      let isDup = false;
+      if (hasCpf && seenCpfs.has(entry.cpf)) {
+        isDup = true;
+      }
+      if (hasTel && seenTels.has(entry.telefone)) {
+        isDup = true;
+      }
+
+      if (isDup) {
+        dups.add(entry.id);
+      } else {
+        if (hasCpf) seenCpfs.add(entry.cpf);
+        if (hasTel) seenTels.add(entry.telefone);
+      }
+    }
+    
+    if (dups.size === 0) {
+      onToast("Nenhuma duplicidade encontrada.", "success");
+      return;
+    }
+
+    setDuplicateIds(dups);
+    setShowDuplicatesOnly(true);
+    onToast(`Encontrados ${dups.size} registros mais antigos possivelmente duplicados.`, "success");
+  };
+
+  const handleExport = () => {
+    const data = filteredGap.map((g) => ({
+      Nome: g.nome,
+      Telefone: g.telefone,
+      CPF: g.cpf,
+      Produto: g.produto,
+      "NÂº Oportunidade": g.numeroOportunidade || "",
+      Curso: g.curso,
+      Semestre: g.semestre || "",
+      Metodologia: g.metodologia || "",
+      "Forma de Ingresso": g.formaIngresso || "",
+      Periodo: g.periodo || "",
+      Matricula: g.numeroMatricula || "",
+      MatAcad:
+        g.matAcad === true ||
+        g.matAcad === "MatrÃ­cula Gerada" ||
+        g.matAcad === "OK"
+          ? "Sim"
+          : "NÃ£o",
+      Documentos: Object.entries(docLabels)
+        .map(
+          ([key, label]) =>
+            `${label}: ${(g.documentos as any)?.[key] ? "OK" : "Pendente"}`,
+        )
+        .join(", "),
+    }));
+    exportToExcel(data, "Gap_Academico");
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    importFromExcel(file, async (data) => {
+      try {
+        const getVal = (row: any, ...keys: string[]) => {
+          const rowKeys = Object.keys(row);
+          for (const key of keys) {
+            const foundKey = rowKeys.find(
+              (k) => k.toLowerCase() === key.toLowerCase(),
+            );
+            if (foundKey && row[foundKey] !== undefined) return row[foundKey];
+          }
+          return undefined;
+        };
+
+        const batch = data.map((item) => {
+          const matAcadRaw = String(
+            getVal(item, "MatAcad", "matAcad", "Mat. Acad.", "mat_acad") || "",
+          )
+            .trim()
+            .toLowerCase();
+          const isMatAcad =
+            matAcadRaw === "sim" ||
+            matAcadRaw === "ok" ||
+            matAcadRaw === "yes" ||
+            matAcadRaw === "true" ||
+            getVal(item, "matAcad") === true;
+
+          return {
+            nome: String(getVal(item, "Nome", "nome") || "").trim(),
+            cpf: String(getVal(item, "CPF", "cpf") || "").replace(/\D/g, ""),
+            telefone: String(
+              getVal(item, "Telefone", "telefone") || "",
+            ).replace(/\D/g, ""),
+            produto: String(getVal(item, "Produto", "produto") || "").trim(),
+            curso: String(getVal(item, "Curso", "curso") || "").trim(),
+            semestre: String(getVal(item, "Semestre", "semestre") || "").trim(),
+            metodologia: String(
+              getVal(item, "Metodologia", "metodologia") || "",
+            ).trim(),
+            formaIngresso: String(
+              getVal(item, "Forma de Ingresso", "formaIngresso", "ingresso") ||
+                "",
+            ).trim(),
+            numeroOportunidade: String(
+              getVal(
+                item,
+                "NÂº Oportunidade",
+                "numeroOportunidade",
+                "oportunidade",
+              ) || "",
+            ).trim(),
+            periodo: String(
+              getVal(item, "Periodo", "periodo", "perÃ­odo") || "",
+            ).trim(),
+            numeroMatricula: String(
+              getVal(
+                item,
+                "Matricula",
+                "numeroMatricula",
+                "NÂº MatrÃ­cula",
+                "MatrÃ­cula",
+                "NÂº Matricula",
+                "matricula",
+              ) || "",
+            ).trim(),
+            matAcad: isMatAcad,
+            documentos: {},
+            createdAt: serverTimestamp(),
+          };
+        });
+
+        let imported = 0;
+        let skipped = 0;
+        const insertedCpfs = new Set();
+        const insertedTels = new Set();
+
+        for (const entry of batch) {
+          const isDupCpf =
+            entry.cpf &&
+            (gap.some((g) => g.cpf === entry.cpf) ||
+              insertedCpfs.has(entry.cpf));
+          const isDupTel =
+            entry.telefone &&
+            (gap.some((g) => g.telefone === entry.telefone) ||
+              insertedTels.has(entry.telefone));
+
+          if (!isDupCpf && !isDupTel) {
+            await addDoc(collection(db, COLLECTIONS.GAP), entry);
+            if (entry.cpf) insertedCpfs.add(entry.cpf);
+            if (entry.telefone) insertedTels.add(entry.telefone);
+            imported++;
+          } else {
+            skipped++;
+          }
+        }
+        onToast(
+          `${imported} registros importados! ${skipped > 0 ? `${skipped} ignorados por duplicidade.` : ""}`,
+        );
+      } catch (err: any) {
+        onToast("Erro ao importar dados.", "error");
+      }
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Tab Navigation */}
+      <div className="flex items-center gap-1 bg-white p-1 rounded-2xl shadow-sm border border-slate-100 w-fit">
+        <button
+          onClick={() => setGapSubTab("dashboard")}
+          className={cn(
+            "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
+            gapSubTab === "dashboard"
+              ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
+              : "text-slate-500 hover:bg-slate-50",
+          )}
+        >
+          <BarChart3 size={18} />
+          <span>Dashboard</span>
+        </button>
+        <button
+          onClick={() => setGapSubTab("lista")}
+          className={cn(
+            "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
+            gapSubTab === "lista"
+              ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
+              : "text-slate-500 hover:bg-slate-50",
+          )}
+        >
+          <List size={18} />
+          <span>Lista de Alunos</span>
+        </button>
+      </div>
+
+      {gapSubTab === "dashboard" && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              title="Total Mat. Financeira"
+              value={stats.matFin}
+              icon={Users}
+              color="bg-blue-500"
+            />
+            <StatCard
+              title="Mat. AcadÃªmica OK"
+              value={stats.matAcadOk}
+              icon={CheckCircle2}
+              color="bg-emerald-500"
+            />
+            <StatCard
+              title="Gap (Docs Pendentes)"
+              value={stats.pendingDocs}
+              icon={Clock}
+              color="bg-amber-500"
+            />
+            <StatCard
+              title="Taxa Conv. Acad"
+              value={`${stats.conversionRate}%`}
+              icon={TrendingUp}
+              color="bg-purple-500"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+              <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <Target size={18} className="text-blue-500" />
+                DistribuiÃ§Ã£o de MatrÃ­cula AcadÃªmica
+              </h3>
+              <div className="space-y-3">
+                {statsByStatus.map((s) => (
+                  <div key={s.name} className="space-y-1">
+                    <div className="flex justify-between text-xs font-semibold">
+                      <span className="text-slate-600 flex items-center gap-1.5">
+                        <span
+                          className={cn(
+                            "w-2 h-2 rounded-full",
+                            s.name === "OK" && "bg-emerald-400",
+                            s.name === "Pendente" && "bg-amber-400",
+                            s.name === "Aguardando" && "bg-blue-400",
+                            s.name === "Desistente" && "bg-rose-400",
+                          )}
+                        />
+                        {s.name}
+                      </span>
+                      <span className="text-slate-800 font-bold">
+                        {s.count}{" "}
+                        <span className="text-slate-400 font-normal">
+                          ({s.percentage}%)
+                        </span>
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div
+                        className={cn(
+                          "h-full rounded-full transition-all",
+                          s.name === "OK" && "bg-emerald-400",
+                          s.name === "Pendente" && "bg-amber-400",
+                          s.name === "Aguardando" && "bg-blue-400",
+                          s.name === "Desistente" && "bg-rose-400",
+                        )}
+                        style={{ width: `${s.percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+              <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <GraduationCap size={18} className="text-blue-500" />
+                DistribuiÃ§Ã£o por Produto
+              </h3>
+              <div className="space-y-3">
+                {statsByProduct.map((p) => (
+                  <div key={p.name} className="space-y-1">
+                    <div className="flex justify-between text-xs font-semibold">
+                      <span className="text-slate-600">{p.name}</span>
+                      <span className="text-slate-800 font-bold">
+                        {p.count}{" "}
+                        <span className="text-slate-400 font-normal">
+                          ({p.percentage}%)
+                        </span>
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-blue-500 rounded-full transition-all"
+                        style={{ width: `${p.percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {gapSubTab === "lista" && (
+        <>
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-slate-800">GAP AcadÃªmico</h2>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => {
+                  setEditingEntry(null);
+                  setFormData({
+                    nome: "",
+                    telefone: "",
+                    cpf: "",
+                    produto: "GraduaÃ§Ã£o",
+                    numeroOportunidade: "",
+                    curso: "",
+                    metodologia: "",
+                    formaIngresso: "",
+                    numeroMatricula: "",
+                    periodo: "",
+                  } as any);
+                  setIsModalOpen(true);
+                }}
+                className="bg-blue-600 text-white px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
+              >
+                <Plus size={20} />
+                <span>Cadastrar</span>
+              </button>
+              <label className="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-blue-100 transition-all text-sm font-bold cursor-pointer">
+                <Upload size={18} />
+                <span>Importar</span>
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  onChange={handleImport}
+                  className="hidden"
+                />
+              </label>
+              <button
+                onClick={handleCheckDuplicates}
+                disabled={loading}
+                className={cn("px-4 py-2 rounded-xl flex items-center space-x-2 transition-all text-sm font-bold disabled:opacity-50", showDuplicatesOnly ? "bg-purple-600 text-white" : "bg-purple-100 text-purple-600 hover:bg-purple-200")}
+              >
+                {showDuplicatesOnly ? <EyeOff size={18} /> : <Eye size={18} />}
+                <span className="hidden sm:inline">
+                  {showDuplicatesOnly ? "Limpar Filtro de Duplicados" : "Verificar Duplicidade"}
+                </span>
+              </button>
+              <button
+                onClick={handleExport}
+                className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-slate-200 transition-all text-sm font-bold"
+              >
+                <Download size={18} />
+                <span>Exportar</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <input
+              placeholder="Nome..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              placeholder="CPF..."
+              value={cpfFilter}
+              onChange={(e) => setCpfFilter(e.target.value)}
+              className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <select
+              value={produtoFilter}
+              onChange={(e) => setProdutoFilter(e.target.value)}
+              className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Produto</option>
+              <option value="GraduaÃ§Ã£o">GraduaÃ§Ã£o</option>
+              <option value="TÃ©cnico">TÃ©cnico</option>
+              <option value="PÃ³s-graduaÃ§Ã£o">PÃ³s-graduaÃ§Ã£o</option>
+            </select>
+            <input
+              placeholder="Curso..."
+              value={cursoFilter}
+              onChange={(e) => setCursoFilter(e.target.value)}
+              className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              placeholder="PerÃ­odo..."
+              value={periodoFilter}
+              onChange={(e) => setPeriodoFilter(e.target.value)}
+              className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <select
+              value={matAcadFilter}
+              onChange={(e) => setMatAcadFilter(e.target.value)}
+              className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Mat. AcadÃªmica</option>
+              <option value="MatrÃ­cula Gerada">MatrÃ­cula Gerada</option>
+              <option value="Aguardando NÂ° de MatrÃ­cula">
+                Aguardando NÂ° de MatrÃ­cula
+              </option>
+              <option value="Pendente">Pendente</option>
+              <option value="Desistente">Desistente</option>
+            </select>
+            <select
+              value={gapFilter}
+              onChange={(e) => setGapFilter(e.target.value)}
+              className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Gap (Docs)</option>
+              <option value="Sim">Com PendÃªncia</option>
+              <option value="NÃ£o">Sem PendÃªncia</option>
+            </select>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+                    <th className="px-6 py-4 w-12">
+                      <input
+                        type="checkbox"
+                        checked={
+                          selectedEntries.length === filteredGap.length &&
+                          filteredGap.length > 0
+                        }
+                        onChange={(e) => toggleSelectAll(e.target.checked)}
+                      />
+                    </th>
+                    <th className="px-6 py-4">Candidato</th>
+                    <th className="px-6 py-4">Curso / Produto</th>
+                    <th className="px-6 py-4">DocumentaÃ§Ã£o</th>
+                    <th className="px-6 py-4">Mat. Acad.</th>
+                    <th className="px-6 py-4 flex items-center gap-4">
+                      {selectedEntries.length > 0 && (
+                        <button
+                          onClick={handleBulkDelete}
+                          className="text-rose-600 font-bold hover:underline"
+                        >
+                          excluir selecionados
+                        </button>
+                      )}
+                      {selectedEntries.length > 0 && botConfig.url && (
+                        <button
+                          onClick={() => {
+                            const selectedObjs = gap.filter((g) =>
+                              selectedEntries.includes(g.id),
+                            );
+                            const payloads = selectedObjs.map((g) => ({
+                              telefone: g.telefone,
+                              message: getGapWhatsAppMessage(g),
+                              nome: g.nome,
+                            }));
+                            onMassSendBot(payloads);
+                            setSelectedEntries([]);
+                          }}
+                          className="text-blue-600 font-bold hover:underline py-1 px-2 bg-blue-50 rounded-lg flex items-center gap-1"
+                        >
+                          <Bot size={14} /> Em Massa
+                        </button>
+                      )}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredGap.map((entry) => (
+                    <tr
+                      key={entry.id}
+                      className="hover:bg-slate-50/50 transition-all"
+                    >
+                      <td className="px-6 py-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedEntries.includes(entry.id)}
+                          onChange={(e) =>
+                            toggleSelect(entry.id, e.target.checked)
+                          }
+                        />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-900">
+                            {entry.nome}
+                          </span>
+                          <span className="text-xs text-slate-500">
+                            {entry.cpf}
+                          </span>
+                          <span className="text-xs text-slate-500">
+                            {formatPhone(entry.telefone)}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-slate-700">
+                            {entry.curso}
+                          </span>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-[10px] text-slate-400">
+                              {entry.produto}
+                            </span>
+                            {entry.periodo && (
+                              <span className="text-[10px] text-slate-400">
+                                â€¢ {entry.periodo}
+                              </span>
+                            )}
+                          </div>
+                          {entry.numeroMatricula && (
+                            <span className="text-[10px] font-bold text-blue-600">
+                              Mat: {entry.numeroMatricula}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-wrap gap-1 max-w-[200px]">
+                          {Object.entries(docLabels).map(([key, label]) => (
+                            <button
+                              key={key}
+                              onClick={() =>
+                                toggleDoc(
+                                  entry.id,
+                                  key,
+                                  !!(entry.documentos as any)?.[key],
+                                )
+                              }
+                              className={cn(
+                                "px-2 py-0.5 rounded text-[9px] font-bold transition-all",
+                                (entry.documentos as any)?.[key]
+                                  ? "bg-emerald-100 text-emerald-600"
+                                  : "bg-slate-100 text-slate-400",
+                              )}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <select
+                          value={String(entry.matAcad)}
+                          onChange={(e) => {
+                            let selectedValue: string | boolean =
+                              e.target.value;
+                            if (selectedValue === "false")
+                              selectedValue = false;
+                            if (selectedValue === "true") selectedValue = true;
+                            updateMatAcadStatus(entry.id, selectedValue);
+                          }}
+                          className={cn(
+                            "px-2 py-1 rounded-lg text-[10px] font-bold uppercase outline-none",
+                            entry.matAcad === true ||
+                              String(entry.matAcad) === "true" ||
+                              entry.matAcad === "MatrÃ­cula Gerada" ||
+                              entry.matAcad === "OK"
+                              ? "bg-emerald-100 text-emerald-600"
+                              : entry.matAcad === "Aguardando NÂ° de MatrÃ­cula"
+                                ? "bg-blue-100 text-blue-600"
+                                : entry.matAcad === "Desistente"
+                                  ? "bg-rose-100 text-rose-600"
+                                  : "bg-amber-100 text-amber-600",
+                          )}
+                        >
+                          <option value="false">Pendente</option>
+                          <option value="MatrÃ­cula Gerada">
+                            MatrÃ­cula Gerada
+                          </option>
+                          <option value="Aguardando NÂ° de MatrÃ­cula">
+                            Aguardando NÂ° de MatrÃ­cula
+                          </option>
+                          <option value="Desistente">Desistente</option>
+                        </select>
+                      </td>
+                      <td className="px-6 py-4 flex items-center space-x-2">
+                        <button
+                          onClick={() => {
+                            setSelectedEntryForWhatsapp(entry);
+                            setIsSelectorOpen(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-700 font-bold text-sm bg-blue-50 p-2 rounded-lg flex items-center gap-1.5 transition-all hover:bg-blue-100"
+                          title="OpÃ§Ãµes de WhatsApp"
+                        >
+                          <Bot size={16} />
+                          <span>WhatsApp</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingEntry(entry);
+                            setFormData({
+                              nome: entry.nome || "",
+                              telefone: entry.telefone || "",
+                              cpf: entry.cpf || "",
+                              produto: entry.produto || "GraduaÃ§Ã£o",
+                              numeroOportunidade:
+                                entry.numeroOportunidade || "",
+                              curso: entry.curso || "",
+                              semestre: entry.semestre || "",
+                              metodologia: entry.metodologia || "",
+                              formaIngresso: entry.formaIngresso || "",
+                              numeroMatricula: entry.numeroMatricula || "",
+                              periodo: entry.periodo || "",
+                              acao: entry.acao || "",
+                              acaoId: entry.acaoId || "",
+                            });
+                            setIsModalOpen(true);
+                          }}
+                          className="text-blue-400 hover:text-blue-600 p-2 hover:bg-blue-50 rounded-lg transition-all"
+                          title="Editar"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteGap(entry.id)}
+                          className="text-rose-400 hover:text-rose-600 p-2 hover:bg-rose-50 rounded-lg transition-all"
+                          title="Excluir"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredGap.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className="px-6 py-12 text-center text-slate-400 italic"
+                      >
+                        Nenhum registro no GAP.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <AnimatePresence>
+            {isModalOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="bg-white rounded-3xl shadow-xl w-full max-w-2xl overflow-hidden"
+                >
+                  <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                    <h3 className="text-xl font-bold text-slate-900">
+                      {editingEntry ? "Editar Candidato" : "Cadastrar no GAP"}
+                    </h3>
+                    <button
+                      onClick={() => setIsModalOpen(false)}
+                      className="text-slate-400 hover:text-slate-600"
+                    >
+                      <X size={24} />
+                    </button>
+                  </div>
+                  <form
+                    onSubmit={handleRegister}
+                    className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4"
+                  >
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        Nome Completo
+                      </label>
+                      <input
+                        required
+                        value={formData.nome}
+                        onChange={(e) =>
+                          setFormData({ ...formData, nome: e.target.value })
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        CPF
+                      </label>
+                      <input
+                        required
+                        value={formData.cpf}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            cpf: formatCPF(e.target.value),
+                          })
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        Telefone
+                      </label>
+                      <input
+                        required
+                        value={formData.telefone}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            telefone: formatPhone(e.target.value),
+                          })
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        Produto
+                      </label>
+                      <select
+                        value={formData.produto}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            produto: e.target.value as any,
+                          })
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      >
+                        <option value="GraduaÃ§Ã£o">GraduaÃ§Ã£o</option>
+                        <option value="TÃ©cnico">TÃ©cnico</option>
+                        <option value="PÃ³s-graduaÃ§Ã£o">PÃ³s-graduaÃ§Ã£o</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        NÂ° Oportunidade
+                      </label>
+                      <input
+                        value={formData.numeroOportunidade}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            numeroOportunidade: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        Curso
+                      </label>
+                      <input
+                        required
+                        value={formData.curso}
+                        onChange={(e) =>
+                          setFormData({ ...formData, curso: e.target.value })
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        PerÃ­odo
+                      </label>
+                      <input
+                        value={formData.periodo}
+                        onChange={(e) =>
+                          setFormData({ ...formData, periodo: e.target.value })
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                        placeholder="Ex: 2024.1"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        Semestre
+                      </label>
+                      <input
+                        value={formData.semestre}
+                        onChange={(e) =>
+                          setFormData({ ...formData, semestre: e.target.value })
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        Metodologia
+                      </label>
+                      <input
+                        value={formData.metodologia}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            metodologia: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        Forma de Ingresso
+                      </label>
+                      <input
+                        value={formData.formaIngresso}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            formaIngresso: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        NÂº MatrÃ­cula
+                      </label>
+                      <input
+                        value={formData.numeroMatricula}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            numeroMatricula: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        AÃ§Ã£o Vinculada (Opcional)
+                      </label>
+                      {calendarioAcoes && calendarioAcoes.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <span className="block text-[10px] font-semibold text-slate-400 mb-1">
+                              Selecionar do CalendÃ¡rio
+                            </span>
+                            <select
+                              value={formData.acaoId || ""}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val === "manual") {
+                                  setFormData({
+                                    ...formData,
+                                    acaoId: "manual",
+                                    acao: "",
+                                  });
+                                } else {
+                                  const matched = calendarioAcoes.find(
+                                    (a) => a.id === val,
+                                  );
+                                  setFormData({
+                                    ...formData,
+                                    acaoId: val,
+                                    acao: matched ? matched.nome : "",
+                                  });
+                                }
+                              }}
+                              className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                            >
+                              <option value="">Nenhuma aÃ§Ã£o vinculada</option>
+                              {calendarioAcoes.map((act) => (
+                                <option key={act.id} value={act.id}>
+                                  {act.nome} ({act.dataInicio})
+                                </option>
+                              ))}
+                              <option value="manual">
+                                Outro (Digitar manualmente)
+                              </option>
+                            </select>
+                          </div>
+                          {(formData.acaoId === "manual" ||
+                            !formData.acaoId) && (
+                            <div>
+                              <span className="block text-[10px] font-semibold text-slate-400 mb-1">
+                                Digitar Nome da AÃ§Ã£o/Origem
+                              </span>
+                              <input
+                                type="text"
+                                required={formData.acaoId === "manual"}
+                                value={formData.acao}
+                                onChange={(e) =>
+                                  setFormData({
+                                    ...formData,
+                                    acao: e.target.value,
+                                  })
+                                }
+                                className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                                placeholder="Ex: Facebook, Panfletagem, etc."
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <input
+                          value={formData.acao}
+                          onChange={(e) =>
+                            setFormData({ ...formData, acao: e.target.value })
+                          }
+                          className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                          placeholder="Ex: Evento Junino, Facebook, etc."
+                        />
+                      )}
+                    </div>
+                    <div className="md:col-span-2">
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all disabled:opacity-50"
+                      >
+                        {loading
+                          ? "Salvando..."
+                          : editingEntry
+                            ? "Salvar AlteraÃ§Ãµes"
+                            : "Cadastrar Candidato"}
+                      </button>
+                    </div>
+                  </form>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
+        </>
+      )}
+
+      {isSelectorOpen && selectedEntryForWhatsapp && (
+        <WhatsAppMessageSelector
+          isOpen={isSelectorOpen}
+          onClose={() => {
+            setIsSelectorOpen(false);
+            setSelectedEntryForWhatsapp(null);
+          }}
+          messages={gapSpecificMessages}
+          onSelect={(msg) => {
+            const url = getWhatsAppUrl(selectedEntryForWhatsapp.telefone, msg);
+            window.open(url, "_blank");
+          }}
+          leadName={selectedEntryForWhatsapp.nome}
+          leadCurso={selectedEntryForWhatsapp.curso}
+          leadMatricula={selectedEntryForWhatsapp.numeroMatricula}
+          botConfig={botConfig}
+          onSendBot={(msg, contactName) => {
+            if (typeof msg === "string") {
+              onSendBot(
+                selectedEntryForWhatsapp.telefone,
+                msg,
+                contactName || selectedEntryForWhatsapp.nome,
+              );
+            }
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function CalendarioAcoesView({
+  data,
+  onToast,
+  profile,
+  initialData,
+  onClearInitialData,
+  users,
+  empresasParceiras = [],
+  callBotApi,
+  leads = [],
+  gap = [],
+  onSendWhatsApp,
+}: {
+  data: CalendarioAcao[];
+  onToast: (m: string, t?: "success" | "error") => void;
+  profile: UserProfile;
+  initialData?: Partial<CalendarioAcao> | null;
+  onClearInitialData?: () => void;
+  users: UserProfile[];
+  empresasParceiras?: EmpresaParceira[];
+  callBotApi?: (
+    path: string,
+    options?: { method?: "GET" | "POST"; body?: any },
+  ) => Promise<any>;
+  leads?: Lead[];
+  gap?: GapEntry[];
+  onSendWhatsApp?: (phone: string, message: string) => Promise<void>;
+}) {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Helper functions for automatic WhatsApp notifications
+  const getLocalDateString = (d: Date = new Date()) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const addDays = (dateStr: string, days: number): string => {
+    const parts = dateStr.split("-");
+    if (parts.length !== 3) return "";
+    const date = new Date(
+      Number(parts[0]),
+      Number(parts[1]) - 1,
+      Number(parts[2]),
+    );
+    date.setDate(date.getDate() + days);
+    return getLocalDateString(date);
+  };
+
+  const formatBrazilianDate = (dateStr?: string): string => {
+    if (!dateStr) return "";
+    const parts = dateStr.split("-");
+    if (parts.length !== 3) return dateStr;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  };
+
+  function formatToWhatsAppPhone(phone?: string): string {
+    if (!phone) return "";
+    let cleaned = phone.replace(/\D/g, "");
+    if (cleaned.startsWith("0")) cleaned = cleaned.substring(1);
+    if (cleaned.length === 10 || cleaned.length === 11) {
+      cleaned = `55${cleaned}`;
+    }
+    return cleaned;
+  }
+
+  async function sendActionWhatsApp(recipientPhone: string, message: string) {
+    if (onSendWhatsApp) {
+      await onSendWhatsApp(recipientPhone, message);
+    }
+  }
+
+  const triggerImmediateNotifications = async (action: {
+    id: string;
+    nome: string;
+    local: string;
+    dataInicio: string;
+    horario: string;
+    observacao?: string;
+    colaboradorId?: string;
+    colaboradoresIds?: string[];
+    promotoresSelecionados?: string[];
+  }) => {
+    const info = `\n\n*AÃ§Ã£o:* ${action.nome}\n*Local:* ${action.local}\n*Data:* ${formatBrazilianDate(action.dataInicio)}\n*HorÃ¡rio:* ${action.horario || "NÃ£o informado"}\n*Objetivo:* ${action.observacao || "NÃ£o informado"}`;
+
+    // 1. Send to FDVs Comerciais linked to action
+    const ids = action.colaboradoresIds?.length
+      ? action.colaboradoresIds
+      : action.colaboradorId
+        ? [action.colaboradorId]
+        : [];
+
+    for (const id of ids) {
+      const fdvUser = (users || []).find((u) => u.uid === id);
+      if (fdvUser && fdvUser.phone) {
+        const msg = `*Aviso de Nova Atividade Criada*\n\nOlÃ¡, *${fdvUser.name}*!\nUma nova aÃ§Ã£o foi criada no sistema e vinculada a vocÃª:${info}\n\nPor favor, acompanhe os detalhes no sistema.`;
+        await sendActionWhatsApp(fdvUser.phone, msg);
+
+        // 1.1 Send to Gestor Unidade linked to the FDV's unit
+        if (fdvUser.unidade) {
+          const unitManagers = (users || []).filter(
+            (u) =>
+              u.role === ROLES.GESTOR_UNIDADE && u.unidade === fdvUser.unidade,
+          );
+          for (const manager of unitManagers) {
+            if (manager.phone) {
+              const mMsg = `*Aviso de Nova Atividade Criada (Sua Unidade)*\n\nOlÃ¡, *${manager.name}*!\nUma nova aÃ§Ã£o foi criada pelo FDV *${fdvUser.name}* da sua unidade:${info}`;
+              await sendActionWhatsApp(manager.phone, mMsg);
+            }
+          }
+        }
+      }
+    }
+
+    // 2. Send to Promotores (if any selected)
+    if (
+      action.promotoresSelecionados &&
+      action.promotoresSelecionados.length > 0
+    ) {
+      for (const promoterId of action.promotoresSelecionados) {
+        const promoterUser = (users || []).find((u) => u.uid === promoterId);
+        if (promoterUser && promoterUser.phone) {
+          const msg = `*Aviso de Nova Atividade Criada*\n\nOlÃ¡, *${promoterUser.name}*!\nUma nova aÃ§Ã£o foi criada com a sua participaÃ§Ã£o:${info}\n\nPor favor, fique atento ao cronograma!`;
+          await sendActionWhatsApp(promoterUser.phone, msg);
+        }
+      }
+    }
+
+    // 3. Send to Gerentes Comerciais and Gestores Comerciais
+    const managers = (users || []).filter(
+      (u) =>
+        u.role === ROLES.GESTOR_COMERCIAL_COMERCIAL ||
+        u.role === ROLES.GESTOR_COMERCIAL,
+    );
+    if (managers.length > 0) {
+      const fdvUser = action.colaboradorId
+        ? (users || []).find((u) => u.uid === action.colaboradorId)
+        : null;
+      const fdvInfo = fdvUser ? `\n*FDV ResponsÃ¡vel:* ${fdvUser.name}` : "";
+
+      for (const manager of managers) {
+        if (manager.phone) {
+          const msg = `*Aviso de Nova Atividade Criada (GestÃ£o)*\n\nOlÃ¡, *${manager.name}*!\nUma nova aÃ§Ã£o foi criada no sistema:${fdvInfo}${info}\n\nPor favor, acompanhe no sistema.`;
+          await sendActionWhatsApp(manager.phone, msg);
+        }
+      }
+    }
+  };
+
+  // Background check for 1-day reminders and 1-day post-action requests
+  useEffect(() => {
+    if (!data || data.length === 0 || !users || users.length === 0) return;
+
+    const checkRemindersAndRequests = async () => {
+      const lastRun = sessionStorage.getItem("last_action_notification_check");
+      const nowTime = Date.now();
+      if (lastRun && nowTime - Number(lastRun) < 300000) {
+        return;
+      }
+      sessionStorage.setItem("last_action_notification_check", String(nowTime));
+
+      const todayStr = getLocalDateString();
+
+      for (const action of data) {
+        // --- 1. Reminder 1 day before action start date ---
+        const oneDayBeforeStart = addDays(action.dataInicio, -1);
+        if (
+          oneDayBeforeStart &&
+          todayStr === oneDayBeforeStart &&
+          !action.concluida &&
+          !(action as any).whatsappLembreteSent
+        ) {
+          try {
+            await updateDoc(doc(db, COLLECTIONS.CALENDARIO_ACOES, action.id), {
+              whatsappLembreteSent: true,
+            });
+
+            const info = `\n\n*AÃ§Ã£o:* ${action.nome}\n*Local:* ${action.local}\n*Data:* ${formatBrazilianDate(action.dataInicio)}\n*HorÃ¡rio:* ${action.horario || "NÃ£o informado"}\n*Objetivo:* ${action.observacao || "NÃ£o informado"}`;
+
+            // Send to FDV
+            if (action.colaboradorId) {
+              const fdvUser = users.find((u) => u.uid === action.colaboradorId);
+              if (fdvUser && fdvUser.phone) {
+                const msg = `*Lembrete de AÃ§Ã£o AmanhÃ£*\n\nOlÃ¡, *${fdvUser.name}*!\nLembrando que amanhÃ£ temos a seguinte aÃ§Ã£o programada:${info}\n\nAtÃ© lÃ¡!`;
+                await sendActionWhatsApp(fdvUser.phone, msg);
+
+                // Send to Gestor Unidade of the FDV
+                if (fdvUser.unidade) {
+                  const unitManagers = users.filter(
+                    (u) =>
+                      u.role === ROLES.GESTOR_UNIDADE &&
+                      u.unidade === fdvUser.unidade,
+                  );
+                  for (const manager of unitManagers) {
+                    if (manager.phone) {
+                      const mMsg = `*Lembrete de AÃ§Ã£o AmanhÃ£ (Sua Unidade)*\n\nOlÃ¡, *${manager.name}*!\nLembrando que amanhÃ£ o FDV *${fdvUser.name}* tem uma aÃ§Ã£o programada:${info}`;
+                      await sendActionWhatsApp(manager.phone, mMsg);
+                    }
+                  }
+                }
+              }
+            }
+
+            // Send to selected promoters
+            if (
+              action.promotoresSelecionados &&
+              action.promotoresSelecionados.length > 0
+            ) {
+              for (const promoterId of action.promotoresSelecionados) {
+                const promoterUser = users.find((u) => u.uid === promoterId);
+                if (promoterUser && promoterUser.phone) {
+                  const msg = `*Lembrete de AÃ§Ã£o AmanhÃ£*\n\nOlÃ¡, *${promoterUser.name}*!\nLembrando que amanhÃ£ temos a seguinte aÃ§Ã£o programada:${info}\n\nAtÃ© lÃ¡!`;
+                  await sendActionWhatsApp(promoterUser.phone, msg);
+                }
+              }
+            }
+
+            // Send to Managers/Gestores
+            const managers = users.filter(
+              (u) =>
+                u.role === ROLES.GESTOR_COMERCIAL_COMERCIAL ||
+                u.role === ROLES.GESTOR_COMERCIAL,
+            );
+            for (const manager of managers) {
+              if (manager.phone) {
+                const msg = `*Lembrete de AÃ§Ã£o AmanhÃ£ (GestÃ£o)*\n\nOlÃ¡, *${manager.name}*!\nAmanhÃ£ haverÃ¡ a seguinte aÃ§Ã£o:${info}`;
+                await sendActionWhatsApp(manager.phone, msg);
+              }
+            }
+          } catch (err) {
+            console.error(
+              "Failed to send 1-day-before reminder",
+              action.id,
+              err,
+            );
+          }
+        }
+
+        // --- 2. Closure Request 1 day after action end date ---
+        const oneDayAfterEnd = addDays(action.dataFim, 1);
+        if (
+          oneDayAfterEnd &&
+          todayStr === oneDayAfterEnd &&
+          !action.concluida &&
+          !(action as any).whatsappFechamentoSent
+        ) {
+          try {
+            await updateDoc(doc(db, COLLECTIONS.CALENDARIO_ACOES, action.id), {
+              whatsappFechamentoSent: true,
+            });
+
+            const info = `\n\n*AÃ§Ã£o:* ${action.nome}\n*Local:* ${action.local}\n*Data:* ${formatBrazilianDate(action.dataInicio)}\n*HorÃ¡rio:* ${action.horario || "NÃ£o informado"}\n*Objetivo:* ${action.observacao || "NÃ£o informado"}`;
+
+            // Send to FDV
+            if (action.colaboradorId) {
+              const fdvUser = users.find((u) => u.uid === action.colaboradorId);
+              if (fdvUser && fdvUser.phone) {
+                const msg = `*Lembrete de Fechar AÃ§Ã£o*\n\nOlÃ¡, *${fdvUser.name}*!\nA aÃ§Ã£o *${action.nome}* finalizou ontem (${formatBrazilianDate(action.dataFim)}).${info}\n\nPor favor, acesse o sistema para realizar o fechamento formal, registrar fotos e confirmar as presenÃ§as dos promotores.`;
+                await sendActionWhatsApp(fdvUser.phone, msg);
+              }
+            }
+
+            // Send to Managers/Gestores
+            const managers = users.filter(
+              (u) =>
+                u.role === ROLES.GESTOR_COMERCIAL_COMERCIAL ||
+                u.role === ROLES.GESTOR_COMERCIAL,
+            );
+            for (const manager of managers) {
+              if (manager.phone) {
+                const msg = `*Lembrete de Fechar AÃ§Ã£o (GestÃ£o)*\n\nOlÃ¡, *${manager.name}*!\nA aÃ§Ã£o do colaborador abaixo finalizou ontem e ainda nÃ£o foi fechada:${info}`;
+                await sendActionWhatsApp(manager.phone, msg);
+              }
+            }
+          } catch (err) {
+            console.error("Failed to send closure request", action.id, err);
+          }
+        }
+      }
+    };
+
+    const timer = setTimeout(checkRemindersAndRequests, 3000);
+    return () => clearTimeout(timer);
+  }, [data, users]);
+
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "NÃ£o iniciada" | "Em andamento" | "ConcluÃ­do" | "Cancelado"
+  >("all");
+  const [colaboradorFilter, setColaboradorFilter] = useState("all");
+  const [unidadeFilter, setUnidadeFilter] = useState("all");
+  const [startDateFilter, setStartDateFilter] = useState("");
+  const [endDateFilter, setEndDateFilter] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
+  const [editingAction, setEditingAction] = useState<CalendarioAcao | null>(
+    null,
+  );
+  const [acoesSubTab, setAcoesSubTab] = useState<"dashboard" | "lista">(
+    "dashboard",
+  );
+  const [viewFormat, setViewFormat] = useState<"card" | "list">("card");
+
+  const autoLeadsCount = editingAction
+    ? (leads || []).filter((l) => l.acaoId === editingAction.id).length
+    : 0;
+  const autoBoletosCount = editingAction
+    ? (gap || []).filter((g) => g.acaoId === editingAction.id).length
+    : 0;
+
+  const [newAction, setNewAction] = useState({
+    nome: "",
+    dataInicio: "",
+    dataFim: "",
+    local: "",
+    observacao: "",
+    status: "NÃ£o iniciada",
+    concluida: false,
+    fotos: ["", "", ""],
+    metaBoletos: "" as number | "",
+    metaInscritos: "" as number | "",
+    precisaPromotor: false,
+    promotoresSelecionados: [] as string[],
+    valorPromotor: "" as number | "",
+    valorOrcado: "" as number | "",
+    colaboradorId: "",
+    colaboradorNome: "",
+    colaboradoresIds: [] as string[],
+    colaboradoresNomes: [] as string[],
+    tipoAtividade: "AÃ§Ã£o" as "AÃ§Ã£o" | "Visita",
+    empresaParceiraId: "",
+    empresaParceiraNome: "",
+    leadsFeitos: "" as number | "",
+    boletosFeitos: "" as number | "",
+    horario: "",
+  });
+
+  const promotoresDisponiveis = (users || []).filter((u) => {
+    const isPromotor =
+      u.role === ROLES.PROMOTOR || u.role === ROLES.PROMOTOR_RUA;
+    if (!isPromotor) return false;
+
+    if (
+      profile.role !== ROLES.ADMIN_MASTER && profile.role !== ROLES.FINANCEIRO &&
+      profile.role !== ROLES.GESTOR_COMERCIAL &&
+      profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL
+    ) {
+      if (profile.unidade && u.unidade !== profile.unidade) {
+        return false;
+      }
+    }
+    return true;
+  });
+  const colaboradoresDisponiveis = (users || []).filter((u) => {
+    const isTargetRole =
+      u.role === ROLES.FDV_COMERCIAL ||
+      u.role === ROLES.GESTOR_COMERCIAL_COMERCIAL;
+    if (!isTargetRole) return false;
+
+    if (
+      profile.role !== ROLES.ADMIN_MASTER && profile.role !== ROLES.FINANCEIRO &&
+      profile.role !== ROLES.GESTOR_COMERCIAL &&
+      profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL
+    ) {
+      if (profile.unidade && u.unidade !== profile.unidade) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    if (initialData) {
+      setNewAction({
+        nome: initialData.nome || "",
+        dataInicio: initialData.dataInicio || "",
+        dataFim: initialData.dataFim || "",
+        local: initialData.local || "",
+        observacao: initialData.observacao || "",
+        status: "NÃ£o iniciada",
+        concluida: false,
+        fotos: ["", "", ""],
+        metaBoletos:
+          (initialData as any).metaBoletos !== undefined
+            ? (initialData as any).metaBoletos
+            : "",
+        metaInscritos:
+          (initialData as any).metaInscritos !== undefined
+            ? (initialData as any).metaInscritos
+            : "",
+        leadsFeitos:
+          (initialData as any).leadsFeitos !== undefined
+            ? (initialData as any).leadsFeitos
+            : "",
+        boletosFeitos:
+          (initialData as any).boletosFeitos !== undefined
+            ? (initialData as any).boletosFeitos
+            : "",
+        precisaPromotor: !!(initialData as any).precisaPromotor,
+        promotoresSelecionados:
+          (initialData as any).promotoresSelecionados || [],
+        valorPromotor:
+          (initialData as any).valorPromotor !== undefined
+            ? (initialData as any).valorPromotor
+            : "",
+        valorOrcado:
+          (initialData as any).valorOrcado !== undefined
+            ? (initialData as any).valorOrcado
+            : "",
+        colaboradorId: (initialData as any).colaboradorId || "",
+        colaboradorNome: (initialData as any).colaboradorNome || "",
+        colaboradoresIds: (initialData as any).colaboradoresIds || [],
+        colaboradoresNomes: (initialData as any).colaboradoresNomes || [],
+        tipoAtividade: (initialData as any).tipoAtividade || "AÃ§Ã£o",
+        empresaParceiraId: (initialData as any).empresaParceiraId || "",
+        empresaParceiraNome: (initialData as any).empresaParceiraNome || "",
+        horario: (initialData as any).horario || "",
+      });
+      setIsAdding(true);
+      if (onClearInitialData) onClearInitialData();
+    }
+  }, [initialData]);
+
+  const filteredData = data.filter((item) => {
+    // Restrict visibility to actions from the same unit, unless admin/gestor
+    if (
+      profile.role !== ROLES.ADMIN_MASTER && profile.role !== ROLES.FINANCEIRO &&
+      profile.role !== ROLES.GESTOR_COMERCIAL &&
+      profile.role !== ROLES.GESTOR_COMERCIAL_COMERCIAL
+    ) {
+      if (profile.unidade && item.unidade !== profile.unidade) {
+        return false;
+      }
+    }
+
+    const matchesSearch =
+      item.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.local.toLowerCase().includes(searchTerm.toLowerCase());
+    const itemStatus =
+      item.status || (item.concluida ? "ConcluÃ­do" : "NÃ£o iniciada");
+
+    const matchesStatus =
+      statusFilter === "all" ? true : statusFilter === itemStatus;
+
+    const matchesColaborador =
+      colaboradorFilter === "all" ||
+      item.colaboradorId === colaboradorFilter ||
+      (item.colaboradoresIds &&
+        item.colaboradoresIds.includes(colaboradorFilter));
+
+    const matchesUnidade =
+      unidadeFilter === "all" || item.unidade === unidadeFilter;
+
+    let matchesDate = true;
+    if (startDateFilter && endDateFilter) {
+      matchesDate =
+        item.dataInicio <= endDateFilter && item.dataFim >= startDateFilter;
+    } else if (startDateFilter) {
+      matchesDate = item.dataFim >= startDateFilter;
+    } else if (endDateFilter) {
+      matchesDate = item.dataInicio <= endDateFilter;
+    }
+    return (
+      matchesSearch &&
+      matchesStatus &&
+      matchesDate &&
+      matchesColaborador &&
+      matchesUnidade
+    );
+  });
+
+  const stats = useMemo(() => {
+    const total = filteredData.length;
+    const completed = filteredData.filter((a) => a.concluida).length;
+    const pending = total - completed;
+    const totalLeads = leads.length;
+    const totalLeadsFeitos = filteredData.reduce(
+      (acc, a) => acc + (Number(a.leadsFeitos) || 0),
+      0,
+    );
+    const totalBoletosFeitos = filteredData.reduce(
+      (acc, a) => acc + (Number(a.boletosFeitos) || 0),
+      0,
+    );
+    const completionRate =
+      total > 0 ? ((completed / total) * 100).toFixed(1) : "0";
+
+    const byType: Record<string, number> = {};
+    filteredData.forEach((a) => {
+      const t = a.tipoAtividade || "AÃ§Ã£o";
+      byType[t] = (byType[t] || 0) + 1;
+    });
+
+    const byStatus = [
+      { name: "ConcluÃ­das", count: completed, color: "bg-emerald-400" },
+      { name: "Pendentes", count: pending, color: "bg-amber-400" },
+    ];
+
+    return {
+      total,
+      completed,
+      pending,
+      totalLeads,
+      totalLeadsFeitos,
+      totalBoletosFeitos,
+      completionRate,
+      byType: Object.entries(byType)
+        .map(([name, count]) => ({
+          name,
+          count,
+          percentage: total > 0 ? ((count / total) * 100).toFixed(1) : "0",
+        }))
+        .sort((a, b) => b.count - a.count),
+      byStatus: byStatus.map((s) => ({
+        ...s,
+        percentage: total > 0 ? ((s.count / total) * 100).toFixed(1) : "0",
+      })),
+    };
+  }, [filteredData, leads]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        ...newAction,
+        metaBoletos:
+          newAction.metaBoletos === "" ? 0 : Number(newAction.metaBoletos),
+        metaInscritos:
+          newAction.metaInscritos === "" ? 0 : Number(newAction.metaInscritos),
+        valorPromotor:
+          newAction.valorPromotor === "" ? 0 : Number(newAction.valorPromotor),
+        valorOrcado:
+          newAction.valorOrcado === "" ? 0 : Number(newAction.valorOrcado),
+        leadsFeitos:
+          newAction.leadsFeitos === "" ? "" : Number(newAction.leadsFeitos),
+        boletosFeitos:
+          newAction.boletosFeitos === "" ? "" : Number(newAction.boletosFeitos),
+        fotos: newAction.fotos.filter((f) => f.trim() !== ""),
+        horario: newAction.horario || "",
+        updatedAt: serverTimestamp(),
+      };
+
+      const isDuplicate = data.some(
+        (action) =>
+          action.nome.toLowerCase() === payload.nome.toLowerCase() &&
+          action.dataInicio === payload.dataInicio &&
+          action.id !== editingAction?.id,
+      );
+      if (isDuplicate) {
+        onToast("JÃ¡ existe uma aÃ§Ã£o com este nome e data.", "error");
+        return;
+      }
+
+      if (editingAction) {
+        await updateDoc(
+          doc(db, COLLECTIONS.CALENDARIO_ACOES, editingAction.id),
+          payload,
+        );
+        onToast("AÃ§Ã£o updated com sucesso!");
+      } else {
+        // Automatically set the unit based on the collaborator (FDV) or the creator
+        let targetUnidade = "";
+        if (payload.colaboradorId) {
+          const collab = (users || []).find(
+            (u) => u.uid === payload.colaboradorId,
+          );
+          if (collab?.unidade) targetUnidade = collab.unidade;
+        }
+        if (!targetUnidade && profile.unidade) {
+          targetUnidade = profile.unidade;
+        }
+
+        const docRef = await addDoc(
+          collection(db, COLLECTIONS.CALENDARIO_ACOES),
+          {
+            ...payload,
+            unidade: targetUnidade,
+            creatorId: profile.uid,
+            creatorRole: profile.role,
+            createdAt: serverTimestamp(),
+            whatsappMomentoSent: true,
+          },
+        );
+        onToast("AÃ§Ã£o agendada com sucesso!");
+
+        // Send automatic WhatsApp notifications at creation time
+        triggerImmediateNotifications({
+          id: docRef.id,
+          nome: payload.nome,
+          local: payload.local,
+          dataInicio: payload.dataInicio,
+          horario: payload.horario,
+          observacao: payload.observacao,
+          colaboradorId: payload.colaboradorId,
+          promotoresSelecionados: payload.promotoresSelecionados,
+        });
+      }
+      setIsAdding(false);
+      setEditingAction(null);
+      setNewAction({
+        nome: "",
+        dataInicio: "",
+        dataFim: "",
+        local: "",
+        observacao: "",
+        status: "NÃ£o iniciada",
+        concluida: false,
+        fotos: ["", "", ""],
+        metaBoletos: "",
+        metaInscritos: "",
+        precisaPromotor: false,
+        promotoresSelecionados: [],
+        valorPromotor: "",
+        valorOrcado: "",
+        colaboradorId: "",
+        colaboradorNome: "",
+        colaboradoresIds: [],
+        colaboradoresNomes: [],
+        tipoAtividade: "AÃ§Ã£o",
+        empresaParceiraId: "",
+        empresaParceiraNome: "",
+        leadsFeitos: "",
+        boletosFeitos: "",
+        horario: "",
+      });
+    } catch (err: any) {
+      handleFirestoreError(
+        err,
+        OperationType.WRITE,
+        COLLECTIONS.CALENDARIO_ACOES,
+      );
+      onToast("Erro ao salvar aÃ§Ã£o.", "error");
+    }
+  };
+
+  const togglePromoterAttendance = async (
+    action: CalendarioAcao,
+    promoterUid: string,
+  ) => {
+    try {
+      const currentAttendance = action.presencaPromotores || {};
+      const nextVal = !currentAttendance[promoterUid];
+      const updatedAttendance = {
+        ...currentAttendance,
+        [promoterUid]: nextVal,
+      };
+
+      const payload: any = {
+        presencaPromotores: updatedAttendance,
+      };
+
+      if (nextVal) {
+        const currentDetails = action.dadosPresencaPromotores || {};
+        if (!currentDetails[promoterUid]) {
+          payload.dadosPresencaPromotores = {
+            ...currentDetails,
+            [promoterUid]: {
+              empresa: "GR15",
+              horas: 4,
+            },
+          };
+        }
+      }
+
+      await updateDoc(
+        doc(db, COLLECTIONS.CALENDARIO_ACOES, action.id),
+        payload,
+      );
+      onToast(
+        nextVal
+          ? "FormulÃ¡rio de presenÃ§a aberto e registrado!"
+          : "PresenÃ§a do promotor removida!",
+      );
+    } catch (err: any) {
+      onToast("Erro ao atualizar presenÃ§a do promotor.", "error");
+    }
+  };
+
+  const updatePromoterPresenceDetails = async (
+    action: CalendarioAcao,
+    promoterUid: string,
+    empresa?: "GR15" | "RP7",
+    horas?: number,
+  ) => {
+    try {
+      const currentDetails = action.dadosPresencaPromotores || {};
+      const promoterDetails = currentDetails[promoterUid] || {};
+      const updatedDetails = {
+        ...currentDetails,
+        [promoterUid]: {
+          ...promoterDetails,
+          ...(empresa !== undefined ? { empresa } : {}),
+          ...(horas !== undefined ? { horas } : {}),
+        },
+      };
+      await updateDoc(doc(db, COLLECTIONS.CALENDARIO_ACOES, action.id), {
+        dadosPresencaPromotores: updatedDetails,
+      });
+      onToast("Dados de pagamento atualizados!");
+    } catch (err: any) {
+      onToast("Erro ao atualizar dados de pagamento.", "error");
+    }
+  };
+
+  const updateActionStatus = async (
+    action: CalendarioAcao,
+    newStatus: string,
+  ) => {
+    try {
+      await updateDoc(doc(db, COLLECTIONS.CALENDARIO_ACOES, action.id), {
+        status: newStatus,
+        concluida: newStatus === "ConcluÃ­do",
+      });
+      onToast(`Status atualizado para: ${newStatus}`);
+    } catch (err: any) {
+      onToast("Erro ao atualizar status.", "error");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Deseja excluir esta aÃ§Ã£o?")) {
+      try {
+        await deleteDoc(doc(db, COLLECTIONS.CALENDARIO_ACOES, id));
+        onToast("AÃ§Ã£o removida.");
+      } catch (err: any) {
+        onToast("Erro ao excluir aÃ§Ã£o.", "error");
+      }
+    }
+  };
+
+  const handleExport = () => {
+    const exportData = filteredData.map((item) => ({
+      Nome: item.nome,
+      "Data InÃ­cio": item.dataInicio,
+      "Data Fim": item.dataFim,
+      Local: item.local,
+      ObservaÃ§Ã£o: item.observacao,
+      Status: item.status || (item.concluida ? "ConcluÃ­da" : "NÃ£o iniciada"),
+    }));
+    exportToExcel(exportData, "Calendario_Acoes");
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    importFromExcel(file, async (importData) => {
+      try {
+        const getVal = (row: any, ...keys: string[]) => {
+          const rowKeys = Object.keys(row);
+          for (const key of keys) {
+            const foundKey = rowKeys.find(
+              (k) => k.toLowerCase() === key.toLowerCase(),
+            );
+            if (foundKey && row[foundKey] !== undefined) return row[foundKey];
+          }
+          return undefined;
+        };
+
+        const batch = importData.map((item) => {
+          const rawStatusOriginal = String(
+            getVal(item, "Status", "status") || "",
+          ).trim();
+          const rawStatus = rawStatusOriginal.toLowerCase();
+          const isConcluida =
+            ["concluÃ­da", "concluida", "sim", "true", "ok"].includes(
+              rawStatus,
+            ) || getVal(item, "concluida") === true;
+
+          let parsedStatus = "NÃ£o iniciada";
+          if (isConcluida || rawStatus === "concluÃ­do")
+            parsedStatus = "ConcluÃ­do";
+          else if (rawStatus === "em andamento") parsedStatus = "Em andamento";
+          else if (rawStatus === "cancelado" || rawStatus === "cancelada")
+            parsedStatus = "Cancelado";
+
+          return {
+            nome: String(getVal(item, "Nome", "nome") || "").trim(),
+            dataInicio: String(
+              getVal(item, "Data InÃ­cio", "dataInicio", "data_inicio") || "",
+            ).trim(),
+            dataFim: String(
+              getVal(item, "Data Fim", "dataFim", "data_fim") || "",
+            ).trim(),
+            local: String(getVal(item, "Local", "local") || "").trim(),
+            observacao: String(
+              getVal(item, "ObservaÃ§Ã£o", "observacao", "observaÃ§Ã£o") || "",
+            ).trim(),
+            status: parsedStatus,
+            concluida: isConcluida,
+            fotos: [],
+            creatorId: profile.uid,
+            creatorRole: profile.role,
+            createdAt: serverTimestamp(),
+          };
+        });
+
+        let imported = 0;
+        let skipped = 0;
+        const inserted = new Set();
+        for (const entry of batch) {
+          const isDup =
+            data.some(
+              (a) => a.nome === entry.nome && a.dataInicio === entry.dataInicio,
+            ) || inserted.has(`${entry.nome}-${entry.dataInicio}`);
+          if (!isDup) {
+            await addDoc(collection(db, COLLECTIONS.CALENDARIO_ACOES), entry);
+            inserted.add(`${entry.nome}-${entry.dataInicio}`);
+            imported++;
+          } else {
+            skipped++;
+          }
+        }
+        onToast(
+          `${imported} aÃ§Ãµes importadas! ${skipped > 0 ? `${skipped} ignoradas.` : ""}`,
+        );
+      } catch (err: any) {
+        onToast("Erro ao importar aÃ§Ãµes.", "error");
+      }
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Tab Navigation */}
+      <div className="flex items-center gap-1 bg-white p-1 rounded-2xl shadow-sm border border-slate-100 w-fit">
+        <button
+          onClick={() => setAcoesSubTab("dashboard")}
+          className={cn(
+            "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
+            acoesSubTab === "dashboard"
+              ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
+              : "text-slate-500 hover:bg-slate-50",
+          )}
+        >
+          <BarChart3 size={18} />
+          <span>Dashboard</span>
+        </button>
+        <button
+          onClick={() => setAcoesSubTab("lista")}
+          className={cn(
+            "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
+            acoesSubTab === "lista"
+              ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
+              : "text-slate-500 hover:bg-slate-50",
+          )}
+        >
+          <List size={18} />
+          <span>Lista de AÃ§Ãµes</span>
+        </button>
+      </div>
+
+      {acoesSubTab === "dashboard" && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            <StatCard
+              title="Total de AÃ§Ãµes"
+              value={stats.total}
+              icon={Calendar}
+              color="bg-blue-500"
+            />
+            <StatCard
+              title="ConcluÃ­das"
+              value={stats.completed}
+              icon={CheckCircle2}
+              color="bg-emerald-500"
+            />
+            <StatCard
+              title="Pendentes"
+              value={stats.pending}
+              icon={Clock}
+              color="bg-amber-500"
+            />
+            <StatCard
+              title="Total Leads"
+              value={stats.totalLeads}
+              icon={Users}
+              color="bg-purple-500"
+            />
+            <StatCard
+              title="Leads Gerados"
+              value={stats.totalLeadsFeitos}
+              icon={UserPlus}
+              color="bg-indigo-500"
+            />
+            <StatCard
+              title="Boletos Gerados"
+              value={stats.totalBoletosFeitos}
+              icon={FileText}
+              color="bg-rose-500"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+              <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <Target size={18} className="text-blue-500" />
+                Status das AÃ§Ãµes
+              </h3>
+              <div className="space-y-3">
+                {stats.byStatus.map((s) => (
+                  <div key={s.name} className="space-y-1">
+                    <div className="flex justify-between text-xs font-semibold">
+                      <span className="text-slate-600 flex items-center gap-1.5">
+                        <span className={cn("w-2 h-2 rounded-full", s.color)} />
+                        {s.name}
+                      </span>
+                      <span className="text-slate-800 font-bold">
+                        {s.count}{" "}
+                        <span className="text-slate-400 font-normal">
+                          ({s.percentage}%)
+                        </span>
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div
+                        className={cn(
+                          "h-full rounded-full transition-all",
+                          s.color,
+                        )}
+                        style={{ width: `${s.percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+              <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <LayoutDashboard size={18} className="text-blue-500" />
+                Tipos de AÃ§Ã£o (Top 5)
+              </h3>
+              <div className="space-y-3">
+                {stats.byType.slice(0, 5).map((t) => (
+                  <div key={t.name} className="space-y-1">
+                    <div className="flex justify-between text-xs font-semibold">
+                      <span className="text-slate-600">{t.name}</span>
+                      <span className="text-slate-800 font-bold">
+                        {t.count}{" "}
+                        <span className="text-slate-400 font-normal">
+                          ({t.percentage}%)
+                        </span>
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-blue-500 rounded-full transition-all"
+                        style={{ width: `${t.percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {acoesSubTab === "lista" && (
+        <>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-3 bg-blue-600 text-white rounded-2xl shadow-lg shadow-blue-200">
+                <Calendar size={24} />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">
+                  Plano de AÃ§Ã£o
+                </h2>
+                <p className="text-slate-500 text-sm">
+                  Gerencie as aÃ§Ãµes e eventos da equipe
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center bg-slate-100 p-1 rounded-xl mr-2">
+                <button
+                  onClick={() => setViewFormat("card")}
+                  className={cn(
+                    "p-2 rounded-lg transition-all",
+                    viewFormat === "card"
+                      ? "bg-white shadow-sm text-blue-600"
+                      : "text-slate-400 hover:text-slate-600",
+                  )}
+                  title="Formato de Cards"
+                >
+                  <LayoutGrid size={18} />
+                </button>
+                <button
+                  onClick={() => setViewFormat("list")}
+                  className={cn(
+                    "p-2 rounded-lg transition-all",
+                    viewFormat === "list"
+                      ? "bg-white shadow-sm text-blue-600"
+                      : "text-slate-400 hover:text-slate-600",
+                  )}
+                  title="Formato de Lista"
+                >
+                  <List size={18} />
+                </button>
+              </div>
+              <button
+                onClick={() => setIsAdding(true)}
+                className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center space-x-2"
+              >
+                <Plus size={20} />
+                <span>Nova AÃ§Ã£o</span>
+              </button>
+              <label className="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-blue-100 transition-all text-sm font-bold cursor-pointer">
+                <Upload size={18} />
+                <span>Importar</span>
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  onChange={handleImport}
+                  className="hidden"
+                />
+              </label>
+              <button
+                onClick={handleExport}
+                className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-slate-200 transition-all text-sm font-bold"
+              >
+                <Download size={18} />
+                <span>Exportar</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">
+                Pesquisar
+              </label>
+              <div className="relative">
+                <Search
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  size={18}
+                />
+                <input
+                  type="text"
+                  placeholder="Nome ou local..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 transition-all"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">
+                FDV Comercial
+              </label>
+              <select
+                value={colaboradorFilter}
+                onChange={(e) => setColaboradorFilter(e.target.value)}
+                className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 transition-all"
+              >
+                <option value="all">Todos os FDVs</option>
+                {colaboradoresDisponiveis.map((u) => (
+                  <option key={u.uid} value={u.uid}>
+                    {u.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">
+                Unidade
+              </label>
+              <select
+                value={unidadeFilter}
+                onChange={(e) => setUnidadeFilter(e.target.value)}
+                className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 transition-all"
+              >
+                <option value="all">Todas as Unidades</option>
+                {Array.from(
+                  new Set((users || []).map((u) => u.unidade).filter(Boolean)),
+                )
+                  .sort()
+                  .map((u) => (
+                    <option key={u} value={u}>
+                      {u}
+                    </option>
+                  ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">
+                Status
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 transition-all"
+              >
+                <option value="all">Todos os Status</option>
+                <option value="NÃ£o iniciada">NÃ£o iniciadas</option>
+                <option value="Em andamento">Em andamento</option>
+                <option value="ConcluÃ­do">ConcluÃ­das</option>
+                <option value="Cancelado">Canceladas</option>
+              </select>
+            </div>
+            <div>
+              <div className="flex justify-between items-center mb-1 ml-1">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase">
+                  Data InÃ­cio
+                </label>
+                {(startDateFilter || endDateFilter) && (
+                  <button
+                    onClick={() => {
+                      setStartDateFilter("");
+                      setEndDateFilter("");
+                    }}
+                    className="text-[10px] text-red-500 font-bold hover:underline"
+                  >
+                    Limpar
+                  </button>
+                )}
+              </div>
+              <input
+                type="date"
+                value={startDateFilter}
+                onChange={(e) => setStartDateFilter(e.target.value)}
+                className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">
+                Data Fim
+              </label>
+              <input
+                type="date"
+                value={endDateFilter}
+                onChange={(e) => setEndDateFilter(e.target.value)}
+                className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 transition-all"
+              />
+            </div>
+          </div>
+
+          {viewFormat === "card" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredData.map((action) => (
+                <motion.div
+                  layout
+                  key={action.id}
+                  className={cn(
+                    "bg-white p-6 rounded-3xl shadow-sm border transition-all",
+                    (action.status ||
+                      (action.concluida ? "ConcluÃ­do" : "NÃ£o iniciada")) ===
+                      "ConcluÃ­do"
+                      ? "border-emerald-100 bg-emerald-50/10"
+                      : action.status === "Em andamento"
+                        ? "border-amber-100 bg-amber-50/10"
+                        : action.status === "Cancelado"
+                          ? "border-rose-100 bg-rose-50/10"
+                          : "border-slate-100",
+                  )}
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div
+                      className={cn(
+                        "p-2 rounded-xl",
+                        (action.status ||
+                          (action.concluida ? "ConcluÃ­do" : "NÃ£o iniciada")) ===
+                          "ConcluÃ­do"
+                          ? "bg-emerald-100 text-emerald-600"
+                          : action.status === "Em andamento"
+                            ? "bg-amber-100 text-amber-600"
+                            : action.status === "Cancelado"
+                              ? "bg-rose-100 text-rose-600"
+                              : "bg-blue-100 text-blue-600",
+                      )}
+                    >
+                      <Calendar size={20} />
+                    </div>
+                    <div className="flex space-x-1">
+                      <button
+                        onClick={() => {
+                          setEditingAction(action);
+                          setNewAction({
+                            nome: action.nome,
+                            dataInicio: action.dataInicio,
+                            dataFim: action.dataFim,
+                            local: action.local,
+                            observacao: action.observacao,
+                            status:
+                              action.status ||
+                              (action.concluida ? "ConcluÃ­do" : "NÃ£o iniciada"),
+                            concluida: action.concluida,
+                            fotos: [...(action.fotos || []), "", "", ""].slice(
+                              0,
+                              3,
+                            ),
+                            metaBoletos:
+                              action.metaBoletos !== undefined
+                                ? action.metaBoletos
+                                : "",
+                            metaInscritos:
+                              action.metaInscritos !== undefined
+                                ? action.metaInscritos
+                                : "",
+                            precisaPromotor: !!action.precisaPromotor,
+                            promotoresSelecionados:
+                              action.promotoresSelecionados || [],
+                            valorPromotor:
+                              action.valorPromotor !== undefined
+                                ? action.valorPromotor
+                                : "",
+                            valorOrcado:
+                              action.valorOrcado !== undefined
+                                ? action.valorOrcado
+                                : "",
+                            colaboradorId: action.colaboradorId || "",
+                            colaboradorNome: action.colaboradorNome || "",
+                            colaboradoresIds: action.colaboradoresIds || [],
+                            colaboradoresNomes: action.colaboradoresNomes || [],
+                            tipoAtividade: action.tipoAtividade || "AÃ§Ã£o",
+                            empresaParceiraId: action.empresaParceiraId || "",
+                            empresaParceiraNome:
+                              action.empresaParceiraNome || "",
+                            leadsFeitos:
+                              action.leadsFeitos !== undefined
+                                ? action.leadsFeitos
+                                : "",
+                            boletosFeitos:
+                              action.boletosFeitos !== undefined
+                                ? action.boletosFeitos
+                                : "",
+                            horario: action.horario || "",
+                          });
+                          setIsAdding(true);
+                        }}
+                        className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-all"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(action.id)}
+                        className="p-2 text-rose-400 hover:bg-rose-50 rounded-lg transition-all"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5 mb-2 shrink-0">
+                    <span
+                      className={cn(
+                        "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border",
+                        action.tipoAtividade === "Visita"
+                          ? "bg-amber-50 text-amber-600 border-amber-200/60"
+                          : "bg-indigo-50 text-indigo-600 border-indigo-200/60",
+                      )}
+                    >
+                      {action.tipoAtividade || "AÃ§Ã£o"}
+                    </span>
+                    {action.empresaParceiraNome && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider bg-rose-50 text-rose-600 border border-rose-200/60 flex items-center gap-1">
+                        <Building2 size={10} />
+                        {action.empresaParceiraNome}
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="text-lg font-bold text-slate-900 mb-1">
+                    {action.nome}
+                  </h3>
+                  {(action.colaboradoresNomes?.length
+                    ? action.colaboradoresNomes
+                    : action.colaboradorNome
+                      ? [action.colaboradorNome]
+                      : []
+                  ).length > 0 && (
+                    <div className="flex flex-col gap-1 text-slate-600 text-xs mb-2">
+                      <span className="font-bold text-blue-700">
+                        Colaboradores:
+                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {(action.colaboradoresNomes?.length
+                          ? action.colaboradoresNomes
+                          : action.colaboradorNome
+                            ? [action.colaboradorNome]
+                            : []
+                        ).map((nome, idx) => (
+                          <span
+                            key={idx}
+                            className="bg-blue-50 text-blue-800 p-1 px-2 rounded-lg inline-flex items-center"
+                          >
+                            {nome}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex items-center space-x-2 text-slate-500 text-xs mb-4">
+                    <MapPin size={14} />
+                    <span>{action.local}</span>
+                  </div>
+
+                  <div className="bg-slate-50 p-3 rounded-2xl mb-4">
+                    <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase mb-1">
+                      <span>PerÃ­odo</span>
+                    </div>
+                    <p className="text-xs font-bold text-slate-700">
+                      {formatLocalDateString(action.dataInicio)}{" "}
+                      {action.dataFim !== action.dataInicio &&
+                        `- ${formatLocalDateString(action.dataFim)}`}
+                    </p>
+                  </div>
+
+                  {/* Metas da AÃ§Ã£o */}
+                  {((action.metaBoletos !== undefined &&
+                    action.metaBoletos > 0) ||
+                    (action.metaInscritos !== undefined &&
+                      action.metaInscritos > 0)) && (
+                    <div className="grid grid-cols-2 gap-2 mb-4 bg-slate-50 p-3 rounded-2xl">
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                          Meta Boletos
+                        </span>
+                        <span className="text-xs font-bold text-slate-700">
+                          {action.metaBoletos || 0}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                          Meta Inscritos
+                        </span>
+                        <span className="text-xs font-bold text-slate-700">
+                          {action.metaInscritos || 0}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Resultados da AÃ§Ã£o */}
+                  <div className="grid grid-cols-2 gap-2 mb-4 bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100/50">
+                    <div>
+                      <span className="text-[10px] font-bold text-emerald-600 uppercase block">
+                        Leads Feitos
+                      </span>
+                      <span className="text-xs font-bold text-emerald-800">
+                        {typeof action.leadsFeitos === "number"
+                          ? action.leadsFeitos
+                          : (leads || []).filter((l) => l.acaoId === action.id)
+                              .length}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-emerald-600 uppercase block">
+                        Boletos Feitos
+                      </span>
+                      <span className="text-xs font-bold text-emerald-800">
+                        {typeof action.boletosFeitos === "number"
+                          ? action.boletosFeitos
+                          : (gap || []).filter((g) => g.acaoId === action.id)
+                              .length}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Promotores e PresenÃ§as */}
+                  {action.precisaPromotor && (
+                    <div className="bg-slate-50 p-3 rounded-2xl mb-4 border border-slate-100">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block mb-2">
+                        Promotores Escala
+                      </span>
+                      {!action.promotoresSelecionados ||
+                      action.promotoresSelecionados.length === 0 ? (
+                        <span className="text-xs text-slate-400 italic">
+                          Nenhum promotor escalado
+                        </span>
+                      ) : (
+                        <div className="space-y-2">
+                          {action.promotoresSelecionados.map((pUid) => {
+                            const promoterObj = (users || []).find(
+                              (u) => u.uid === pUid,
+                            );
+                            const isPresent =
+                              !!action.presencaPromotores?.[pUid];
+                            const details = action.dadosPresencaPromotores?.[
+                              pUid
+                            ] || { empresa: "GR15", horas: 4 };
+
+                            return (
+                              <div
+                                key={pUid}
+                                className="p-2.5 rounded-xl border border-slate-100 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] space-y-2"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-2 overflow-hidden mr-1">
+                                    <div
+                                      className={cn(
+                                        "w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0",
+                                        isPresent
+                                          ? "bg-emerald-100 text-emerald-800"
+                                          : "bg-slate-100 text-slate-500",
+                                      )}
+                                    >
+                                      {promoterObj
+                                        ? promoterObj.name
+                                            .charAt(0)
+                                            .toUpperCase()
+                                        : "?"}
+                                    </div>
+                                    <div className="flex flex-col overflow-hidden">
+                                      <span className="text-xs font-bold text-slate-700 truncate">
+                                        {promoterObj
+                                          ? promoterObj.name
+                                          : "Promotor Removido"}
+                                      </span>
+                                      <span className="text-[9px] text-slate-400 font-medium truncate">
+                                        {promoterObj ? promoterObj.role : ""}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <button
+                                    onClick={() =>
+                                      togglePromoterAttendance(action, pUid)
+                                    }
+                                    className={cn(
+                                      "text-[10px] px-2.5 py-1.5 rounded-lg font-bold flex items-center space-x-1.5 shrink-0 transition-colors cursor-pointer",
+                                      isPresent
+                                        ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                                        : "bg-slate-100 text-slate-500 hover:bg-slate-200",
+                                    )}
+                                  >
+                                    {isPresent ? (
+                                      <CheckSquare size={13} />
+                                    ) : (
+                                      <Square size={13} />
+                                    )}
+                                    <span>
+                                      {isPresent ? "Participou" : "Ausente"}
+                                    </span>
+                                  </button>
+                                </div>
+
+                                {isPresent && (
+                                  <div className="mt-2 text-[11px] pt-2 border-t border-dashed border-slate-100 space-y-2">
+                                    {/* Empresa Selector */}
+                                    <div className="flex items-center justify-between">
+                                      <span className="font-semibold text-slate-500">
+                                        Pagas por:
+                                      </span>
+                                      <div className="flex space-x-1">
+                                        {(["GR15", "RP7"] as const).map(
+                                          (emp) => (
+                                            <button
+                                              type="button"
+                                              key={emp}
+                                              onClick={() =>
+                                                updatePromoterPresenceDetails(
+                                                  action,
+                                                  pUid,
+                                                  emp,
+                                                  details.horas,
+                                                )
+                                              }
+                                              className={cn(
+                                                "px-2 py-0.5 rounded-md font-bold transition-all text-[10px] cursor-pointer",
+                                                details.empresa === emp
+                                                  ? "bg-blue-600 text-white shadow-sm"
+                                                  : "bg-slate-100 text-slate-600 hover:bg-slate-200",
+                                              )}
+                                            >
+                                              {emp}
+                                            </button>
+                                          ),
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Horas de AtuaÃ§Ã£o Selector */}
+                                    <div className="flex items-center justify-between">
+                                      <span className="font-semibold text-slate-500">
+                                        Horas de atuaÃ§Ã£o:
+                                      </span>
+                                      <div className="flex items-center space-x-1">
+                                        {([4, 6, 8, 10] as const).map((hr) => (
+                                          <button
+                                            type="button"
+                                            key={hr}
+                                            onClick={() =>
+                                              updatePromoterPresenceDetails(
+                                                action,
+                                                pUid,
+                                                details.empresa as
+                                                  "GR15" | "RP7",
+                                                hr,
+                                              )
+                                            }
+                                            className={cn(
+                                              "px-1.5 py-0.5 rounded-md font-bold transition-all text-[10px] cursor-pointer",
+                                              details.horas === hr
+                                                ? "bg-indigo-600 text-white shadow-sm"
+                                                : "bg-slate-100 text-slate-600 hover:bg-slate-200",
+                                            )}
+                                          >
+                                            {hr}h
+                                          </button>
+                                        ))}
+
+                                        <input
+                                          type="number"
+                                          min="1"
+                                          max="100"
+                                          value={details.horas || ""}
+                                          onChange={(e) => {
+                                            const val =
+                                              e.target.value === ""
+                                                ? 0
+                                                : Number(e.target.value);
+                                            updatePromoterPresenceDetails(
+                                              action,
+                                              pUid,
+                                              details.empresa as "GR15" | "RP7",
+                                              val,
+                                            );
+                                          }}
+                                          className="w-10 px-1 py-0.5 border border-slate-200 rounded-md text-[10px] text-center font-bold text-slate-700 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                          placeholder="Outro"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {action.fotos && action.fotos.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2 mb-4">
+                      {action.fotos.map((foto, idx) => (
+                        <div
+                          key={idx}
+                          className="aspect-square rounded-xl overflow-hidden bg-slate-100 border border-slate-200 relative group"
+                        >
+                          <img
+                            src={foto}
+                            alt={`Foto ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                          <a
+                            href={foto}
+                            download={`foto_${idx + 1}.jpg`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
+                            title="Fazer Download"
+                          >
+                            <Download size={20} />
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {action.observacao && (
+                    <div className="mb-4">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">
+                        ObservaÃ§Ãµes
+                      </p>
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        {action.observacao}
+                      </p>
+                    </div>
+                  )}
+
+                  <select
+                    value={
+                      action.status ||
+                      (action.concluida ? "ConcluÃ­do" : "NÃ£o iniciada")
+                    }
+                    onChange={(e) => updateActionStatus(action, e.target.value)}
+                    className={cn(
+                      "w-full py-3 px-4 rounded-xl font-bold text-sm text-center appearance-none cursor-pointer outline-none transition-all",
+                      action.status === "ConcluÃ­do" ||
+                        (!action.status && action.concluida)
+                        ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                        : action.status === "Em andamento"
+                          ? "bg-amber-500 text-white hover:bg-amber-600"
+                          : action.status === "Cancelado"
+                            ? "bg-rose-500 text-white hover:bg-rose-600"
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200",
+                    )}
+                  >
+                    <option value="NÃ£o iniciada">NÃ£o iniciada</option>
+                    <option value="Em andamento">Em andamento</option>
+                    <option value="ConcluÃ­do">ConcluÃ­da</option>
+                    <option value="Cancelado">Cancelada</option>
+                  </select>
+                </motion.div>
+              ))}
+              {filteredData.length === 0 && (
+                <div className="col-span-full py-20 text-center">
+                  <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                    <Calendar size={40} />
+                  </div>
+                  <p className="text-slate-400 italic">
+                    Nenhuma aÃ§Ã£o encontrada para os filtros aplicados.
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="overflow-x-auto bg-white rounded-3xl shadow-sm border border-slate-100">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-100 text-xs font-bold text-slate-500 uppercase">
+                    <th className="p-4 rounded-tl-3xl">AÃ§Ã£o / Local</th>
+                    <th className="p-4">Colaboradores</th>
+                    <th className="p-4">PerÃ­odo</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4 text-center rounded-tr-3xl">AÃ§Ãµes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredData.map((action) => (
+                    <tr
+                      key={action.id}
+                      className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors"
+                    >
+                      <td className="p-4">
+                        <div className="font-bold text-slate-900 mb-1">
+                          {action.nome}
+                        </div>
+                        <div className="text-xs text-slate-500 flex items-center space-x-1">
+                          <MapPin size={12} />
+                          <span>{action.local}</span>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex flex-wrap gap-1">
+                          {(action.colaboradoresNomes?.length
+                            ? action.colaboradoresNomes
+                            : action.colaboradorNome
+                              ? [action.colaboradorNome]
+                              : []
+                          ).map((nome, idx) => (
+                            <span
+                              key={idx}
+                              className="bg-blue-50 text-blue-800 p-1 px-2 text-[10px] rounded-lg"
+                            >
+                              {nome}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="p-4 text-xs font-bold text-slate-700">
+                        {formatLocalDateString(action.dataInicio)}
+                        {action.dataFim !== action.dataInicio &&
+                          ` - ${formatLocalDateString(action.dataFim)}`}
+                      </td>
+                      <td className="p-4">
+                        <select
+                          value={
+                            action.status ||
+                            (action.concluida ? "ConcluÃ­do" : "NÃ£o iniciada")
+                          }
+                          onChange={(e) =>
+                            updateActionStatus(action, e.target.value)
+                          }
+                          className={cn(
+                            "py-1.5 px-3 rounded-lg font-bold text-xs appearance-none cursor-pointer outline-none transition-all",
+                            action.status === "ConcluÃ­do" ||
+                              (!action.status && action.concluida)
+                              ? "bg-emerald-100 text-emerald-800"
+                              : action.status === "Em andamento"
+                                ? "bg-amber-100 text-amber-800"
+                                : action.status === "Cancelado"
+                                  ? "bg-rose-100 text-rose-800"
+                                  : "bg-slate-100 text-slate-600",
+                          )}
+                        >
+                          <option value="NÃ£o iniciada">NÃ£o iniciada</option>
+                          <option value="Em andamento">Em andamento</option>
+                          <option value="ConcluÃ­do">ConcluÃ­da</option>
+                          <option value="Cancelado">Cancelada</option>
+                        </select>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center justify-center space-x-2">
+                          <button
+                            onClick={() => {
+                              setEditingAction(action);
+                              setNewAction({
+                                nome: action.nome,
+                                dataInicio: action.dataInicio,
+                                dataFim: action.dataFim,
+                                local: action.local,
+                                observacao: action.observacao,
+                                status:
+                                  action.status ||
+                                  (action.concluida
+                                    ? "ConcluÃ­do"
+                                    : "NÃ£o iniciada"),
+                                concluida: action.concluida,
+                                fotos: [
+                                  ...(action.fotos || []),
+                                  "",
+                                  "",
+                                  "",
+                                ].slice(0, 3),
+                                metaBoletos:
+                                  action.metaBoletos !== undefined
+                                    ? action.metaBoletos
+                                    : "",
+                                metaInscritos:
+                                  action.metaInscritos !== undefined
+                                    ? action.metaInscritos
+                                    : "",
+                                precisaPromotor: !!action.precisaPromotor,
+                                promotoresSelecionados:
+                                  action.promotoresSelecionados || [],
+                                valorPromotor:
+                                  action.valorPromotor !== undefined
+                                    ? action.valorPromotor
+                                    : "",
+                                valorOrcado:
+                                  action.valorOrcado !== undefined
+                                    ? action.valorOrcado
+                                    : "",
+                                colaboradorId: action.colaboradorId || "",
+                                colaboradorNome: action.colaboradorNome || "",
+                                colaboradoresIds:
+                                  action.colaboradoresIds ||
+                                  (action.colaboradorId
+                                    ? [action.colaboradorId]
+                                    : []),
+                                colaboradoresNomes:
+                                  action.colaboradoresNomes ||
+                                  (action.colaboradorNome
+                                    ? [action.colaboradorNome]
+                                    : []),
+                                tipoAtividade: action.tipoAtividade || "AÃ§Ã£o",
+                                empresaParceiraId:
+                                  action.empresaParceiraId || "",
+                                empresaParceiraNome:
+                                  action.empresaParceiraNome || "",
+                                leadsFeitos:
+                                  action.leadsFeitos !== undefined
+                                    ? action.leadsFeitos
+                                    : "",
+                                boletosFeitos:
+                                  action.boletosFeitos !== undefined
+                                    ? action.boletosFeitos
+                                    : "",
+                                horario: action.horario || "",
+                              });
+                              setIsAdding(true);
+                            }}
+                            className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                            title="Editar"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(action.id)}
+                            className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                            title="Excluir"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredData.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="py-20 text-center">
+                        <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                          <Calendar size={40} />
+                        </div>
+                        <p className="text-slate-400 italic">
+                          Nenhuma aÃ§Ã£o encontrada para os filtros aplicados.
+                        </p>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {isAdding && (
+            <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+              >
+                <div className="p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
+                  <h3 className="text-xl font-bold text-slate-900">
+                    {editingAction ? "Editar AÃ§Ã£o" : "Nova AÃ§Ã£o"}
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setIsAdding(false);
+                      setEditingAction(null);
+                    }}
+                    className="text-slate-400 hover:bg-slate-50 p-2 rounded-lg"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+                <form
+                  onSubmit={handleSubmit}
+                  className="p-6 space-y-4 overflow-y-auto flex-1"
+                >
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Nome da AÃ§Ã£o / Visita *
+                    </label>
+                    <input
+                      required
+                      value={newAction.nome}
+                      onChange={(e) =>
+                        setNewAction({ ...newAction, nome: e.target.value })
+                      }
+                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      placeholder="Ex: Blitz no Centro ou Visita Institucional"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        Tipo de Atividade *
+                      </label>
+                      <select
+                        value={newAction.tipoAtividade}
+                        onChange={(e) =>
+                          setNewAction({
+                            ...newAction,
+                            tipoAtividade: e.target.value as "AÃ§Ã£o" | "Visita",
+                          })
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm bg-white font-semibold text-slate-700"
+                      >
+                        <option value="AÃ§Ã£o">AÃ§Ã£o</option>
+                        <option value="Visita">Visita</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        Empresa Vinculada (Opcional)
+                      </label>
+                      <select
+                        value={newAction.empresaParceiraId}
+                        onChange={(e) => {
+                          const selId = e.target.value;
+                          const selEmp = empresasParceiras.find(
+                            (emp) => emp.id === selId,
+                          );
+                          setNewAction({
+                            ...newAction,
+                            empresaParceiraId: selId,
+                            empresaParceiraNome: selEmp ? selEmp.nome : "",
+                            local: selEmp
+                              ? selEmp.endereco || newAction.local
+                              : newAction.local,
+                          });
+                        }}
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm bg-white text-slate-700 font-medium"
+                      >
+                        <option value="">Nenhuma (NÃ£o vincular)</option>
+                        {empresasParceiras
+                          .filter((emp) => {
+                            if (
+                              !newAction.colaboradoresIds ||
+                              newAction.colaboradoresIds.length === 0
+                            )
+                              return true;
+                            return newAction.colaboradoresIds.includes(
+                              emp.consultorId || "",
+                            );
+                          })
+                          .map((emp) => (
+                            <option key={emp.id} value={emp.id}>
+                              {emp.nome}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        Data InÃ­cio *
+                      </label>
+                      <input
+                        type="date"
+                        required
+                        value={newAction.dataInicio}
+                        onChange={(e) =>
+                          setNewAction({
+                            ...newAction,
+                            dataInicio: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        Data Fim *
+                      </label>
+                      <input
+                        type="date"
+                        required
+                        value={newAction.dataFim}
+                        onChange={(e) =>
+                          setNewAction({
+                            ...newAction,
+                            dataFim: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        HorÃ¡rio
+                      </label>
+                      <input
+                        type="time"
+                        value={newAction.horario}
+                        onChange={(e) =>
+                          setNewAction({
+                            ...newAction,
+                            horario: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Local *
+                    </label>
+                    <input
+                      required
+                      value={newAction.local}
+                      onChange={(e) =>
+                        setNewAction({ ...newAction, local: e.target.value })
+                      }
+                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      placeholder="Ex: PraÃ§a Central"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      ObservaÃ§Ãµes
+                    </label>
+                    <textarea
+                      value={newAction.observacao}
+                      onChange={(e) =>
+                        setNewAction({
+                          ...newAction,
+                          observacao: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm min-h-[100px]"
+                      placeholder="O que serÃ¡ feito?"
+                    />
+                  </div>
+
+                  <div className="relative">
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Colaboradores / FDVs ResponsÃ¡veis
+                    </label>
+                    <MultiSelect
+                      options={colaboradoresDisponiveis.map((u) => u.name)}
+                      selectedValues={
+                        newAction.colaboradoresNomes?.length
+                          ? newAction.colaboradoresNomes
+                          : newAction.colaboradorNome
+                            ? [newAction.colaboradorNome]
+                            : []
+                      }
+                      onChange={(selectedNames) => {
+                        const selectedUsers = colaboradoresDisponiveis.filter(
+                          (u) => selectedNames.includes(u.name),
+                        );
+                        const selectedIds = selectedUsers.map((u) => u.uid);
+
+                        const firstId =
+                          selectedIds.length > 0 ? selectedIds[0] : "";
+                        const firstName =
+                          selectedNames.length > 0 ? selectedNames[0] : "";
+
+                        let nextEmpresaId = newAction.empresaParceiraId;
+                        let nextEmpresaNome = newAction.empresaParceiraNome;
+
+                        if (nextEmpresaId) {
+                          const emp = empresasParceiras.find(
+                            (e) => e.id === nextEmpresaId,
+                          );
+                          if (
+                            emp &&
+                            !selectedIds.includes(emp.consultorId || "")
+                          ) {
+                            nextEmpresaId = "";
+                            nextEmpresaNome = "";
+                          }
+                        }
+
+                        setNewAction({
+                          ...newAction,
+                          colaboradorId: firstId,
+                          colaboradorNome: firstName,
+                          colaboradoresIds: selectedIds,
+                          colaboradoresNomes: selectedNames,
+                          empresaParceiraId: nextEmpresaId,
+                          empresaParceiraNome: nextEmpresaNome,
+                        });
+                      }}
+                      placeholder="Selecione os colaboradores..."
+                      allLabel="Todos os colaboradores"
+                      className="w-full bg-white"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        Meta de Boletos da AÃ§Ã£o
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={newAction.metaBoletos}
+                        onChange={(e) =>
+                          setNewAction({
+                            ...newAction,
+                            metaBoletos:
+                              e.target.value === ""
+                                ? ""
+                                : Number(e.target.value),
+                          })
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                        placeholder="Ex: 5"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        Meta de Inscritos da AÃ§Ã£o
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={newAction.metaInscritos}
+                        onChange={(e) =>
+                          setNewAction({
+                            ...newAction,
+                            metaInscritos:
+                              e.target.value === ""
+                                ? ""
+                                : Number(e.target.value),
+                          })
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                        placeholder="Ex: 20"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 mb-1">
+                        Valor DiÃ¡ria Personalizado (R$){" "}
+                        <span className="font-normal text-[9px] text-slate-400 block mt-0.5">
+                          (SerÃ¡ calculado auto p/ 4h, 6h, 8h ou 10h)
+                        </span>
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={newAction.valorPromotor}
+                        onChange={(e) =>
+                          setNewAction({
+                            ...newAction,
+                            valorPromotor:
+                              e.target.value === ""
+                                ? ""
+                                : Number(e.target.value),
+                          })
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                        placeholder="Ex: 15.00"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 mb-1">
+                        Valor OrÃ§ado Total (R$)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={newAction.valorOrcado}
+                        onChange={(e) =>
+                          setNewAction({
+                            ...newAction,
+                            valorOrcado:
+                              e.target.value === ""
+                                ? ""
+                                : Number(e.target.value),
+                          })
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                        placeholder="Ex: R$ 500,00"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Se vai precisar de Promotor */}
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={newAction.precisaPromotor}
+                        onChange={(e) =>
+                          setNewAction({
+                            ...newAction,
+                            precisaPromotor: e.target.checked,
+                          })
+                        }
+                        className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
+                      />
+                      <div>
+                        <span className="text-sm font-bold text-slate-800">
+                          Precisa de Promotores?
+                        </span>
+                        <span className="text-xs text-slate-400 block">
+                          Ative para atribuir promotores na aÃ§Ã£o
+                        </span>
+                      </div>
+                    </label>
+
+                    {newAction.precisaPromotor && (
+                      <div className="mt-4 border-t border-slate-200/60 pt-3 space-y-2">
+                        <span className="text-xs font-bold text-slate-500 block uppercase tracking-wider mb-2">
+                          Selecione os Promotores Escalados:
+                        </span>
+                        {promotoresDisponiveis.length === 0 ? (
+                          <span className="text-xs text-slate-400 italic block">
+                            Nenhum promotor cadastrado neste servidor comercial
+                            ou principal.
+                          </span>
+                        ) : (
+                          <div className="max-h-40 overflow-y-auto space-y-1 pr-1">
+                            {promotoresDisponiveis.map((promoter) => {
+                              const isSelected =
+                                newAction.promotoresSelecionados.includes(
+                                  promoter.uid,
+                                );
+                              return (
+                                <button
+                                  type="button"
+                                  key={promoter.uid}
+                                  onClick={() => {
+                                    const isSel =
+                                      newAction.promotoresSelecionados.includes(
+                                        promoter.uid,
+                                      );
+                                    const updated = isSel
+                                      ? newAction.promotoresSelecionados.filter(
+                                          (id) => id !== promoter.uid,
+                                        )
+                                      : [
+                                          ...newAction.promotoresSelecionados,
+                                          promoter.uid,
+                                        ];
+                                    setNewAction({
+                                      ...newAction,
+                                      promotoresSelecionados: updated,
+                                    });
+                                  }}
+                                  className={cn(
+                                    "w-full flex items-center justify-between p-2 rounded-lg text-xs font-semibold text-left transition-colors border",
+                                    isSelected
+                                      ? "bg-blue-50/80 border-blue-200 text-blue-700"
+                                      : "bg-white border-slate-100 hover:bg-slate-50 text-slate-600",
+                                  )}
+                                >
+                                  <div className="flex items-center space-x-2">
+                                    <div
+                                      className={cn(
+                                        "w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px]",
+                                        isSelected
+                                          ? "bg-blue-600 text-white"
+                                          : "bg-slate-100 text-slate-500",
+                                      )}
+                                    >
+                                      {promoter.name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <span>{promoter.name}</span>
+                                  </div>
+                                  <span className="text-[10px] text-slate-400 italic font-medium">
+                                    {promoter.role}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Optional outcome statistics after completed */}
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-4">
+                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Resultados da AÃ§Ã£o (Opcional)
+                    </h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 mb-1">
+                          Leads Feitos
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={newAction.leadsFeitos}
+                          onChange={(e) =>
+                            setNewAction({
+                              ...newAction,
+                              leadsFeitos:
+                                e.target.value === ""
+                                  ? ""
+                                  : Number(e.target.value),
+                            })
+                          }
+                          className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                          placeholder={
+                            editingAction
+                              ? `AutomÃ¡tico: ${autoLeadsCount}`
+                              : "Ex: 10"
+                          }
+                        />
+                        {editingAction && (
+                          <span className="text-[10px] text-slate-400 block mt-1">
+                            Total vinculados no sistema: {autoLeadsCount}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 mb-1">
+                          Boletos Feitos
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={newAction.boletosFeitos}
+                          onChange={(e) =>
+                            setNewAction({
+                              ...newAction,
+                              boletosFeitos:
+                                e.target.value === ""
+                                  ? ""
+                                  : Number(e.target.value),
+                            })
+                          }
+                          className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                          placeholder={
+                            editingAction
+                              ? `AutomÃ¡tico: ${autoBoletosCount}`
+                              : "Ex: 5"
+                          }
+                        />
+                        {editingAction && (
+                          <span className="text-[10px] text-slate-400 block mt-1">
+                            Total vinculados no sistema: {autoBoletosCount}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-2">
+                      Fotos (atÃ© 3 URLs)
+                    </label>
+                    <div className="space-y-2">
+                      {newAction.fotos.map((foto, idx) => (
+                        <input
+                          key={idx}
+                          placeholder={`URL da Foto ${idx + 1}`}
+                          value={foto}
+                          onChange={(e) => {
+                            const next = [...newAction.fotos];
+                            next[idx] = e.target.value;
+                            setNewAction({ ...newAction, fotos: next });
+                          }}
+                          className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
+                  >
+                    {editingAction ? "Salvar AlteraÃ§Ãµes" : "Agendar AÃ§Ã£o"}
+                  </button>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function EmpresasParceirasView({
+  data,
+  leads = [],
+  acoes = [],
+  onToast,
+  onGenerateAction,
+  cursos = [],
+  users = [],
+  onSendWhatsApp,
+  botConfig,
+  uniqueUnidades = [],
+  profile,
+}: {
+  data: EmpresaParceira[];
+  leads?: Lead[];
+  acoes?: CalendarioAcao[];
+  onToast: (m: string, t?: "success" | "error") => void;
+  onGenerateAction: (empresa: EmpresaParceira) => void;
+  cursos?: CursoDisponivel[];
+  users?: UserProfile[];
+  onSendWhatsApp?: (phone: string, message: string) => Promise<void>;
+  botConfig?: BotConfig;
+  uniqueUnidades?: string[];
+  profile?: UserProfile;
+}) {
+  const sendTelegramNotification = async (
+    telegramHandleOrId: string,
+    message: string,
+  ) => {
+    if (!telegramHandleOrId) return;
+    const targetUrl = botConfig?.telegramBotUrl || "";
+    const apiKey = botConfig?.telegramApiKey || "";
+    if (!targetUrl) {
+      console.log("Telegram Bot URL not configured in botConfig.");
+      return;
+    }
+    try {
+      const chatId = telegramHandleOrId.trim();
+      const response = await fetch("/api/bot-proxy", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          targetUrl,
+          method: "POST",
+          headers: {
+            "x-api-key": apiKey,
+          },
+          body: {
+            chatId,
+            mensagem: message,
+          },
+        }),
+      });
+      const resData = await response.json();
+      if (!response.ok || !resData.success) {
+        console.error(
+          "Failed to send Telegram message:",
+          resData.error || "Unknown error",
+        );
+      } else {
+        console.log(`Telegram message sent to ${chatId}`);
+      }
+    } catch (err) {
+      console.error("Error calling Telegram bot-proxy:", err);
+    }
+  };
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("Todas");
+  const [unidadeFilter, setUnidadeFilter] = useState<string>("Todas");
+  const [seguimentoFilter, setSeguimentoFilter] = useState<string>("Todos");
+  const [classificacaoFilter, setClassificacaoFilter] =
+    useState<string>("Todas");
+  const [fdvFilter, setFdvFilter] = useState<string>("Todos");
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingEmpresa, setEditingEmpresa] = useState<EmpresaParceira | null>(
+    null,
+  );
+  const [selectedUnidades, setSelectedUnidades] = useState<string[]>([]);
+  const [selectedConsultorId, setSelectedConsultorId] = useState<string>("");
+
+  // Mass deletion states
+  const [selectedEmpresaIds, setSelectedEmpresaIds] = useState<string[]>([]);
+  const [selectedMapEmpresaId, setSelectedMapEmpresaId] = useState<
+    string | null
+  >(null);
+
+  // Active Tab: list vs tratativas report vs map
+  const [activeTab, setActiveTab] = useState<"lista" | "tratativas" | "mapa" | "oportunidades">(
+    "lista",
+  );
+  const [viewFormat, setViewFormat] = useState<"card" | "list">("card");
+
+  const uniqueSeguimentos = useMemo(() => {
+    return Array.from(
+      new Set(data.map((d) => d.seguimento).filter(Boolean) as string[]),
+    ).sort();
+  }, [data]);
+
+  // Filter commercial/FDV users
+  const listForSelection = useMemo(() => {
+    const consultores = (users || []).filter((u) => {
+      const roleLower = (u.role || "").toLowerCase();
+      const isComercialServer = u.servidor === "comercial";
+      return (
+        roleLower.includes("fdv") ||
+        roleLower.includes("comercial") ||
+        roleLower.includes("promotor") ||
+        isComercialServer
+      );
+    });
+    return consultores.length > 0 ? consultores : users || [];
+  }, [users]);
+
+  useEffect(() => {
+    if (editingEmpresa) {
+      setSelectedUnidades(editingEmpresa.unidadesVinculadas || []);
+      setSelectedConsultorId(editingEmpresa.consultorId || "");
+    } else {
+      setSelectedUnidades([]);
+      setSelectedConsultorId("");
+    }
+  }, [editingEmpresa, isModalOpen]);
+
+  // Date and age helpers for reminders
+  const getTratativaDays = (emp: EmpresaParceira) => {
+    if (!emp.createdAt) return 0;
+    const createdDate = emp.createdAt.seconds
+      ? new Date(emp.createdAt.seconds * 1000)
+      : new Date(emp.createdAt);
+    const diffTime = new Date().getTime() - createdDate.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays < 0 ? 0 : diffDays;
+  };
+
+  const getTratativaAlert = (emp: EmpresaParceira) => {
+    if (emp.statusEmpresa !== "Em tratativa") return null;
+    const days = getTratativaDays(emp);
+    if (days >= 15) {
+      return {
+        level: "EmergÃªncia",
+        days,
+        label: "Retorno de EmergÃªncia",
+        color: "red",
+        bg: "bg-rose-50 border-rose-200 text-rose-800",
+        iconColor: "text-rose-600",
+      };
+    }
+    if (days >= 7) {
+      return {
+        level: "AtenÃ§Ã£o",
+        days,
+        label: "AtenÃ§Ã£o",
+        color: "orange",
+        bg: "bg-orange-50 border-orange-200 text-orange-800",
+        iconColor: "text-orange-600",
+      };
+    }
+    if (days >= 3) {
+      return {
+        level: "Retorno",
+        days,
+        label: "Retorno",
+        color: "yellow",
+        bg: "bg-amber-50 border-amber-200 text-amber-800",
+        iconColor: "text-amber-600",
+      };
+    }
+    return {
+      level: "Recente",
+      days,
+      label: "Recente",
+      color: "blue",
+      bg: "bg-blue-50 border-blue-100 text-blue-800",
+      iconColor: "text-blue-500",
+    };
+  };
+
+  // Helper for direct status update from the report
+  const handleUpdateStatus = async (id: string, newStatus: string) => {
+    try {
+      await updateDoc(doc(db, COLLECTIONS.EMPRESAS_PARCEIRAS, id), {
+        statusEmpresa: newStatus,
+        updatedAt: serverTimestamp(),
+      });
+      onToast("Status atualizado!");
+    } catch (err: any) {
+      onToast("Erro ao atualizar status.", "error");
+    }
+  };
+
+  const filteredData = data.filter((emp) => {
+    const term = searchTerm.toLowerCase();
+    const matchBusca =
+      emp.nome.toLowerCase().includes(term) ||
+      (emp.cnpj || "").toLowerCase().includes(term);
+    const matchStatus =
+      statusFilter === "Todas" || emp.statusEmpresa === statusFilter;
+    const matchUnidade =
+      unidadeFilter === "Todas" ||
+      (emp.unidadesVinculadas || []).includes(unidadeFilter);
+    const matchSeguimento =
+      seguimentoFilter === "Todos" || emp.seguimento === seguimentoFilter;
+    const matchClassificacao =
+      classificacaoFilter === "Todas" ||
+      emp.classificacao === classificacaoFilter;
+    const matchFdv = fdvFilter === "Todos" || emp.consultorId === fdvFilter;
+
+    return (
+      matchBusca &&
+      matchStatus &&
+      matchUnidade &&
+      matchSeguimento &&
+      matchClassificacao &&
+      matchFdv
+    );
+  });
+
+  // Calculate Dashboard metrics based on filtered output
+  const kpiTotais = filteredData.length;
+  const statConveniada = filteredData.filter(
+    (e) => e.statusEmpresa === "Conveniada",
+  ).length;
+  const statEmTratativa = filteredData.filter(
+    (e) => e.statusEmpresa === "Em tratativa",
+  ).length;
+  const statCancelada = filteredData.filter(
+    (e) => e.statusEmpresa === "Cancelada",
+  ).length;
+  const statNaoVisitada = filteredData.filter(
+    (e) => e.statusEmpresa === "NÃ£o visitada",
+  ).length;
+  const classOuro = filteredData.filter(
+    (e) => e.classificacao === "Ouro",
+  ).length;
+  const classPrata = filteredData.filter(
+    (e) => e.classificacao === "Prata",
+  ).length;
+  const classBronze = filteredData.filter(
+    (e) => e.classificacao === "Bronze",
+  ).length;
+
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const matchedUser = (users || []).find(
+      (u) => u.uid === selectedConsultorId,
+    );
+    const consultorNome = matchedUser ? matchedUser.name : "";
+
+    const payload: any = {
+      nome: formData.get("nome") as string,
+      responsavel: formData.get("responsavel") as string,
+      telefone: formData.get("telefone") as string,
+      telefoneResponsavel: formData.get("telefoneResponsavel") as string,
+      email: formData.get("email") as string,
+      endereco: formData.get("endereco") as string,
+      bairro: formData.get("bairro") as string,
+      cidade: formData.get("cidade") as string,
+      linkMaps: formData.get("linkMaps") as string,
+      classificacao: formData.get("classificacao") as string,
+      seguimento: formData.get("seguimento") as string,
+      cnpj: formData.get("cnpj") as string,
+      statusEmpresa: formData.get("statusEmpresa") as string,
+      linkSales: formData.get("linkSales") as string,
+      unidadesVinculadas: selectedUnidades,
+      consultorId: selectedConsultorId,
+      consultorNome: consultorNome,
+      updatedAt: serverTimestamp(),
+    };
+
+    if (!editingEmpresa) {
+      payload.creatorId = auth.currentUser?.uid;
+    }
+
+    const isDuplicate = data.some(
+      (emp) =>
+        emp.nome.toLowerCase() === payload.nome.toLowerCase() &&
+        emp.id !== editingEmpresa?.id,
+    );
+    if (isDuplicate) {
+      onToast("JÃ¡ existe uma empresa cadastrada com este nome.", "error");
+      return;
+    }
+
+    const isNowInTratativa =
+      payload.statusEmpresa === "Em tratativa" &&
+      (!editingEmpresa || editingEmpresa.statusEmpresa !== "Em tratativa");
+
+    try {
+      if (editingEmpresa) {
+        await updateDoc(
+          doc(db, COLLECTIONS.EMPRESAS_PARCEIRAS, editingEmpresa.id),
+          payload,
+        );
+        if (isNowInTratativa) {
+          onToast(
+            `O processo foi iniciado acompanhe a tratativa com a empresa ${payload.nome} para iniciar as campanhas de trade.`,
+            "success",
+          );
+          if (matchedUser && matchedUser.phone && onSendWhatsApp) {
+            const msg = `O processo foi iniciado acompanhe a tratativa com a empresa ${payload.nome} para iniciar as campanhas de trade.`;
+            await onSendWhatsApp(matchedUser.phone, msg);
+          }
+          if (matchedUser && matchedUser.telegram) {
+            const telMsg = `O processo foi iniciado. Acompanhe a tratativa com a empresa <b>${payload.nome}</b> para iniciar as campanhas de trade.`;
+            await sendTelegramNotification(matchedUser.telegram, telMsg);
+          }
+
+          // Notificar Gerente Comercial
+          const managers = (users || []).filter(
+            (u) =>
+              u.role === ROLES.GESTOR_COMERCIAL_COMERCIAL ||
+              u.role === ROLES.GESTOR_COMERCIAL,
+          );
+          for (const manager of managers) {
+            if (manager.phone && onSendWhatsApp) {
+              const fdvInfo = matchedUser
+                ? `\n*FDV ResponsÃ¡vel:* ${matchedUser.name}`
+                : "";
+              const msg = `*Aviso de Nova Tratativa (GestÃ£o)*\n\nOlÃ¡, *${manager.name}*!\nUma nova tratativa foi iniciada com a empresa ${payload.nome}.${fdvInfo}\n\nPor favor, acompanhe no sistema.`;
+              await onSendWhatsApp(manager.phone, msg);
+            }
+            if (manager.telegram) {
+              const fdvInfo = matchedUser
+                ? `\n<b>FDV ResponsÃ¡vel:</b> ${matchedUser.name}`
+                : "";
+              const telMsg = `<b>Aviso de Nova Tratativa (GestÃ£o)</b>\n\nOlÃ¡, <b>${manager.name}</b>!\nUma nova tratativa foi iniciada com a empresa <b>${payload.nome}</b>.${fdvInfo}\n\nPor favor, acompanhe no sistema.`;
+              await sendTelegramNotification(manager.telegram, telMsg);
+            }
+          }
+        } else {
+          onToast("Empresa atualizada!");
+        }
+      } else {
+        await addDoc(collection(db, COLLECTIONS.EMPRESAS_PARCEIRAS), {
+          ...payload,
+          createdAt: serverTimestamp(),
+        });
+        if (isNowInTratativa) {
+          onToast(
+            `O processo foi iniciado acompanhe a tratativa com a empresa ${payload.nome} para iniciar as campanhas de trade.`,
+            "success",
+          );
+          if (matchedUser && matchedUser.phone && onSendWhatsApp) {
+            const msg = `O processo foi iniciado acompanhe a tratativa com a empresa ${payload.nome} para iniciar as campanhas de trade.`;
+            await onSendWhatsApp(matchedUser.phone, msg);
+          }
+          if (matchedUser && matchedUser.telegram) {
+            const telMsg = `O processo foi iniciado. Acompanhe a tratativa com a empresa <b>${payload.nome}</b> para iniciar as campanhas de trade.`;
+            await sendTelegramNotification(matchedUser.telegram, telMsg);
+          }
+
+          // Notificar Gerente Comercial
+          const managers = (users || []).filter(
+            (u) =>
+              u.role === ROLES.GESTOR_COMERCIAL_COMERCIAL ||
+              u.role === ROLES.GESTOR_COMERCIAL,
+          );
+          for (const manager of managers) {
+            if (manager.phone && onSendWhatsApp) {
+              const fdvInfo = matchedUser
+                ? `\n*FDV ResponsÃ¡vel:* ${matchedUser.name}`
+                : "";
+              const msg = `*Aviso de Nova Tratativa (GestÃ£o)*\n\nOlÃ¡, *${manager.name}*!\nUma nova tratativa foi iniciada com a empresa ${payload.nome}.${fdvInfo}\n\nPor favor, acompanhe no sistema.`;
+              await onSendWhatsApp(manager.phone, msg);
+            }
+            if (manager.telegram) {
+              const fdvInfo = matchedUser
+                ? `\n<b>FDV ResponsÃ¡vel:</b> ${matchedUser.name}`
+                : "";
+              const telMsg = `<b>Aviso de Nova Tratativa (GestÃ£o)</b>\n\nOlÃ¡, <b>${manager.name}</b>!\nUma nova tratativa foi iniciada com a empresa <b>${payload.nome}</b>.${fdvInfo}\n\nPor favor, acompanhe no sistema.`;
+              await sendTelegramNotification(manager.telegram, telMsg);
+            }
+          }
+        } else {
+          onToast("Empresa cadastrada!");
+        }
+      }
+      setIsModalOpen(false);
+      setEditingEmpresa(null);
+    } catch (err: any) {
+      handleFirestoreError(
+        err,
+        OperationType.WRITE,
+        COLLECTIONS.EMPRESAS_PARCEIRAS,
+      );
+      onToast("Erro ao salvar empresa.", "error");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Deseja excluir esta empresa?")) {
+      try {
+        await deleteDoc(doc(db, COLLECTIONS.EMPRESAS_PARCEIRAS, id));
+        onToast("Empresa removida.");
+        setSelectedEmpresaIds((prev) => prev.filter((item) => item !== id));
+      } catch (err: any) {
+        onToast("Erro ao excluir empresa.", "error");
+      }
+    }
+  };
+
+  // Mass deletion handler
+  const handleBulkDelete = async () => {
+    if (selectedEmpresaIds.length === 0) return;
+    if (
+      window.confirm(
+        `AtenÃ§Ã£o! Deseja realmente excluir permanentemente as ${selectedEmpresaIds.length} empresas selecionadas?`,
+      )
+    ) {
+      try {
+        let deletedCount = 0;
+        for (const id of selectedEmpresaIds) {
+          await deleteDoc(doc(db, COLLECTIONS.EMPRESAS_PARCEIRAS, id));
+          deletedCount++;
+        }
+        onToast(`${deletedCount} empresas excluÃ­das com sucesso!`);
+        setSelectedEmpresaIds([]);
+      } catch (err: any) {
+        onToast("Erro na exclusÃ£o em massa das empresas.", "error");
+      }
+    }
+  };
+
+  const handleExport = () => {
+    const exportData = filteredData.map((emp) => ({
+      Nome: emp.nome,
+      CNPJ: emp.cnpj || "",
+      ResponsÃ¡vel: emp.responsavel,
+      Telefone: emp.telefone,
+      "Telefone ResponsÃ¡vel": emp.telefoneResponsavel || "",
+      Email: emp.email,
+      EndereÃ§o: emp.endereco,
+      Bairro: emp.bairro || "",
+      Cidade: emp.cidade || "",
+      Seguimento: emp.seguimento || "",
+      ClassificaÃ§Ã£o: emp.classificacao || "",
+      Status: emp.statusEmpresa || "",
+      "Link Maps": emp.linkMaps || "",
+      "Link Sales": emp.linkSales || "",
+      "Consultor Vinculado": emp.consultorNome || "",
+      "Unidades Vinculadas": (emp.unidadesVinculadas || []).join(", "),
+    }));
+    exportToExcel(exportData, "Empresas_Parceiras");
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    importFromExcel(file, async (importData) => {
+      try {
+        const getVal = (row: any, ...keys: string[]) => {
+          const rowKeys = Object.keys(row);
+          for (const key of keys) {
+            const foundKey = rowKeys.find(
+              (k) => k.toLowerCase() === key.toLowerCase(),
+            );
+            if (foundKey && row[foundKey] !== undefined) return row[foundKey];
+          }
+          return undefined;
+        };
+
+        const normalizeStatusEmpresa = (val: string) => {
+          if (!val) return "NÃ£o visitada";
+          const lower = val.trim().toLowerCase();
+          if (lower === "conveniada") return "Conveniada";
+          if (lower === "em tratativa" || lower.includes("tratativa"))
+            return "Em tratativa";
+          if (lower === "cancelada") return "Cancelada";
+          if (
+            lower === "nao visitada" ||
+            lower === "nÃ£o visitada" ||
+            lower.includes("visitada")
+          )
+            return "NÃ£o visitada";
+          return val;
+        };
+
+        const batch = importData.map((item) => {
+          const importedConsultorNome = String(
+            getVal(
+              item,
+              "Consultor",
+              "consultor",
+              "consultorNome",
+              "consultor_vinculado",
+              "Consultor Vinculado",
+            ) || "",
+          ).trim();
+          const matchedImportedUser = (users || []).find(
+            (u) =>
+              u.name.trim().toLowerCase() ===
+              importedConsultorNome.toLowerCase(),
+          );
+          const consultorId = matchedImportedUser
+            ? matchedImportedUser.uid
+            : "";
+
+          const importedUnidadesRaw = String(
+            getVal(
+              item,
+              "Unidades",
+              "unidade",
+              "unidadesVinculadas",
+              "unidade_vinculada",
+              "unidades_vinculadas",
+              "Unidades Vinculadas",
+            ) || "",
+          ).trim();
+          const unidadesVinculadas = importedUnidadesRaw
+            ? importedUnidadesRaw
+                .split(",")
+                .map((x) => x.trim())
+                .filter(Boolean)
+            : [];
+
+          return {
+            nome: String(getVal(item, "Nome", "nome") || "").trim(),
+            cnpj: String(getVal(item, "CNPJ", "cnpj") || "").trim(),
+            responsavel: String(
+              getVal(item, "ResponsÃ¡vel", "responsavel", "responsÃ¡vel") || "",
+            ).trim(),
+            telefone: String(
+              getVal(item, "Telefone", "telefone") || "",
+            ).replace(/\D/g, ""),
+            telefoneResponsavel: String(
+              getVal(item, "Telefone ResponsÃ¡vel", "telefoneResponsavel") || "",
+            ).replace(/\D/g, ""),
+            email: String(getVal(item, "Email", "email") || "").trim(),
+            endereco: String(
+              getVal(item, "EndereÃ§o", "endereco", "endereÃ§o") || "",
+            ).trim(),
+            bairro: String(getVal(item, "Bairro", "bairro") || "").trim(),
+            cidade: String(getVal(item, "Cidade", "cidade") || "").trim(),
+            seguimento: String(
+              getVal(item, "Seguimento", "seguimento") || "",
+            ).trim(),
+            classificacao: String(
+              getVal(item, "ClassificaÃ§Ã£o", "classificacao", "classificaÃ§Ã£o") ||
+                "",
+            ).trim(),
+            statusEmpresa: normalizeStatusEmpresa(
+              String(getVal(item, "Status", "statusEmpresa", "status") || ""),
+            ),
+            linkMaps: String(
+              getVal(item, "Link Maps", "linkMaps") || "",
+            ).trim(),
+            linkSales: String(
+              getVal(item, "Link Sales", "linkSales") || "",
+            ).trim(),
+            consultorId,
+            consultorNome:
+              importedConsultorNome ||
+              (matchedImportedUser ? matchedImportedUser.name : ""),
+            unidadesVinculadas,
+            createdAt: serverTimestamp(),
+          };
+        });
+
+        let imported = 0;
+        let skipped = 0;
+        const inserted = new Set();
+        for (const entry of batch) {
+          const isDup =
+            data.some((e) => e.nome === entry.nome) || inserted.has(entry.nome);
+          if (!isDup) {
+            await addDoc(collection(db, COLLECTIONS.EMPRESAS_PARCEIRAS), entry);
+            inserted.add(entry.nome);
+            imported++;
+          } else {
+            skipped++;
+          }
+        }
+        onToast(
+          `${imported} empresas importadas! ${skipped > 0 ? `${skipped} ignoradas.` : ""}`,
+        );
+      } catch (err: any) {
+        onToast("Erro ao importar empresas.", "error");
+      }
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center space-x-3">
+          <div className="p-3 bg-blue-600 text-white rounded-2xl shadow-lg shadow-blue-200">
+            <Building2 size={24} />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900">
+              Empresas Parceiras
+            </h2>
+            <p className="text-slate-500 text-sm">
+              GestÃ£o de parcerias e convÃªnios
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="flex items-center bg-slate-100 p-1 rounded-xl mr-2">
+            <button
+              onClick={() => setViewFormat("card")}
+              className={cn(
+                "p-2 rounded-lg transition-all",
+                viewFormat === "card"
+                  ? "bg-white shadow-sm text-blue-600"
+                  : "text-slate-400 hover:text-slate-600",
+              )}
+              title="Formato de Cards"
+            >
+              <LayoutGrid size={18} />
+            </button>
+            <button
+              onClick={() => setViewFormat("list")}
+              className={cn(
+                "p-2 rounded-lg transition-all",
+                viewFormat === "list"
+                  ? "bg-white shadow-sm text-blue-600"
+                  : "text-slate-400 hover:text-slate-600",
+              )}
+              title="Formato de Lista"
+            >
+              <List size={18} />
+            </button>
+          </div>
+          <button
+            onClick={() => {
+              setEditingEmpresa(null);
+              setIsModalOpen(true);
+            }}
+            className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center space-x-2"
+          >
+            <Plus size={20} />
+            <span>Nova Empresa</span>
+          </button>
+          <label className="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-blue-100 transition-all text-sm font-bold cursor-pointer">
+            <Upload size={18} />
+            <span>Importar</span>
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={handleImport}
+              className="hidden"
+            />
+          </label>
+          <button
+            onClick={handleExport}
+            className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-slate-200 transition-all text-sm font-bold"
+          >
+            <Download size={18} />
+            <span>Exportar</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Tab Switcher */}
+      <div className="flex border-b border-slate-200">
+        <button
+          type="button"
+          onClick={() => setActiveTab("lista")}
+          className={cn(
+            "pb-3 px-6 font-bold text-sm transition-all border-b-2",
+            activeTab === "lista"
+              ? "border-blue-600 text-blue-600"
+              : "border-transparent text-slate-500 hover:text-slate-700",
+          )}
+        >
+          ğŸ“‹ Lista de Empresas
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("mapa")}
+          className={cn(
+            "pb-3 px-6 font-bold text-sm transition-all border-b-2 flex items-center space-x-2",
+            activeTab === "mapa"
+              ? "border-blue-600 text-blue-600"
+              : "border-transparent text-slate-500 hover:text-slate-700",
+          )}
+        >
+          ğŸ—ºï¸ Mapa das Empresas
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("tratativas")}
+          className={cn(
+            "pb-3 px-6 font-bold text-sm transition-all border-b-2 flex items-center space-x-2",
+            activeTab === "tratativas"
+              ? "border-blue-600 text-blue-600"
+              : "border-transparent text-slate-500 hover:text-slate-700",
+          )}
+        >
+          <span>â° Acompanhamento de Tratativas (Alertas)</span>
+          {statEmTratativa > 0 && (
+            <span className="bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+              {statEmTratativa}
+            </span>
+          )}
+        </button>
+        {profile?.role === "Admin Master" && (
+          <button
+            type="button"
+            onClick={() => setActiveTab("oportunidades")}
+            className={cn(
+              "pb-3 px-6 font-bold text-sm transition-all border-b-2 flex items-center space-x-2",
+              activeTab === "oportunidades"
+                ? "border-indigo-600 text-indigo-600"
+                : "border-transparent text-slate-500 hover:text-slate-700",
+            )}
+          >
+            <Search size={16} />
+            <span>Novas Oportunidades</span>
+          </button>
+        )}
+      </div>
+
+      {(activeTab === "lista" || activeTab === "mapa") && (
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 space-y-4 my-6">
+          <div className="relative">
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              size={18}
+            />
+            <input
+              type="text"
+              placeholder="Buscar por nome da empresa ou CNPJ..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                Status
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none"
+              >
+                <option value="Todas">Todos</option>
+                <option value="Conveniada">Conveniada</option>
+                <option value="Em tratativa">Em Tratativa</option>
+                <option value="Cancelada">Cancelada</option>
+                <option value="NÃ£o visitada">NÃ£o Visitada</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                ClassificaÃ§Ã£o
+              </label>
+              <select
+                value={classificacaoFilter}
+                onChange={(e) => setClassificacaoFilter(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none"
+              >
+                <option value="Todas">Todas</option>
+                <option value="Ouro">Ouro</option>
+                <option value="Prata">Prata</option>
+                <option value="Bronze">Bronze</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                Unidade Vinculada
+              </label>
+              <select
+                value={unidadeFilter}
+                onChange={(e) => setUnidadeFilter(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none"
+              >
+                <option value="Todas">Todas</option>
+                {uniqueUnidades.map((u) => (
+                  <option key={u} value={u}>
+                    {u}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                Seguimento
+              </label>
+              <select
+                value={seguimentoFilter}
+                onChange={(e) => setSeguimentoFilter(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none"
+              >
+                <option value="Todos">Todos</option>
+                {uniqueSeguimentos.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                FDV
+              </label>
+              <select
+                value={fdvFilter}
+                onChange={(e) => setFdvFilter(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none"
+              >
+                <option value="Todos">Todos</option>
+                {listForSelection.map((u) => (
+                  <option key={u.uid} value={u.uid}>
+                    {u.nome}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "lista" && (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 col-span-2 flex items-center space-x-4">
+              <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                <Building2 size={24} />
+              </div>
+              <div>
+                <p className="text-sm text-slate-500 font-medium">
+                  Total Empresas
+                </p>
+                <p className="text-2xl font-black text-slate-900">
+                  {kpiTotais}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 col-span-2 lg:col-span-3 space-y-2">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Por Status
+              </p>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-emerald-600 font-medium text-xs">
+                    Conveniada
+                  </span>
+                  <span className="font-bold text-slate-700">
+                    {statConveniada}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-amber-600 font-medium text-xs">
+                    Em Tratativa
+                  </span>
+                  <span className="font-bold text-slate-700">
+                    {statEmTratativa}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-rose-600 font-medium text-xs">
+                    Cancelada
+                  </span>
+                  <span className="font-bold text-slate-700">
+                    {statCancelada}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 font-medium text-xs">
+                    NÃ£o Visitada
+                  </span>
+                  <span className="font-bold text-slate-700">
+                    {statNaoVisitada}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 col-span-2 lg:col-span-3 space-y-2">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Por ClassificaÃ§Ã£o
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                <div className="bg-amber-100/50 p-2 rounded-lg flex flex-col items-center">
+                  <span className="text-amber-700 font-bold text-xs uppercase">
+                    Ouro
+                  </span>
+                  <span className="text-lg font-black text-amber-900">
+                    {classOuro}
+                  </span>
+                </div>
+                <div className="bg-slate-100/80 p-2 rounded-lg flex flex-col items-center">
+                  <span className="text-slate-600 font-bold text-xs uppercase">
+                    Prata
+                  </span>
+                  <span className="text-lg font-black text-slate-800">
+                    {classPrata}
+                  </span>
+                </div>
+                <div className="bg-orange-100/50 p-2 rounded-lg flex flex-col items-center">
+                  <span className="text-orange-800 font-bold text-xs uppercase">
+                    Bronze
+                  </span>
+                  <span className="text-lg font-black text-orange-900">
+                    {classBronze}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bulk Action Panel */}
+          {selectedEmpresaIds.length > 0 && (
+            <div className="bg-rose-50 border border-rose-200 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-3 animate-fadeIn">
+              <span className="text-sm text-rose-800 font-medium">
+                Selecionadas: <strong>{selectedEmpresaIds.length}</strong>{" "}
+                empresa(s) para exclusÃ£o em massa.
+              </span>
+              <div className="flex space-x-2 w-full sm:w-auto justify-end">
+                <button
+                  type="button"
+                  onClick={() => setSelectedEmpresaIds([])}
+                  className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-lg transition-all"
+                >
+                  Desmarcar Todas
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBulkDelete}
+                  className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all flex items-center space-x-1.5"
+                >
+                  <Trash2 size={14} />
+                  <span>Excluir Selecionadas</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Quick select toggle */}
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-slate-400 font-medium font-mono">
+              Mostrando {filteredData.length} de {data.length} empresas
+            </span>
+            <div className="flex space-x-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const allFilteredIds = filteredData.map((emp) => emp.id);
+                  const areAllSelected = allFilteredIds.every((id) =>
+                    selectedEmpresaIds.includes(id),
+                  );
+                  if (areAllSelected) {
+                    setSelectedEmpresaIds((prev) =>
+                      prev.filter((id) => !allFilteredIds.includes(id)),
+                    );
+                  } else {
+                    setSelectedEmpresaIds((prev) =>
+                      Array.from(new Set([...prev, ...allFilteredIds])),
+                    );
+                  }
+                }}
+                className="text-xs text-blue-600 hover:text-blue-800 font-bold"
+              >
+                {filteredData.length > 0 &&
+                filteredData.every((emp) => selectedEmpresaIds.includes(emp.id))
+                  ? "Desmarcar Todas do Filtro"
+                  : `Selecionar Todas do Filtro (${filteredData.length})`}
+              </button>
+            </div>
+          </div>
+
+          {viewFormat === "card" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredData.map((emp) => {
+                const isSelected = selectedEmpresaIds.includes(emp.id);
+                const alertInfo = getTratativaAlert(emp);
+                return (
+                  <div
+                    key={emp.id}
+                    className={cn(
+                      "bg-white p-6 pl-12 rounded-3xl shadow-sm border flex flex-col justify-between hover:border-blue-200 transition-all group relative",
+                      isSelected
+                        ? "border-blue-400 bg-blue-50/20"
+                        : "border-slate-100",
+                    )}
+                  >
+                    {/* Absolute checkbox for mass deletion */}
+                    <div className="absolute top-5 left-4 z-10">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => {
+                          if (isSelected) {
+                            setSelectedEmpresaIds(
+                              selectedEmpresaIds.filter((id) => id !== emp.id),
+                            );
+                          } else {
+                            setSelectedEmpresaIds([
+                              ...selectedEmpresaIds,
+                              emp.id,
+                            ]);
+                          }
+                        }}
+                        className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
+                      />
+                    </div>
+
+                    {emp.classificacao && (
+                      <div
+                        className={cn(
+                          "absolute -top-3 -right-3 text-[10px] font-black uppercase tracking-wider py-1 px-3 rounded-full shadow-sm border",
+                          emp.classificacao === "Ouro"
+                            ? "bg-amber-100 text-amber-800 border-amber-200"
+                            : emp.classificacao === "Prata"
+                              ? "bg-slate-100 text-slate-700 border-slate-300"
+                              : "bg-orange-100 text-orange-800 border-orange-200",
+                        )}
+                      >
+                        {emp.classificacao}
+                      </div>
+                    )}
+
+                    <div>
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors pr-8">
+                          {emp.nome}
+                        </h3>
+                        <div className="flex space-x-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingEmpresa(emp);
+                              setIsModalOpen(true);
+                            }}
+                            className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-all"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(emp.id)}
+                            className="p-2 text-rose-400 hover:bg-rose-50 rounded-lg transition-all"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-1.5 mb-4">
+                        <span
+                          className={cn(
+                            "text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                            emp.statusEmpresa === "Conveniada" &&
+                              "bg-emerald-50 text-emerald-700 border-emerald-200",
+                            emp.statusEmpresa === "Em tratativa" &&
+                              "bg-amber-50 text-amber-700 border-amber-200",
+                            emp.statusEmpresa === "Cancelada" &&
+                              "bg-rose-50 text-rose-700 border-rose-200",
+                            (emp.statusEmpresa === "NÃ£o visitada" ||
+                              !emp.statusEmpresa) &&
+                              "bg-slate-50 text-slate-600 border-slate-200",
+                          )}
+                        >
+                          {emp.statusEmpresa || "NÃ£o visitada"}
+                        </span>
+                        {emp.seguimento && (
+                          <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">
+                            {emp.seguimento}
+                          </span>
+                        )}
+                        {alertInfo && (
+                          <span
+                            className={cn(
+                              "text-[9px] font-bold px-2 py-0.5 rounded-full border flex items-center space-x-1",
+                              alertInfo.bg,
+                            )}
+                          >
+                            <Clock size={10} className={alertInfo.iconColor} />
+                            <span>
+                              {alertInfo.label} ({getTratativaDays(emp)}d)
+                            </span>
+                          </span>
+                        )}
+                      </div>
+
+                      {emp.statusEmpresa === "Em tratativa" && (
+                        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start space-x-2 shadow-sm">
+                          <span className="text-amber-500 shrink-0 font-bold">
+                            âš ï¸
+                          </span>
+                          <div className="leading-relaxed">
+                            O processo foi iniciado acompanhe a tratativa com a
+                            empresa{" "}
+                            <span className="font-bold text-slate-900">
+                              {emp.nome}
+                            </span>{" "}
+                            para iniciar as campanhas de trade.
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="space-y-3 mb-6 text-sm text-slate-600">
+                        {emp.cnpj && (
+                          <div className="flex items-center space-x-3">
+                            <Briefcase size={16} className="text-slate-400" />
+                            <span className="font-mono text-xs">
+                              {emp.cnpj}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex flex-col space-y-1">
+                          <div className="flex items-center justify-between pr-1">
+                            <div className="flex items-center space-x-3">
+                              <Phone size={16} className="text-slate-400" />
+                              <span>{formatPhone(emp.telefone)}</span>
+                            </div>
+                            <span className="text-[9px] font-bold text-slate-400 uppercase">
+                              Empresa
+                            </span>
+                          </div>
+                          {emp.telefoneResponsavel && (
+                            <div className="flex items-center justify-between pr-1">
+                              <div className="flex items-center space-x-3">
+                                <Phone
+                                  size={16}
+                                  className="text-slate-400 opacity-50"
+                                />
+                                <span>
+                                  {formatPhone(emp.telefoneResponsavel)}
+                                </span>
+                              </div>
+                              <span className="text-[9px] font-bold text-slate-400 uppercase">
+                                Resp.
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex items-center space-x-3">
+                          <Users size={16} className="text-slate-400" />
+                          <span>{emp.responsavel}</span>
+                        </div>
+
+                        {emp.consultorNome && (
+                          <div className="flex items-center space-x-3 text-blue-700 font-medium">
+                            <UserIcon size={16} className="text-blue-500" />
+                            <span>Comercial: {emp.consultorNome}</span>
+                          </div>
+                        )}
+
+                        <div className="flex items-center space-x-3">
+                          <Mail size={16} className="text-slate-400" />
+                          <span className="truncate">{emp.email}</span>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <MapPin size={16} className="text-slate-400" />
+                          <span className="truncate">{emp.endereco}</span>
+                        </div>
+                        {emp.bairro && (
+                          <div className="flex items-center space-x-3">
+                            <MapPin
+                              size={16}
+                              className="text-slate-400 opacity-50"
+                            />
+                            <span className="truncate">
+                              Bairro: {emp.bairro}
+                            </span>
+                          </div>
+                        )}
+                        {emp.cidade && (
+                          <div className="flex items-center space-x-3">
+                            <MapPin
+                              size={16}
+                              className="text-slate-400 opacity-50"
+                            />
+                            <span className="truncate">
+                              Cidade: {emp.cidade}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {emp.unidadesVinculadas &&
+                        emp.unidadesVinculadas.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-slate-100 mb-4">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 font-mono">
+                              Unidades Vinculadas
+                            </span>
+                            <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1">
+                              {emp.unidadesVinculadas.map((uni) => (
+                                <span
+                                  key={uni}
+                                  className="text-[9px] font-bold bg-indigo-50/60 text-indigo-600 border border-indigo-100/40 p-1 px-2 rounded-md truncate max-w-[150px]"
+                                  title={uni}
+                                >
+                                  {uni}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                    </div>
+
+                    <div className="flex flex-col space-y-2 mt-auto pt-3 border-t border-slate-100/60">
+                      <div className="grid grid-cols-2 gap-2">
+                        {emp.linkMaps && (
+                          <a
+                            href={emp.linkMaps}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center space-x-2 w-full py-2 bg-slate-50 text-slate-600 rounded-xl font-bold text-xs hover:bg-slate-100 transition-all border border-slate-200"
+                          >
+                            <Globe size={14} />
+                            <span>Maps</span>
+                          </a>
+                        )}
+                        {emp.linkSales && (
+                          <a
+                            href={emp.linkSales}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center space-x-2 w-full py-2 bg-blue-50 text-blue-600 rounded-xl font-bold text-xs hover:bg-blue-100 transition-all border border-blue-200"
+                          >
+                            <ExternalLink size={14} />
+                            <span>Sales</span>
+                          </a>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => onGenerateAction(emp)}
+                        className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center justify-center space-x-2"
+                      >
+                        <Calendar size={18} />
+                        <span>Gerar AÃ§Ã£o</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/30">
+                    <th className="p-4 pl-12">
+                      <div className="flex items-center space-x-2">
+                        <span>Empresa</span>
+                      </div>
+                    </th>
+                    <th className="p-4">Status / Seguimento</th>
+                    <th className="p-4">ResponsÃ¡vel / Contato</th>
+                    <th className="p-4">Consultor</th>
+                    <th className="p-4">LocalizaÃ§Ã£o</th>
+                    <th className="p-4 pr-6 text-right">AÃ§Ãµes</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-sm">
+                  {filteredData.map((emp) => {
+                    const isSelected = selectedEmpresaIds.includes(emp.id);
+                    const alertInfo = getTratativaAlert(emp);
+                    return (
+                      <tr
+                        key={emp.id}
+                        className={cn(
+                          "hover:bg-slate-50/50 transition-colors relative",
+                          isSelected && "bg-blue-50/30",
+                        )}
+                      >
+                        <td className="p-4 pl-12 relative">
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => {
+                                if (isSelected) {
+                                  setSelectedEmpresaIds(
+                                    selectedEmpresaIds.filter(
+                                      (id) => id !== emp.id,
+                                    ),
+                                  );
+                                } else {
+                                  setSelectedEmpresaIds([
+                                    ...selectedEmpresaIds,
+                                    emp.id,
+                                  ]);
+                                }
+                              }}
+                              className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
+                            />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-bold text-slate-900 leading-none mb-1">
+                              {emp.nome}
+                            </span>
+                            {emp.cnpj && (
+                              <span className="text-[10px] font-mono text-slate-400">
+                                {emp.cnpj}
+                              </span>
+                            )}
+                            {emp.classificacao && (
+                              <span
+                                className={cn(
+                                  "inline-flex w-fit mt-1 text-[8px] font-black uppercase px-1.5 py-0.5 rounded border",
+                                  emp.classificacao === "Ouro"
+                                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                                    : emp.classificacao === "Prata"
+                                      ? "bg-slate-50 text-slate-600 border-slate-200"
+                                      : "bg-orange-50 text-orange-700 border-orange-200",
+                                )}
+                              >
+                                {emp.classificacao}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex flex-col space-y-1">
+                            <span
+                              className={cn(
+                                "text-[10px] font-bold px-2 py-0.5 rounded-full border w-fit",
+                                emp.statusEmpresa === "Conveniada" &&
+                                  "bg-emerald-50 text-emerald-700 border-emerald-200",
+                                emp.statusEmpresa === "Em tratativa" &&
+                                  "bg-amber-50 text-amber-700 border-amber-200",
+                                emp.statusEmpresa === "Cancelada" &&
+                                  "bg-rose-50 text-rose-700 border-rose-200",
+                                (emp.statusEmpresa === "NÃ£o visitada" ||
+                                  !emp.statusEmpresa) &&
+                                  "bg-slate-50 text-slate-600 border-slate-200",
+                              )}
+                            >
+                              {emp.statusEmpresa || "NÃ£o visitada"}
+                            </span>
+                            {emp.seguimento && (
+                              <span className="text-[10px] font-medium text-slate-500">
+                                {emp.seguimento}
+                              </span>
+                            )}
+                            {alertInfo && (
+                              <span
+                                className={cn(
+                                  "text-[9px] font-bold px-2 py-0.5 rounded-full border flex items-center space-x-1 w-fit",
+                                  alertInfo.bg,
+                                )}
+                              >
+                                <Clock
+                                  size={10}
+                                  className={alertInfo.iconColor}
+                                />
+                                <span>
+                                  {alertInfo.label} ({getTratativaDays(emp)}d)
+                                </span>
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex flex-col text-xs">
+                            <div className="flex items-center space-x-1 mb-0.5">
+                              <Users size={12} className="text-slate-400" />
+                              <span className="font-medium text-slate-700">
+                                {emp.responsavel}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-1 text-slate-500">
+                              <Phone size={12} className="text-slate-400" />
+                              <span>{formatPhone(emp.telefone)}</span>
+                            </div>
+                            {emp.email && (
+                              <div className="flex items-center space-x-1 text-slate-500">
+                                <Mail size={12} className="text-slate-400" />
+                                <span className="truncate max-w-[150px]">
+                                  {emp.email}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          {emp.consultorNome ? (
+                            <div className="flex items-center space-x-1.5 text-blue-700 font-medium text-xs">
+                              <UserIcon size={14} className="text-blue-500" />
+                              <span>{emp.consultorNome}</span>
+                            </div>
+                          ) : (
+                            <span className="text-slate-400 text-xs">-</span>
+                          )}
+                        </td>
+                        <td className="p-4">
+                          <div className="flex flex-col text-[11px] text-slate-600 max-w-[200px]">
+                            <span className="truncate">{emp.endereco}</span>
+                            <span className="text-slate-400 truncate">
+                              {emp.bairro && `${emp.bairro}, `}
+                              {emp.cidade}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="p-4 pr-6 text-right">
+                          <div className="flex justify-end items-center space-x-1">
+                            <button
+                              type="button"
+                              onClick={() => onGenerateAction(emp)}
+                              className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                              title="Gerar AÃ§Ã£o"
+                            >
+                              <Calendar size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingEmpresa(emp);
+                                setIsModalOpen(true);
+                              }}
+                              className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-lg transition-all"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(emp.id)}
+                              className="p-1.5 text-rose-400 hover:bg-rose-50 rounded-lg transition-all"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Mapa das Empresas View */}
+      {activeTab === "mapa" && (
+        <Mapa3D
+          empresas={filteredData}
+          leads={leads}
+          acoes={acoes}
+          selectedId={selectedMapEmpresaId}
+          onSelect={setSelectedMapEmpresaId}
+          onGenerateAction={onGenerateAction}
+          formatPhone={formatPhone}
+        />
+      )}
+
+      {/* Tratativas (Alertas) Report View */}
+      {activeTab === "tratativas" && (
+        <div className="space-y-6">
+          {/* Alerts Guide Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-start space-x-3">
+              <div className="p-2 bg-amber-100 text-amber-700 rounded-xl shrink-0">
+                <Clock size={20} />
+              </div>
+              <div>
+                <h4 className="font-bold text-amber-900 text-sm">
+                  Lembrete de Retorno
+                </h4>
+                <p className="text-xs text-amber-700 mt-1">
+                  Ativado apÃ³s <strong>3 dias</strong> do cadastro. Requer
+                  contato inicial para retorno sobre o fechamento da aÃ§Ã£o.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-orange-50 border border-orange-200 p-4 rounded-2xl flex items-start space-x-3">
+              <div className="p-2 bg-orange-100 text-orange-700 rounded-xl shrink-0">
+                <AlertCircle size={20} />
+              </div>
+              <div>
+                <h4 className="font-bold text-orange-900 text-sm">
+                  Alerta de AtenÃ§Ã£o
+                </h4>
+                <p className="text-xs text-orange-700 mt-1">
+                  Ativado apÃ³s <strong>7 dias</strong> do cadastro. AtenÃ§Ã£o
+                  necessÃ¡ria para a negociaÃ§Ã£o em andamento.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-rose-50 border border-rose-200 p-4 rounded-2xl flex items-start space-x-3">
+              <div className="p-2 bg-rose-100 text-rose-700 rounded-xl shrink-0">
+                <AlertCircle size={20} />
+              </div>
+              <div>
+                <h4 className="font-bold text-rose-900 text-sm">
+                  Retorno de EmergÃªncia
+                </h4>
+                <p className="text-xs text-rose-700 mt-1">
+                  Ativado apÃ³s <strong>15 dias</strong> ou mais. Tratativa
+                  crÃ­tica necessitando retorno imediato de emergÃªncia.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* List of companies in tratativa */}
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h3 className="font-bold text-slate-800 text-base">
+                RelatÃ³rio de Acompanhamento de Tratativas
+              </h3>
+              <span className="text-xs text-slate-500 font-medium">
+                Total de Tratativas Ativas:{" "}
+                <strong>
+                  {
+                    data.filter((e) => e.statusEmpresa === "Em tratativa")
+                      .length
+                  }
+                </strong>
+              </span>
+            </div>
+
+            {data.filter((e) => e.statusEmpresa === "Em tratativa").length ===
+            0 ? (
+              <div className="p-12 text-center text-slate-400 italic">
+                Nenhuma empresa com status "Em tratativa" cadastrada.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/30">
+                      <th className="p-4 pl-6">Empresa</th>
+                      <th className="p-4">Consultor Vinculado (FDV)</th>
+                      <th className="p-4">Unidade(s)</th>
+                      <th className="p-4">Data Cadastro</th>
+                      <th className="p-4">Dias Decorridos</th>
+                      <th className="p-4">Lembrete / Status</th>
+                      <th className="p-4 pr-6 text-right">
+                        AÃ§Ãµes para Mudar Status
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-sm">
+                    {data
+                      .filter((e) => e.statusEmpresa === "Em tratativa")
+                      .map((emp) => {
+                        const alertInfo = getTratativaAlert(emp);
+                        const days = getTratativaDays(emp);
+
+                        const formatDate = (dateVal: any) => {
+                          if (!dateVal) return "-";
+                          let dateObj: Date;
+                          if (dateVal.seconds) {
+                            dateObj = new Date(dateVal.seconds * 1000);
+                          } else {
+                            dateObj = new Date(dateVal);
+                          }
+                          if (isNaN(dateObj.getTime())) return "-";
+                          return dateObj.toLocaleDateString("pt-BR");
+                        };
+
+                        return (
+                          <tr
+                            key={emp.id}
+                            className="hover:bg-slate-50/50 transition-colors"
+                          >
+                            <td className="p-4 pl-6">
+                              <div className="font-bold text-slate-800">
+                                {emp.nome}
+                              </div>
+                              {emp.cnpj && (
+                                <div className="text-[10px] text-slate-400 font-mono">
+                                  CNPJ: {emp.cnpj}
+                                </div>
+                              )}
+                              <div className="mt-1.5 text-xs text-amber-700 max-w-sm leading-relaxed bg-amber-50/60 p-2 rounded-lg border border-amber-100/50">
+                                O processo foi iniciado acompanhe a tratativa
+                                com a empresa <strong>{emp.nome}</strong> para
+                                iniciar as campanhas de trade.
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              {emp.consultorNome ? (
+                                <div className="flex items-center space-x-2 text-slate-700">
+                                  <UserIcon
+                                    size={14}
+                                    className="text-blue-500 shrink-0"
+                                  />
+                                  <span className="font-medium">
+                                    {emp.consultorNome}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-slate-400 italic text-xs">
+                                  Sem consultor vinculado
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-4">
+                              {emp.unidadesVinculadas &&
+                              emp.unidadesVinculadas.length > 0 ? (
+                                <div className="flex flex-wrap gap-1 max-w-[200px]">
+                                  {emp.unidadesVinculadas.map((un) => (
+                                    <span
+                                      key={un}
+                                      className="text-[9px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded font-bold border border-indigo-100/30"
+                                    >
+                                      {un}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-slate-400 text-xs">
+                                  -
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-4 text-slate-600 text-xs">
+                              {formatDate(emp.createdAt)}
+                            </td>
+                            <td className="p-4">
+                              <span className="font-bold text-slate-700 font-mono">
+                                {days}
+                              </span>
+                              <span className="text-slate-400 text-xs ml-1">
+                                dia(s)
+                              </span>
+                            </td>
+                            <td className="p-4">
+                              {alertInfo && (
+                                <span
+                                  className={cn(
+                                    "text-[10px] font-bold px-2.5 py-1 rounded-full border flex items-center space-x-1.5 w-fit",
+                                    alertInfo.bg,
+                                  )}
+                                >
+                                  <Clock
+                                    size={10}
+                                    className={alertInfo.iconColor}
+                                  />
+                                  <span>
+                                    {alertInfo.label} ({days}d)
+                                  </span>
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-4 pr-6 text-right">
+                              <div className="flex items-center justify-end space-x-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleUpdateStatus(emp.id, "Conveniada")
+                                  }
+                                  className="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-xs font-bold transition-all animate-none"
+                                  title="Mudar para Conveniada"
+                                >
+                                  ğŸ¤ Conveniar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleUpdateStatus(emp.id, "Cancelada")
+                                  }
+                                  className="px-2.5 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-lg text-xs font-bold transition-all animate-none"
+                                  title="Mudar para Cancelada"
+                                >
+                                  âœ• Cancelar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleUpdateStatus(emp.id, "NÃ£o visitada")
+                                  }
+                                  className="px-2.5 py-1 bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 rounded-lg text-xs font-bold transition-all animate-none"
+                                  title="Mudar para NÃ£o Visitada"
+                                >
+                                  Ignorar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingEmpresa(emp);
+                                    setIsModalOpen(true);
+                                  }}
+                                  className="p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-lg transition-all"
+                                  title="Editar Completo"
+                                >
+                                  <Edit2 size={14} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Novas Oportunidades View */}
+      {activeTab === "oportunidades" && profile?.role === "Admin Master" && (
+        <NovasOportunidadesView 
+          data={data}
+          botConfig={botConfig}
+          onToast={onToast}
+          onAdicionarOportunidade={(nova) => {
+            setEditingEmpresa(nova as EmpresaParceira);
+            setIsModalOpen(true);
+          }}
+        />
+      )}
+
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col"
+            >
+              <div className="p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
+                <h3 className="text-xl font-bold text-slate-900">
+                  {editingEmpresa ? "Editar Empresa" : "Nova Empresa Parceira"}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-slate-400 hover:text-slate-600"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="overflow-y-auto flex-1">
+                <form
+                  id="empresaForm"
+                  onSubmit={handleSave}
+                  className="p-6 space-y-5"
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-1">
+                        Nome da Empresa
+                      </label>
+                      <input
+                        name="nome"
+                        defaultValue={editingEmpresa?.nome}
+                        required
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-1">
+                        CNPJ
+                      </label>
+                      <input
+                        name="cnpj"
+                        defaultValue={editingEmpresa?.cnpj}
+                        placeholder="00.000.000/0000-00"
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-1">
+                        Status
+                      </label>
+                      <select
+                        name="statusEmpresa"
+                        defaultValue={editingEmpresa?.statusEmpresa || ""}
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                      >
+                        <option value="">Selecione...</option>
+                        <option value="Conveniada">Conveniada</option>
+                        <option value="Em tratativa">Em Tratativa</option>
+                        <option value="Cancelada">Cancelada</option>
+                        <option value="NÃ£o visitada">NÃ£o Visitada</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-1">
+                        ClassificaÃ§Ã£o
+                      </label>
+                      <select
+                        name="classificacao"
+                        defaultValue={editingEmpresa?.classificacao || ""}
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                      >
+                        <option value="">Nenhuma</option>
+                        <option value="Ouro">Ouro</option>
+                        <option value="Prata">Prata</option>
+                        <option value="Bronze">Bronze</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-1">
+                        Seguimento
+                      </label>
+                      <input
+                        name="seguimento"
+                        defaultValue={editingEmpresa?.seguimento}
+                        placeholder="Ex: EducaÃ§Ã£o, Varejo"
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-1">
+                        ResponsÃ¡vel pela Parceria
+                      </label>
+                      <input
+                        name="responsavel"
+                        defaultValue={editingEmpresa?.responsavel}
+                        required
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-1">
+                        Email
+                      </label>
+                      <input
+                        name="email"
+                        type="email"
+                        defaultValue={editingEmpresa?.email}
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-1">
+                        Telefone Principal (Empresa)
+                      </label>
+                      <input
+                        name="telefone"
+                        defaultValue={editingEmpresa?.telefone}
+                        onChange={(e) => {
+                          e.target.value = formatPhone(e.target.value);
+                        }}
+                        required
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-1">
+                        Telefone do ResponsÃ¡vel
+                      </label>
+                      <input
+                        name="telefoneResponsavel"
+                        defaultValue={editingEmpresa?.telefoneResponsavel}
+                        onChange={(e) => {
+                          e.target.value = formatPhone(e.target.value);
+                        }}
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-1">
+                        EndereÃ§o
+                      </label>
+                      <input
+                        name="endereco"
+                        defaultValue={editingEmpresa?.endereco}
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-1">
+                        Bairro
+                      </label>
+                      <input
+                        name="bairro"
+                        defaultValue={editingEmpresa?.bairro}
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-1">
+                        Cidade
+                      </label>
+                      <input
+                        name="cidade"
+                        defaultValue={editingEmpresa?.cidade}
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-1">
+                        Link no Maps
+                      </label>
+                      <input
+                        name="linkMaps"
+                        defaultValue={editingEmpresa?.linkMaps}
+                        placeholder="https://goo.gl/maps/..."
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-1">
+                        Link do Sales de VÃ­nculo
+                      </label>
+                      <input
+                        name="linkSales"
+                        defaultValue={editingEmpresa?.linkSales}
+                        placeholder="https://sales..."
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">
+                      Vincular a Consultor Comercial / FDV
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={selectedConsultorId}
+                        onChange={(e) => setSelectedConsultorId(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm cursor-pointer"
+                      >
+                        <option value="">
+                          Nenhum consultor selecionado (Sem vÃ­nculo)
+                        </option>
+                        {listForSelection.map((u) => (
+                          <option key={u.uid} value={u.uid}>
+                            {u.name} (
+                            {(
+                              u.role ||
+                              u.servidor ||
+                              "Comercial"
+                            ).toUpperCase()}
+                            )
+                          </option>
+                        ))}
+                      </select>
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                        <UserIcon size={18} />
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      Selecione um comercial/FDV cadastrado no sistema para
+                      vincular a esta empresa parceira.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">
+                      Unidades Vinculadas
+                    </label>
+                    {uniqueUnidades.length === 0 ? (
+                      <span className="text-xs text-slate-400 italic block">
+                        Nenhuma unidade cadastrada em Cursos DisponÃ­veis.
+                      </span>
+                    ) : (
+                      <div className="space-y-1.5 max-h-36 overflow-y-auto border border-slate-200 rounded-xl p-3 bg-slate-50">
+                        <label className="flex items-center space-x-2 pb-1.5 mb-1.5 border-b border-slate-200 cursor-pointer text-xs font-bold text-blue-600">
+                          <input
+                            type="checkbox"
+                            checked={
+                              selectedUnidades.length === uniqueUnidades.length
+                            }
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedUnidades(uniqueUnidades);
+                              } else {
+                                setSelectedUnidades([]);
+                              }
+                            }}
+                            className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
+                          />
+                          <span>
+                            Selecionar Todas ({uniqueUnidades.length})
+                          </span>
+                        </label>
+                        {uniqueUnidades.map((unidade) => {
+                          const isChecked = selectedUnidades.includes(unidade);
+                          return (
+                            <label
+                              key={unidade}
+                              className="flex items-center space-x-2 text-xs font-medium text-slate-700 cursor-pointer py-0.5 hover:text-slate-900"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => {
+                                  const next = isChecked
+                                    ? selectedUnidades.filter(
+                                        (u) => u !== unidade,
+                                      )
+                                    : [...selectedUnidades, unidade];
+                                  setSelectedUnidades(next);
+                                }}
+                                className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
+                              />
+                              <span>{unidade}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </form>
+              </div>
+
+              <div className="p-6 border-t border-slate-100 shrink-0 bg-slate-50">
+                <button
+                  type="submit"
+                  form="empresaForm"
+                  className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
+                >
+                  {editingEmpresa ? "Salvar AlteraÃ§Ãµes" : "Cadastrar Empresa"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function CalculoRemuneracaoView() {
+  const [salario, setSalario] = useState<string>("");
+  const [multiplo, setMultiplo] = useState<string>("");
+
+  const resultado = useMemo(() => {
+    const vSalario = parseFloat(salario.replace(",", ".")) || 0;
+    const vMultiplo = parseFloat(multiplo.replace(",", ".")) || 0;
+
+    // Formula: SalÃ¡rio Base * MÃºltiplo da RV
+    return vSalario * vMultiplo;
+  }, [salario, multiplo]);
+
+  const formatCurrency = (val: number) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(val);
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto space-y-8">
+      <div className="text-center space-y-2">
+        <h2 className="text-3xl font-bold text-slate-900">
+          CÃ¡lculo de RemuneraÃ§Ã£o
+        </h2>
+        <p className="text-slate-500">
+          Preencha os campos abaixo para calcular a remuneraÃ§Ã£o total
+        </p>
+      </div>
+
+      <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+        <div className="p-8 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-slate-700">
+                SalÃ¡rio Base
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">
+                  R$
+                </span>
+                <input
+                  type="text"
+                  value={salario}
+                  onChange={(e) => setSalario(e.target.value)}
+                  placeholder="0,00"
+                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-slate-700">
+                MÃºltiplo da RV
+              </label>
+              <input
+                type="text"
+                value={multiplo}
+                onChange={(e) => setMultiplo(e.target.value)}
+                placeholder="Ex: 1.5"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
+              />
+            </div>
+          </div>
+
+          <div className="pt-8 border-t border-slate-100">
+            <div className="bg-blue-600 rounded-3xl p-8 text-white text-center space-y-2 shadow-lg shadow-blue-200">
+              <span className="text-blue-100 text-sm font-bold uppercase tracking-wider">
+                RemuneraÃ§Ã£o Total Estimada
+              </span>
+              <div className="text-4xl md:text-5xl font-black">
+                {formatCurrency(resultado)}
+              </div>
+              <p className="text-blue-100/80 text-xs pt-2">
+                FÃ³rmula: SalÃ¡rio Base Ã— MÃºltiplo da RV
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-start space-x-3">
+        <AlertCircle className="text-amber-500 shrink-0" size={20} />
+        <p className="text-xs text-amber-700 leading-relaxed">
+          Este cÃ¡lculo Ã© uma estimativa baseada nos valores informados. Consulte
+          as regras vigentes de sua unidade para confirmaÃ§Ã£o dos valores finais.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function AdminView({
+  profile,
+  users,
+  links,
+  onToast,
+  leads,
+  bases,
+  gap,
+  planner,
+  campanhas,
+  bomDia,
+  forecast,
+  periodos,
+  whatsappMessages,
+  activeWhatsappTemplates,
+  setActiveWhatsappTemplates,
+  empresasParceiras,
+  botConfig,
+  botStatuses,
+  setBotStatuses,
+  callBotApi,
+  metaDia,
+  metaSM,
+  metaCursos,
+  qgLigacoes,
+  cursos,
+  uniqueUnidades = [],
+  analysisSchemes,
+  onSaveAnalysisScheme,
+  onDeleteAnalysisScheme,
+  setShowInjectModal,
+}: {
+  profile: UserProfile | null;
+  users: UserProfile[];
+  links: LinkUtil[];
+  onToast: (m: string, t?: "success" | "error") => void;
+  leads: Lead[];
+  bases: BaseEntry[];
+  gap: GapEntry[];
+  planner: PlannerTask[];
+  campanhas: Campanha[];
+  bomDia: BomDiaCaptacao[];
+  forecast: ForecastCaptacao[];
+  periodos: PeriodoCaptacao[];
+  whatsappMessages: WhatsAppMessage[];
+  activeWhatsappTemplates: Record<string, string>;
+  setActiveWhatsappTemplates: React.Dispatch<
+    React.SetStateAction<Record<string, string>>
+  >;
+  empresasParceiras: EmpresaParceira[];
+  botConfig: BotConfig;
+  uniqueUnidades?: string[];
+  botStatuses: Record<
+    string,
+    {
+      status: string;
+      pairingCode?: string;
+      qrCode?: string;
+      qrUrl?: string;
+      active?: boolean;
+    }
+  >;
+  setBotStatuses: React.Dispatch<
+    React.SetStateAction<
+      Record<
+        string,
+        {
+          status: string;
+          pairingCode?: string;
+          qrCode?: string;
+          qrUrl?: string;
+          active?: boolean;
+        }
+      >
+    >
+  >;
+  callBotApi: (
+    path: string,
+    options?: { method?: "GET" | "POST"; body?: any },
+  ) => Promise<any>;
+  metaDia: MetaDia[];
+  metaSM: MetaSM[];
+  metaCursos: MetaCurso[];
+  qgLigacoes: QgLigacao[];
+  cursos: CursoDisponivel[];
+  analysisSchemes: AnalysisScheme[];
+  onSaveAnalysisScheme: (scheme: Partial<AnalysisScheme>) => Promise<void>;
+  onDeleteAnalysisScheme: (id: string) => Promise<void>;
+  setShowInjectModal: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
+  const [activeWhatsappTab, setActiveWhatsappTab] = useState<
+    "historico" | "bases" | "gap" | "fiesProuni" | "bases_renovacao"
+  >("historico");
+  const [activeTab, setActiveTab] = useState<
+    | "usuarios"
+    | "bomDia"
+    | "forecast"
+    | "planner"
+    | "periodo"
+    | "links"
+    | "whatsapp"
+    | "backup"
+    | "treinamento"
+    | "metaDia"
+    | "qgLigacoes"
+    | "folgas"
+    | "logo"
+    | "funcionarios"
+    | "crescimentoAnual"
+    | "formularios"
+    | "metaSM"
+    | "metaCursos"
+  >(profile?.role === "Gestor Unidade" ? "forecast" : "usuarios");
+  const [adminRequests, setAdminRequests] = useState<SolicitacaoFolga[]>([]);
+  const [loadingAdminRequests, setLoadingAdminRequests] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<
+    "Todos" | "Pendente" | "Aprovado" | "Recusado"
+  >("Todos");
+
+  // Subscribe to all folga requests in AdminView
+  useEffect(() => {
+    if (activeTab !== "folgas") return;
+
+    setLoadingAdminRequests(true);
+    const q = collection(db, COLLECTIONS.SOLICITACAO_FOLGA);
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const list = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as SolicitacaoFolga[];
+
+        // Sort descending by createdAt
+        list.sort((a, b) => {
+          const timeA = a.createdAt?.seconds || 0;
+          const timeB = b.createdAt?.seconds || 0;
+          return timeB - timeA;
+        });
+
+        setAdminRequests(list);
+        setLoadingAdminRequests(false);
+      },
+      (error) => {
+        console.error("Error loading admin folgas:", error);
+        setLoadingAdminRequests(false);
+      },
+    );
+
+    return () => unsubscribe();
+  }, [activeTab]);
+
+  const handleDecideRequest = async (
+    request: SolicitacaoFolga,
+    status: "Aprovado" | "Recusado",
+  ) => {
+    try {
+      if (!auth.currentUser) return;
+      const currentUserUid = auth.currentUser.uid;
+      const decider = users.find((u) => u.uid === currentUserUid);
+      const deciderName = decider
+        ? decider.name
+        : auth.currentUser.email || "Admin";
+
+      const requestRef = doc(db, COLLECTIONS.SOLICITACAO_FOLGA, request.id);
+      await updateDoc(requestRef, {
+        status,
+        aprovadoPorId: currentUserUid,
+        aprovadoPorNome: deciderName,
+        updatedAt: serverTimestamp(),
+      });
+
+      onToast(
+        `SolicitaÃ§Ã£o de ${request.solicitanteNome} foi ${status === "Aprovado" ? "aprovada" : "recusada"}.`,
+        "success",
+      );
+    } catch (err: any) {
+      console.error("Error deciding request:", err);
+      onToast("Erro ao processar decisÃ£o.", "error");
+    }
+  };
+
+  const [isProcessingPdf, setIsProcessingPdf] = useState(false);
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      onToast("Por favor, selecione um arquivo PDF.", "error");
+      return;
+    }
+
+    setIsProcessingPdf(true);
+    try {
+      const pdfjsLib = await import("pdfjs-dist");
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let text = "";
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        const pageText = content.items.map((item: any) => item.str).join(" ");
+        text += `\n--- PÃ¡gina ${i} ---\n` + pageText + "\n";
+      }
+
+      const currentContext = botConfig.trainingContext || "";
+      const newContext =
+        currentContext +
+        (currentContext ? "\n\n" : "") +
+        `=== ConteÃºdo do Arquivo: ${file.name} ===\n` +
+        text;
+
+      await setDoc(
+        doc(db, COLLECTIONS.BOT_CONFIG, "main"),
+        {
+          trainingContext: newContext,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true },
+      );
+
+      onToast("PDF processado e adicionado ao contexto com sucesso!");
+    } catch (err: any) {
+      console.error(err);
+      onToast(`Erro ao processar PDF: ${err.message}`, "error");
+    } finally {
+      setIsProcessingPdf(false);
+      e.target.value = "";
+    }
+  };
+
+  const [logoPreview, setLogoPreview] = useState<string | null>(
+    botConfig?.loginLogo || null,
+  );
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+
+  useEffect(() => {
+    if (botConfig?.loginLogo) {
+      setLogoPreview(botConfig.loginLogo);
+    } else {
+      setLogoPreview(null);
+    }
+  }, [botConfig?.loginLogo]);
+
+  const handleLogoUploadProcess = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      onToast("Por favor, envie apenas arquivos de imagem.", "error");
+      return;
+    }
+
+    setIsUploadingLogo(true);
+    try {
+      const compressImage = (f: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(f);
+          reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement("canvas");
+              const MAX_WIDTH = 400;
+              const MAX_HEIGHT = 400;
+              let width = img.width;
+              let height = img.height;
+
+              if (width > height) {
+                if (width > MAX_WIDTH) {
+                  height *= MAX_WIDTH / width;
+                  width = MAX_WIDTH;
+                }
+              } else {
+                if (height > MAX_HEIGHT) {
+                  width *= MAX_HEIGHT / height;
+                  height = MAX_HEIGHT;
+                }
+              }
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext("2d");
+              if (ctx) {
+                ctx.drawImage(img, 0, 0, width, height);
+                const dataUrl = canvas.toDataURL("image/png", 0.85);
+                resolve(dataUrl);
+              } else {
+                resolve(event.target?.result as string);
+              }
+            };
+            img.onerror = (err) => reject(err);
+            img.src = event.target?.result as string;
+          };
+          reader.onerror = (err) => reject(err);
+        });
+      };
+
+      const base64Image = await compressImage(file);
+      setLogoPreview(base64Image);
+
+      await setDoc(
+        doc(db, COLLECTIONS.BOT_CONFIG, "main"),
+        {
+          loginLogo: base64Image,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true },
+      );
+
+      onToast("Logotipo atualizado com sucesso!");
+    } catch (err: any) {
+      console.error(err);
+      onToast(`Erro ao enviar logotipo: ${err.message}`, "error");
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  };
+
+  const [newLink, setNewLink] = useState({ nome: "", url: "", local: "" });
+  const [editingLink, setEditingLink] = useState<LinkUtil | null>(null);
+  const [newPlanner, setNewPlanner] = useState({
+    atendenteName: "",
+    baseName: "",
+    dayOfWeek: "Segunda-feira",
+  });
+  const [newPeriodo, setNewPeriodo] = useState({
+    nome: "",
+    inicioInscricao: "",
+    fimInscricao: "",
+    inicioMatFin: "",
+    fimMatFin: "",
+    inicioMatAcad: "",
+    fimMatAcad: "",
+  });
+  const [newBomDia, setNewBomDia] = useState({
+    titulo: "",
+    metaFinal: { insc: 0, matFin: 0, matAcad: 0 },
+    metaDia: { insc: 0, matFin: 0, matAcad: 0 },
+    anoAnterior: { insc: 0, matFin: 0, matAcad: 0 },
+    real: { insc: 0, matFin: 0, matAcad: 0 },
+  });
+  const [newForecast, setNewForecast] = useState({
+    nome: "",
+    dataInicio: new Date().toISOString().split("T")[0],
+    dataFim: new Date().toISOString().split("T")[0],
+    metaDiaYTD: 0,
+    realizado: 0,
+    metaFechamento: 0,
+  });
+
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  const [changingPasswordUser, setChangingPasswordUser] =
+    useState<UserProfile | null>(null);
+  const [newPasswordValue, setNewPasswordValue] = useState("");
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [editingBomDia, setEditingBomDia] = useState<BomDiaCaptacao | null>(
+    null,
+  );
+  const [editingForecast, setEditingForecast] =
+    useState<ForecastCaptacao | null>(null);
+  const [editingMetaDia, setEditingMetaDia] = useState<MetaDia | null>(null);
+  const [newMetaDia, setNewMetaDia] = useState({
+    data: new Date().toISOString().split("T")[0],
+    aaPresencial: 0,
+    ytdPresencial: 0,
+    realizadoPresencial: 0,
+    aaSemipresencial: 0,
+    ytdSemipresencial: 0,
+    realizadoSemipresencial: 0,
+    aaDigital: 0,
+    ytdDigital: 0,
+    realizadoDigital: 0,
+    aaTecnico: 0,
+    ytdTecnico: 0,
+    realizadoTecnico: 0,
+    aaPosGraduacao: 0,
+    ytdPosGraduacao: 0,
+    realizadoPosGraduacao: 0,
+  });
+
+  const [editingQgLigacao, setEditingQgLigacao] = useState<QgLigacao | null>(
+    null,
+  );
+  const [newQgLigacao, setNewQgLigacao] = useState<{
+    nome: string;
+    diaSemana: string[];
+    horario: string;
+  }>({
+    nome: "",
+    diaSemana: [],
+    horario: "",
+  });
+
+  const [isAddingUser, setIsAddingUser] = useState(false);
+
+  const handleAddMetaDia = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        data: newMetaDia.data,
+        aaPresencial: Number(newMetaDia.aaPresencial),
+        ytdPresencial: Number(newMetaDia.ytdPresencial),
+        realizadoPresencial: Number(newMetaDia.realizadoPresencial),
+        aaSemipresencial: Number(newMetaDia.aaSemipresencial),
+        ytdSemipresencial: Number(newMetaDia.ytdSemipresencial),
+        realizadoSemipresencial: Number(newMetaDia.realizadoSemipresencial),
+        aaDigital: Number(newMetaDia.aaDigital),
+        ytdDigital: Number(newMetaDia.ytdDigital),
+        realizadoDigital: Number(newMetaDia.realizadoDigital),
+        aaTecnico: Number(newMetaDia.aaTecnico || 0),
+        ytdTecnico: Number(newMetaDia.ytdTecnico || 0),
+        realizadoTecnico: Number(newMetaDia.realizadoTecnico || 0),
+        aaPosGraduacao: Number(newMetaDia.aaPosGraduacao || 0),
+        ytdPosGraduacao: Number(newMetaDia.ytdPosGraduacao || 0),
+        realizadoPosGraduacao: Number(newMetaDia.realizadoPosGraduacao || 0),
+      };
+
+      if (editingMetaDia) {
+        await updateDoc(
+          doc(db, COLLECTIONS.META_DIA, editingMetaDia.id),
+          payload,
+        );
+        onToast("Meta DiÃ¡ria atualizada com sucesso!");
+        setEditingMetaDia(null);
+      } else {
+        await addDoc(collection(db, COLLECTIONS.META_DIA), {
+          ...payload,
+          createdAt: serverTimestamp(),
+        });
+        onToast("Meta DiÃ¡ria cadastrada com sucesso!");
+      }
+
+      setNewMetaDia({
+        data: new Date().toISOString().split("T")[0],
+        aaPresencial: 0,
+        ytdPresencial: 0,
+        realizadoPresencial: 0,
+        aaSemipresencial: 0,
+        ytdSemipresencial: 0,
+        realizadoSemipresencial: 0,
+        aaDigital: 0,
+        ytdDigital: 0,
+        realizadoDigital: 0,
+        aaTecnico: 0,
+        ytdTecnico: 0,
+        realizadoTecnico: 0,
+        aaPosGraduacao: 0,
+        ytdPosGraduacao: 0,
+        realizadoPosGraduacao: 0,
+      });
+    } catch (err: any) {
+      onToast(`Erro ao salvar Meta DiÃ¡ria: ${err.message}`, "error");
+    }
+  };
+
+  const handleAddQgLigacao = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        nome: newQgLigacao.nome,
+        diaSemana: newQgLigacao.diaSemana,
+        horario: newQgLigacao.horario,
+      };
+
+      if (editingQgLigacao) {
+        await updateDoc(
+          doc(db, COLLECTIONS.QG_LIGACOES, editingQgLigacao.id),
+          payload,
+        );
+        onToast("QG LigaÃ§Ãµes atualizado com sucesso!");
+        setEditingQgLigacao(null);
+      } else {
+        await addDoc(collection(db, COLLECTIONS.QG_LIGACOES), {
+          ...payload,
+          createdAt: serverTimestamp(),
+        });
+        onToast("QG LigaÃ§Ãµes cadastrado com sucesso!");
+      }
+
+      setNewQgLigacao({
+        nome: "",
+        diaSemana: [],
+        horario: "",
+      });
+    } catch (err: any) {
+      onToast(`Erro ao salvar QG LigaÃ§Ãµes: ${err.message}`, "error");
+    }
+  };
+
+  const handleDeleteQgLigacao = async (id: string) => {
+    if (!window.confirm("Deseja apagar este registro do QG LigaÃ§Ãµes?")) return;
+    try {
+      await deleteDoc(doc(db, COLLECTIONS.QG_LIGACOES, id));
+      onToast("Registro apagado com sucesso!");
+    } catch (err: any) {
+      onToast(`Erro ao apagar QG LigaÃ§Ãµes: ${err.message}`, "error");
+    }
+  };
+
+  const handleUpdateUser = async (uid: string, data: Partial<UserProfile>) => {
+    try {
+      await updateDoc(doc(db, COLLECTIONS.USERS, uid), {
+        ...data,
+        updatedAt: serverTimestamp(),
+      });
+      onToast("UsuÃ¡rio atualizado!");
+      setEditingUser(null);
+    } catch (err: any) {
+      onToast(err.message, "error");
+    }
+  };
+
+  const handleDeleteUser = async (uid: string) => {
+    if (
+      window.confirm(
+        "Deseja excluir permanentemente este usuÃ¡rio? Esta aÃ§Ã£o nÃ£o pode ser desfeita.",
+      )
+    ) {
+      try {
+        await deleteDoc(doc(db, COLLECTIONS.USERS, uid));
+        onToast("UsuÃ¡rio excluÃ­do com sucesso.");
+      } catch (err: any) {
+        handleFirestoreError(
+          err,
+          OperationType.DELETE,
+          `${COLLECTIONS.USERS}/${uid}`,
+        );
+        onToast("Erro ao excluir usuÃ¡rio.", "error");
+      }
+    }
+  };
+
+  const handleAddLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingLink) {
+        await updateDoc(doc(db, COLLECTIONS.LINKS, editingLink.id), newLink);
+        onToast("Link atualizado!");
+        setEditingLink(null);
+      } else {
+        await addDoc(collection(db, COLLECTIONS.LINKS), newLink);
+        onToast("Link adicionado!");
+      }
+      setNewLink({ nome: "", url: "", local: "" });
+    } catch (err: any) {
+      onToast(err.message, "error");
+    }
+  };
+
+  const handleAddBomDia = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingBomDia) {
+        await updateDoc(doc(db, COLLECTIONS.BOM_DIA, editingBomDia.id), {
+          ...newBomDia,
+          updatedAt: serverTimestamp(),
+        });
+        onToast("Bom Dia atualizado!");
+        setEditingBomDia(null);
+      } else {
+        await addDoc(collection(db, COLLECTIONS.BOM_DIA), {
+          ...newBomDia,
+          data: new Date().toISOString().split("T")[0],
+          createdAt: serverTimestamp(),
+        });
+        onToast("Bom Dia adicionado!");
+      }
+      setNewBomDia({
+        titulo: "",
+        metaFinal: { insc: 0, matFin: 0, matAcad: 0 },
+        metaDia: { insc: 0, matFin: 0, matAcad: 0 },
+        anoAnterior: { insc: 0, matFin: 0, matAcad: 0 },
+        real: { insc: 0, matFin: 0, matAcad: 0 },
+      });
+    } catch (err: any) {
+      onToast("Erro ao salvar Bom Dia.", "error");
+    }
+  };
+
+  const handleAddForecast = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingForecast) {
+        await updateDoc(doc(db, COLLECTIONS.FORECAST, editingForecast.id), {
+          ...newForecast,
+          updatedAt: serverTimestamp(),
+        });
+        onToast("Forecast atualizado!");
+        setEditingForecast(null);
+      } else {
+        await addDoc(collection(db, COLLECTIONS.FORECAST), {
+          ...newForecast,
+          createdAt: serverTimestamp(),
+        });
+        onToast("Forecast criado!");
+      }
+      setNewForecast({
+        nome: "",
+        dataInicio: new Date().toISOString().split("T")[0],
+        dataFim: new Date().toISOString().split("T")[0],
+        metaDiaYTD: 0,
+        realizado: 0,
+        metaFechamento: 0,
+      });
+    } catch (err: any) {
+      onToast("Erro ao salvar Forecast.", "error");
+    }
+  };
+
+  const handleAddPlanner = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await addDoc(collection(db, COLLECTIONS.PLANNER), {
+        ...newPlanner,
+        createdAt: serverTimestamp(),
+      });
+      onToast("Planner adicionado!");
+      setNewPlanner({
+        atendenteName: "",
+        baseName: "",
+        dayOfWeek: "Segunda-feira",
+      });
+    } catch (err: any) {
+      onToast("Erro ao salvar Planner.", "error");
+    }
+  };
+
+  const handleAddPeriodo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await addDoc(collection(db, COLLECTIONS.PERIODO_CAPTACAO), {
+        ...newPeriodo,
+        createdAt: serverTimestamp(),
+      });
+      onToast("PerÃ­odo adicionado!");
+      setNewPeriodo({
+        nome: "",
+        inicioInscricao: "",
+        fimInscricao: "",
+        inicioMatFin: "",
+        fimMatFin: "",
+        inicioMatAcad: "",
+        fimMatAcad: "",
+      });
+    } catch (err: any) {
+      onToast("Erro ao salvar PerÃ­odo.", "error");
+    }
+  };
+
+  const handleBackup = () => {
+    const data = {
+      leads,
+      bases,
+      gap,
+      planner,
+      links,
+      users,
+      campanhas,
+      bomDia,
+      forecast,
+      periodos,
+      whatsappMessages,
+      empresasParceiras,
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `backup_angra_leads_${new Date().toISOString().split("T")[0]}.json`;
+    a.click();
+    onToast("Backup gerado com sucesso!");
+  };
+
+  return (
+    <div className="space-y-8 pb-12">
+      <div className="flex overflow-x-auto space-x-2 border-b border-slate-200 pb-4 mb-6 scrollbar-hide">
+        {[
+          { id: "usuarios", label: "UsuÃ¡rios", roles: ["Admin Master", "LÃ­der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
+          { id: "funcionarios", label: "FuncionÃ¡rios (Insumos)", roles: ["Admin Master", "LÃ­der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
+          { id: "folgas", label: "Folgas e FÃ©rias", roles: ["Admin Master", "LÃ­der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)", "Gestor Unidade"] },
+          { id: "bomDia", label: "Bom Dia CaptaÃ§Ã£o", roles: ["Admin Master", "LÃ­der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
+          { id: "forecast", label: "Forecast", roles: ["Admin Master", "LÃ­der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)", "Gestor Unidade"] },
+          { id: "metaDia", label: "Meta Dia", roles: ["Admin Master", "LÃ­der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
+          { id: "metaSM", label: "Meta SM", roles: ["Admin Master", "LÃ­der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
+          { id: "metaCursos", label: "Meta Cursos", roles: ["Admin Master", "LÃ­der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
+          { id: "qgLigacoes", label: "QG LigaÃ§Ãµes", roles: ["Admin Master", "LÃ­der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
+          { id: "planner", label: "Planner da Semana", roles: ["Admin Master", "LÃ­der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
+          { id: "periodo", label: "PerÃ­odo da CaptaÃ§Ã£o", roles: ["Admin Master", "LÃ­der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
+          { id: "whatsapp", label: "GestÃ£o WhatsApp", roles: ["Admin Master", "LÃ­der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
+          { id: "treinamento", label: "Treinamento Bot", roles: ["Admin Master", "LÃ­der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
+          { id: "links", label: "Links Ãšteis", roles: ["Admin Master", "LÃ­der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)", "Gestor Unidade"] },
+          { id: "logo", label: "Logotipo do Login", roles: ["Admin Master", "LÃ­der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)"] },
+          { id: "formularios", label: "FormulÃ¡rios", roles: ["Admin Master", "LÃ­der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)", "Gestor Unidade"] },
+          { id: "crescimentoAnual", label: "Crescimento Anual", roles: ["Admin Master", "LÃ­der/FDV", "Gestor Comercial", "Gerente Comercial (Comercial)", "Gestor Unidade"] },
+          { id: "backup", label: "Backup e SeguranÃ§a", roles: ["Admin Master"] },
+        ].filter(t => !t.roles || t.roles.includes(profile?.role || "")).map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
+              activeTab === tab.id
+                ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "usuarios" && (
+        <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+            <h3 className="text-xl font-bold text-slate-900">
+              Gerenciar UsuÃ¡rios
+            </h3>
+            <button
+              onClick={() => setIsAddingUser(true)}
+              className="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center space-x-2 text-sm"
+            >
+              <UserPlus size={18} />
+              <span>Novo UsuÃ¡rio</span>
+            </button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                  <th className="px-6 py-4">Nome</th>
+                  <th className="px-6 py-4">Email</th>
+                  <th className="px-6 py-4">CPF</th>
+                  <th className="px-6 py-4">Telefone</th>
+                  <th className="px-6 py-4">Unidade</th>
+                  <th className="px-6 py-4">Cargo</th>
+                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">AÃ§Ãµes</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {users.map((u) => (
+                  <tr
+                    key={u.uid}
+                    className={cn(
+                      "hover:bg-slate-50 transition-colors",
+                      u.blocked && "bg-rose-50/50",
+                    )}
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs">
+                          {u.name.charAt(0)}
+                        </div>
+                        <span className="font-bold text-slate-900">
+                          {u.name}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-500">
+                      {u.email}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-500">
+                      {u.cpf || "-"}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-500">
+                      {u.phone || "-"}
+                    </td>
+                    <td className="px-6 py-4">
+                      <select
+                        value={u.unidade || ""}
+                        onChange={(e) =>
+                          handleUpdateUser(u.uid, {
+                            unidade: e.target.value,
+                          })
+                        }
+                        className="text-xs font-bold border-none bg-transparent focus:ring-0 text-slate-700 w-full"
+                      >
+                        <option value="">Nenhuma</option>
+                        {uniqueUnidades.map((un) => (
+                          <option key={un} value={un}>
+                            {un}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-6 py-4">
+                      <select
+                        value={u.role}
+                        onChange={(e) =>
+                          handleUpdateUser(u.uid, {
+                            role: e.target.value as UserRole,
+                          })
+                        }
+                        className="text-xs font-bold border-none bg-transparent focus:ring-0 text-slate-700"
+                      >
+                        {Object.values(ROLES).map((r) => (
+                          <option key={r} value={r}>
+                            {r}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={cn(
+                          "px-2 py-1 rounded-full text-[10px] font-bold uppercase",
+                          u.blocked
+                            ? "bg-rose-100 text-rose-600"
+                            : "bg-emerald-100 text-emerald-600",
+                        )}
+                      >
+                        {u.blocked ? "Bloqueado" : "Ativo"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => {
+                            setChangingPasswordUser(u);
+                            setNewPasswordValue("");
+                            setPasswordError(null);
+                          }}
+                          className="p-2 text-sky-500 hover:bg-sky-50 rounded-lg transition-all"
+                          title="Alterar Senha"
+                        >
+                          <KeyRound size={16} />
+                        </button>
+                        <button
+                          onClick={() => setEditingUser(u)}
+                          className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-all"
+                          title="Editar Perfil"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleUpdateUser(u.uid, { blocked: !u.blocked })
+                          }
+                          className={cn(
+                            "p-2 rounded-lg transition-all",
+                            u.blocked
+                              ? "text-emerald-500 hover:bg-emerald-50"
+                              : "text-amber-500 hover:bg-amber-50",
+                          )}
+                          title={u.blocked ? "Desbloquear" : "Bloquear"}
+                        >
+                          {u.blocked ? (
+                            <Unlock size={16} />
+                          ) : (
+                            <Lock size={16} />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(u.uid)}
+                          className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                          title="Excluir UsuÃ¡rio"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {editingUser && (
+            <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
+              >
+                <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                  <h3 className="text-xl font-bold text-slate-900">
+                    Editar Perfil
+                  </h3>
+                  <button
+                    onClick={() => setEditingUser(null)}
+                    className="text-slate-400 hover:bg-slate-50 p-2 rounded-lg"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    const updateData: any = {
+                      name: formData.get("name") as string,
+                      phone: formData.get("phone") as string,
+                      email: formData.get("email") as string,
+                      cpf: formData.get("cpf") as string,
+                      dataNascimento: formData.get("dataNascimento") as string,
+                      chavePix: formData.get("chavePix") as string,
+                      telegram: formData.get("telegram") as string,
+                      botNumber: formData.get("botNumber") as string,
+                      unidade: formData.get("unidade") as string,
+                      role: formData.get("role") as string,
+                    };
+                    if (updateData.role === ROLES.PROMOTOR_RUA) {
+                      updateData.linkadoA = formData.get("linkadoA") as string;
+                    }
+                    handleUpdateUser(editingUser.uid, updateData);
+                  }}
+                  className="p-6 space-y-4"
+                >
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Nome Completo
+                    </label>
+                    <input
+                      name="name"
+                      required
+                      defaultValue={editingUser.name}
+                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Email
+                    </label>
+                    <input
+                      name="email"
+                      type="email"
+                      required
+                      defaultValue={editingUser.email}
+                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      CPF (Opcional)
+                    </label>
+                    <input
+                      name="cpf"
+                      defaultValue={editingUser.cpf || ""}
+                      onChange={(e) =>
+                        (e.target.value = formatCPF(e.target.value))
+                      }
+                      placeholder="000.000.000-00"
+                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Data de Nascimento (Opcional)
+                    </label>
+                    <input
+                      name="dataNascimento"
+                      type="date"
+                      defaultValue={editingUser.dataNascimento || ""}
+                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Telefone (Contato)
+                    </label>
+                    <input
+                      name="phone"
+                      defaultValue={editingUser.phone}
+                      onChange={(e) =>
+                        (e.target.value = formatPhone(e.target.value))
+                      }
+                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      placeholder="(00) 00000-0000"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Telefone da IA (Multi-Device)
+                    </label>
+                    <input
+                      name="botNumber"
+                      defaultValue={editingUser.botNumber || ""}
+                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      placeholder="Ex: 5511999999999 (Somente nÃºmeros)"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      Este serÃ¡ o nÃºmero de WhatsApp usado pelo sistema para
+                      enviar mensagens desta conta.
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Unidade (Para Gestor Unidade / FDV Comercial)
+                    </label>
+                    <select
+                      name="unidade"
+                      defaultValue={editingUser.unidade || ""}
+                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                    >
+                      <option value="">Selecione uma unidade</option>
+                      {uniqueUnidades.map((unidade) => (
+                        <option key={unidade} value={unidade}>
+                          {unidade}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Cargo
+                    </label>
+                    <select
+                      name="role"
+                      defaultValue={editingUser.role}
+                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                    >
+                      {Object.values(ROLES)
+                        .filter((r) => {
+                          const isComercial =
+                            localStorage.getItem("servidor_selected") ===
+                            "comercial";
+                          if (isComercial) {
+                            return [
+                              "Admin Master",
+                              "Gerente Comercial (Comercial)",
+                              "FDV (Comercial)",
+                              "Promotor/rua",
+                              "Financeiro",
+                            ].includes(r);
+                          } else {
+                            return ![
+                              "Gerente Comercial (Comercial)",
+                              "FDV (Comercial)",
+                              "Promotor/rua",
+                            ].includes(r);
+                          }
+                        })
+                        .map((r) => (
+                          <option key={r} value={r}>
+                            {r}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Linkado a (FDV - Apenas para Promotor/rua)
+                    </label>
+                    <select
+                      name="linkadoA"
+                      defaultValue={editingUser.linkadoA || ""}
+                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                    >
+                      <option value="">Nenhum/NÃ£o se aplica</option>
+                      {users
+                        .filter(
+                          (u) =>
+                            u.role === ROLES.FDV_COMERCIAL ||
+                            u.role === ROLES.FDV,
+                        )
+                        .map((fdv) => (
+                          <option key={fdv.uid} value={fdv.uid}>
+                            {fdv.name} ({fdv.email})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Chave PIX (Opcional)
+                    </label>
+                    <input
+                      name="chavePix"
+                      defaultValue={editingUser.chavePix}
+                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      placeholder="CPF, Email, Telefone ou Chave AleatÃ³ria"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Telegram (@username ou Chat ID) (Opcional)
+                    </label>
+                    <input
+                      name="telegram"
+                      defaultValue={editingUser.telegram || ""}
+                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      placeholder="@username ou Chat ID"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
+                  >
+                    Salvar AlteraÃ§Ãµes
+                  </button>
+                </form>
+              </motion.div>
+            </div>
+          )}
+
+          {changingPasswordUser &&
+            (() => {
+              const isMasterAdmin =
+                profile?.role === "Admin Master" ||
+                profile?.email === "marcos.teixeira@estacio.br" ||
+                profile?.email === "canaldonutri@gmail.com";
+              return (
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
+                  >
+                    <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                      <div>
+                        <h3 className="text-lg font-bold text-slate-900">
+                          {isMasterAdmin
+                            ? "Alterar Senha do UsuÃ¡rio"
+                            : "Redefinir Senha do UsuÃ¡rio"}
+                        </h3>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {isMasterAdmin
+                            ? `Defina uma nova senha para ${changingPasswordUser.name}`
+                            : `Envie um e-mail de redefiniÃ§Ã£o para ${changingPasswordUser.name}`}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setChangingPasswordUser(null)}
+                        className="text-slate-400 hover:bg-slate-200 p-2 rounded-lg transition-colors"
+                      >
+                        <X size={20} />
+                      </button>
+                    </div>
+
+                    <div className="p-6 space-y-6">
+                      {isMasterAdmin ? (
+                        <>
+                          {/* Option 1: Direct Password Change */}
+                          <form
+                            onSubmit={async (e) => {
+                              e.preventDefault();
+                              setPasswordError(null);
+                              if (
+                                !newPasswordValue ||
+                                newPasswordValue.length < 6
+                              ) {
+                                onToast(
+                                  "A senha deve ter pelo menos 6 caracteres.",
+                                  "error",
+                                );
+                                return;
+                              }
+
+                              setIsUpdatingPassword(true);
+                              try {
+                                const response = await fetch(
+                                  "/api/direct-pw-update",
+                                  {
+                                    method: "POST",
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                    },
+                                    body: JSON.stringify({
+                                      uid: changingPasswordUser.uid,
+                                      newPassword: newPasswordValue,
+                                      servidor:
+                                        localStorage.getItem(
+                                          "servidor_selected",
+                                        ) || "principal",
+                                      adminEmail: profile?.email,
+                                    }),
+                                  },
+                                );
+
+                                const responseText = await response.text();
+                                let result;
+                                try {
+                                  result = JSON.parse(responseText);
+                                } catch (parseErr) {
+                                  console.error(
+                                    "Non-JSON response received:",
+                                    responseText,
+                                  );
+                                  const prefix = responseText
+                                    ? responseText.substring(0, 120).trim()
+                                    : "Vazio";
+                                  throw new Error(
+                                    `O servidor retornou uma resposta invÃ¡lida (HTML: "${prefix}..."). Isso geralmente ocorre se as credenciais administrativas para alteraÃ§Ã£o direta nÃ£o estiverem totalmente configuradas ou se o servidor de desenvolvimento estiver em processo de atualizaÃ§Ã£o. Por favor, utilize a opÃ§Ã£o "Enviar E-mail de RedefiniÃ§Ã£o" abaixo, que Ã© 100% nativa e funciona perfeitamente para ambos os servidores!`,
+                                  );
+                                }
+
+                                if (result.success) {
+                                  onToast(
+                                    `Senha de ${changingPasswordUser.name} alterada com sucesso!`,
+                                    "success",
+                                  );
+                                  setChangingPasswordUser(null);
+                                } else {
+                                  setPasswordError(result.error);
+                                  onToast(`Erro: ${result.error}`, "error");
+                                }
+                              } catch (err: any) {
+                                setPasswordError(err.message);
+                                onToast(
+                                  `Erro ao alterar senha: ${err.message}`,
+                                  "error",
+                                );
+                              } finally {
+                                setIsUpdatingPassword(false);
+                              }
+                            }}
+                            className="space-y-4"
+                          >
+                            {passwordError && (
+                              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl space-y-1.5 leading-relaxed">
+                                <p className="font-semibold text-red-800">
+                                  Erro ao alterar senha:
+                                </p>
+                                <p className="break-all">{passwordError}</p>
+                                {passwordError.includes("identitytoolkit") && (
+                                  <div className="mt-2 pt-2 border-t border-red-100">
+                                    <p className="font-bold text-red-950">
+                                      AÃ§Ã£o NecessÃ¡ria:
+                                    </p>
+                                    <p className="mt-1 text-red-800">
+                                      A API{" "}
+                                      <strong>Google Identity Toolkit</strong>{" "}
+                                      precisa ser ativada no seu projeto Google
+                                      Cloud para permitir a alteraÃ§Ã£o
+                                      administrativa de senhas.
+                                    </p>
+                                    <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0 mt-2.5">
+                                      <a
+                                        href="https://console.developers.google.com/apis/api/identitytoolkit.googleapis.com/overview?project=gestaopro-761e1"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center justify-center space-x-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors text-[11px]"
+                                      >
+                                        <span>
+                                          Ativar no Principal (gestaopro-761e1)
+                                        </span>
+                                      </a>
+                                      <a
+                                        href="https://console.developers.google.com/apis/api/identitytoolkit.googleapis.com/overview?project=gestaodeleadspro-d4230"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center justify-center space-x-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-colors text-[11px]"
+                                      >
+                                        <span>
+                                          Ativar no Comercial
+                                          (gestaodeleadspro-d4230)
+                                        </span>
+                                      </a>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            <div>
+                              <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                                Nova Senha
+                              </label>
+                              <input
+                                type="text"
+                                required
+                                placeholder="Digite a nova senha (mÃ­nimo 6 caracteres)"
+                                value={newPasswordValue}
+                                onChange={(e) =>
+                                  setNewPasswordValue(e.target.value)
+                                }
+                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                              />
+                            </div>
+
+                            <button
+                              type="submit"
+                              disabled={isUpdatingPassword}
+                              className="w-full bg-blue-600 text-white py-2.5 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 disabled:bg-blue-300 disabled:cursor-not-allowed flex items-center justify-center space-x-2 cursor-pointer"
+                            >
+                              {isUpdatingPassword ? (
+                                <span>Alterando...</span>
+                              ) : (
+                                <>
+                                  <KeyRound size={16} />
+                                  <span>Definir Nova Senha Diretamente</span>
+                                </>
+                              )}
+                            </button>
+                          </form>
+
+                          <div className="relative flex py-2 items-center">
+                            <div className="flex-grow border-t border-slate-100"></div>
+                            <span className="flex-shrink mx-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                              ou
+                            </span>
+                            <div className="flex-grow border-t border-slate-100"></div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="p-4 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-2xl space-y-2 leading-relaxed">
+                          <p className="font-bold text-amber-900 flex items-center">
+                            <svg
+                              className="w-4.5 h-4.5 mr-2 text-amber-600 flex-shrink-0"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2.5}
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                              />
+                            </svg>
+                            Recurso Restrito ao Admin Master
+                          </p>
+                          <p>
+                            Por motivos de seguranÃ§a e integridade das contas, a{" "}
+                            <strong>
+                              alteraÃ§Ã£o direta de senha administrativa
+                            </strong>{" "}
+                            Ã© de uso exclusivo do Admin Master.
+                          </p>
+                          <p>
+                            Como administrador, vocÃª pode disparar o fluxo de
+                            redefiniÃ§Ã£o enviando um e-mail com link seguro para
+                            o endereÃ§o cadastrado do usuÃ¡rio no botÃ£o abaixo.
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Option 2: Email Password Reset */}
+                      <div className="space-y-3">
+                        <p className="text-xs text-slate-500 text-center">
+                          {isMasterAdmin
+                            ? "VocÃª tambÃ©m pode enviar um e-mail de redefiniÃ§Ã£o para o endereÃ§o cadastrado do usuÃ¡rio."
+                            : "Envie um link seguro de redefiniÃ§Ã£o para o endereÃ§o cadastrado do usuÃ¡rio."}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (
+                              window.confirm(
+                                `Deseja enviar um e-mail de redefiniÃ§Ã£o de senha para ${changingPasswordUser.name} (${changingPasswordUser.email})?`,
+                              )
+                            ) {
+                              try {
+                                await sendPasswordResetEmail(
+                                  auth,
+                                  changingPasswordUser.email,
+                                );
+                                onToast(
+                                  "E-mail de redefiniÃ§Ã£o enviado com sucesso!",
+                                  "success",
+                                );
+                                setChangingPasswordUser(null);
+                              } catch (err: any) {
+                                onToast(
+                                  `Erro ao enviar e-mail: ${err.message}`,
+                                  "error",
+                                );
+                              }
+                            }
+                          }}
+                          className="w-full bg-blue-50 text-blue-700 hover:bg-blue-100 py-2.5 rounded-xl font-bold transition-all text-xs text-center cursor-pointer"
+                        >
+                          Enviar E-mail de RedefiniÃ§Ã£o de Senha
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+              );
+            })()}
+
+          {isAddingUser && (
+            <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
+              >
+                <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                  <h3 className="text-xl font-bold text-slate-900">
+                    Novo UsuÃ¡rio
+                  </h3>
+                  <button
+                    onClick={() => setIsAddingUser(false)}
+                    className="text-slate-400 hover:bg-slate-50 p-2 rounded-lg"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    const email = formData.get("email") as string;
+                    const name = formData.get("name") as string;
+                    const role = formData.get("role") as UserRole;
+                    const linkadoA = formData.get("linkadoA")?.toString() || "";
+
+                    try {
+                      // Create user in Auth using secondary app to avoid signing out admin
+                      const userCredential =
+                        await createUserWithEmailAndPassword(
+                          secondaryAuth,
+                          email,
+                          "123456",
+                        );
+                      await updateProfile(userCredential.user, {
+                        displayName: name,
+                      });
+                      const newUid = userCredential.user.uid;
+
+                      const profileData: any = {
+                        uid: newUid,
+                        name,
+                        email,
+                        cpf: (formData.get("cpf") as string) || "",
+                        dataNascimento:
+                          (formData.get("dataNascimento") as string) || "",
+                        role,
+                        servidor:
+                          localStorage.getItem("servidor_selected") ||
+                          "principal",
+                        phone: formData.get("phone") as string,
+                        chavePix: formData.get("chavePix") as string,
+                        telegram: (formData.get("telegram") as string) || "",
+                        unidade: (formData.get("unidade") as string) || "",
+                        blocked: false,
+                        mustChangePassword: true,
+                        createdAt: serverTimestamp(),
+                        updatedAt: serverTimestamp(),
+                      };
+                      if (role === ROLES.PROMOTOR_RUA && linkadoA) {
+                        profileData.linkadoA = linkadoA;
+                      }
+
+                      // Create profile in Firestore
+                      await setDoc(
+                        doc(db, COLLECTIONS.USERS, newUid),
+                        profileData,
+                      );
+
+                      onToast(
+                        "UsuÃ¡rio criado com sucesso! Senha padrÃ£o: 123456",
+                      );
+                      setIsAddingUser(false);
+                      // Sign out from secondary auth to clean up
+                      await signOut(secondaryAuth);
+                    } catch (err: any) {
+                      console.error("Auth error details (UsersView):", {
+                        code: err.code,
+                        message: err.message,
+                        stack: err.stack,
+                      });
+                      onToast(
+                        err.message ===
+                          "Firebase: Error (auth/email-already-in-use)."
+                          ? "Este email jÃ¡ estÃ¡ em uso."
+                          : `Erro ao criar usuÃ¡rio: ${err.message}`,
+                        "error",
+                      );
+                    }
+                  }}
+                  className="p-6 space-y-4"
+                >
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Nome Completo
+                    </label>
+                    <input
+                      name="name"
+                      required
+                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Email (Google)
+                    </label>
+                    <input
+                      name="email"
+                      type="email"
+                      required
+                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      CPF (Opcional)
+                    </label>
+                    <input
+                      name="cpf"
+                      onChange={(e) =>
+                        (e.target.value = formatCPF(e.target.value))
+                      }
+                      placeholder="000.000.000-00"
+                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Data de Nascimento (Opcional)
+                    </label>
+                    <input
+                      name="dataNascimento"
+                      type="date"
+                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Cargo
+                    </label>
+                    <select
+                      name="role"
+                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                    >
+                      {Object.values(ROLES)
+                        .filter((r) => {
+                          const isComercial =
+                            localStorage.getItem("servidor_selected") ===
+                            "comercial";
+                          if (isComercial) {
+                            return [
+                              "Admin Master",
+                              "Gerente Comercial (Comercial)",
+                              "FDV (Comercial)",
+                              "Promotor/rua",
+                              "Financeiro",
+                            ].includes(r);
+                          } else {
+                            return ![
+                              "Gerente Comercial (Comercial)",
+                              "FDV (Comercial)",
+                              "Promotor/rua",
+                            ].includes(r);
+                          }
+                        })
+                        .map((r) => (
+                          <option key={r} value={r}>
+                            {r}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Linkado a (FDV - Apenas para Promotor/rua)
+                    </label>
+                    <select
+                      name="linkadoA"
+                      className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                    >
+                      <option value="">Nenhum</option>
+                      {users
+                        .filter(
+                          (u) =>
+                            u.role === ROLES.FDV_COMERCIAL ||
+                            u.role === ROLES.FDV,
+                        )
+                        .map((fdv) => (
+                          <option key={fdv.uid} value={fdv.uid}>
+                            {fdv.name} ({fdv.email})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        Unidade (Para Gestor Unidade / FDV Comercial)
+                      </label>
+                      <select
+                        name="unidade"
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                      >
+                        <option value="">Selecione uma unidade</option>
+                        {uniqueUnidades.map((unidade) => (
+                          <option key={unidade} value={unidade}>
+                            {unidade}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        Telefone
+                      </label>
+                      <input
+                        name="phone"
+                        onChange={(e) =>
+                          (e.target.value = formatPhone(e.target.value))
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                        placeholder="(00) 00000-0000"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        Chave PIX
+                      </label>
+                      <input
+                        name="chavePix"
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">
+                        Telegram (@username ou Chat ID)
+                      </label>
+                      <input
+                        name="telegram"
+                        placeholder="@username ou Chat ID"
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
+                  >
+                    Criar UsuÃ¡rio
+                  </button>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </section>
+      )}
+
+      {activeTab === "metaSM" && (
+        <MetaSMView metaSM={metaSM} onToast={onToast} />
+      )}
+      {activeTab === "metaCursos" && (
+        <MetaCursosView metaCursos={metaCursos} onToast={onToast} />
+      )}
+      {activeTab === "metaDia" && (
+        <div className="space-y-8">
+          <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 max-w-4xl mx-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-slate-900">
+                {editingMetaDia
+                  ? "Editar Registro de Meta Dia"
+                  : "Adicionar Novo Registro de Meta Dia"}
+              </h3>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const dataToExport = metaDia.map((m) => ({
+                      Data: m.data,
+                      "A.A Presencial": m.aaPresencial,
+                      "Meta Presencial": m.ytdPresencial,
+                      "Realizado Presencial": m.realizadoPresencial,
+                      "A.A Semipresencial": m.aaSemipresencial,
+                      "Meta Semipresencial": m.ytdSemipresencial,
+                      "Realizado Semipresencial": m.realizadoSemipresencial,
+                      "A.A Digital": m.aaDigital,
+                      "Meta Digital": m.ytdDigital,
+                      "Realizado Digital": m.realizadoDigital,
+                      "A.A TÃ©cnico": m.aaTecnico || 0,
+                      "Meta TÃ©cnico": m.ytdTecnico || 0,
+                      "Realizado TÃ©cnico": m.realizadoTecnico || 0,
+                      "A.A PÃ³s-GraduaÃ§Ã£o": m.aaPosGraduacao || 0,
+                      "Meta PÃ³s-GraduaÃ§Ã£o": m.ytdPosGraduacao || 0,
+                      "Realizado PÃ³s-GraduaÃ§Ã£o": m.realizadoPosGraduacao || 0,
+                    }));
+                    exportToExcel(dataToExport, "Meta_Dia_Admin");
+                  }}
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors"
+                >
+                  <Download size={14} /> Exportar
+                </button>
+                <label className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors">
+                  <Upload size={14} /> Importar
+                  <input
+                    type="file"
+                    accept=".xlsx, .xls"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      importFromExcel(file, async (data) => {
+                        let imported = 0;
+                        for (const row of data) {
+                          try {
+                            if (!row["Data"]) continue;
+                            const docData = {
+                              data: row["Data"],
+                              aaPresencial: Number(row["A.A Presencial"]) || 0,
+                              ytdPresencial: Number(row["Meta Presencial"]) || 0,
+                              realizadoPresencial: Number(row["Realizado Presencial"]) || 0,
+                              aaSemipresencial: Number(row["A.A Semipresencial"]) || 0,
+                              ytdSemipresencial: Number(row["Meta Semipresencial"]) || 0,
+                              realizadoSemipresencial: Number(row["Realizado Semipresencial"]) || 0,
+                              aaDigital: Number(row["A.A Digital"]) || 0,
+                              ytdDigital: Number(row["Meta Digital"]) || 0,
+                              realizadoDigital: Number(row["Realizado Digital"]) || 0,
+                              aaTecnico: Number(row["A.A TÃ©cnico"]) || 0,
+                              ytdTecnico: Number(row["Meta TÃ©cnico"]) || 0,
+                              realizadoTecnico: Number(row["Realizado TÃ©cnico"]) || 0,
+                              aaPosGraduacao: Number(row["A.A PÃ³s-GraduaÃ§Ã£o"]) || 0,
+                              ytdPosGraduacao: Number(row["Meta PÃ³s-GraduaÃ§Ã£o"]) || 0,
+                              realizadoPosGraduacao: Number(row["Realizado PÃ³s-GraduaÃ§Ã£o"]) || 0,
+                              createdAt: serverTimestamp(),
+                            };
+                            await addDoc(collection(db, COLLECTIONS.META_DIA), docData);
+                            imported++;
+                          } catch (err) {
+                            console.error(err);
+                          }
+                        }
+                        onToast(imported + " registros importados!", "success");
+                      });
+                      e.target.value = ""; // reset
+                    }}
+                  />
+                </label>
+              </div>
+              {editingMetaDia && (
+                <button
+                  onClick={() => {
+                    setEditingMetaDia(null);
+                    setNewMetaDia({
+                      data: new Date().toISOString().split("T")[0],
+                      aaPresencial: 0,
+                      ytdPresencial: 0,
+                      realizadoPresencial: 0,
+                      aaSemipresencial: 0,
+                      ytdSemipresencial: 0,
+                      realizadoSemipresencial: 0,
+                      aaDigital: 0,
+                      ytdDigital: 0,
+                      realizadoDigital: 0,
+                      aaTecnico: 0,
+                      ytdTecnico: 0,
+                      realizadoTecnico: 0,
+                      aaPosGraduacao: 0,
+                      ytdPosGraduacao: 0,
+                      realizadoPosGraduacao: 0,
+                    });
+                  }}
+                  className="text-slate-400 hover:text-slate-600 text-sm font-bold"
+                >
+                  Cancelar EdiÃ§Ã£o
+                </button>
+              )}
+            </div>
+
+            <form onSubmit={handleAddMetaDia} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="flex items-center space-x-2 text-xs font-bold text-slate-500 mb-2">
+                    <Calendar size={14} className="text-blue-600" />
+                    <span>Data *</span>
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={newMetaDia.data}
+                    onChange={(e) =>
+                      setNewMetaDia({ ...newMetaDia, data: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                  />
+                </div>
+                <div className="flex bg-slate-50 items-center justify-around rounded-xl p-3 border border-slate-100/80">
+                  <div className="text-center">
+                    <span className="block text-[10px] font-bold text-slate-400 uppercase">
+                      Total A.A
+                    </span>
+                    <span className="text-sm font-extrabold text-slate-700">
+                      {Number(newMetaDia.aaPresencial) +
+                        Number(newMetaDia.aaSemipresencial) +
+                        Number(newMetaDia.aaDigital) +
+                        Number(newMetaDia.aaTecnico || 0)}
+                    </span>
+                  </div>
+                  <div className="text-center border-x border-slate-200 px-6">
+                    <span className="block text-[10px] font-bold text-slate-400 uppercase">
+                      Total YTD
+                    </span>
+                    <span className="text-sm font-extrabold text-blue-600">
+                      {Number(newMetaDia.ytdPresencial) +
+                        Number(newMetaDia.ytdSemipresencial) +
+                        Number(newMetaDia.ytdDigital) +
+                        Number(newMetaDia.ytdTecnico || 0)}
+                    </span>
+                  </div>
+                  <div className="text-center">
+                    <span className="block text-[10px] font-bold text-slate-400 uppercase">
+                      Total Realizado
+                    </span>
+                    <span className="text-sm font-extrabold text-emerald-600">
+                      {Number(newMetaDia.realizadoPresencial) +
+                        Number(newMetaDia.realizadoSemipresencial) +
+                        Number(newMetaDia.realizadoDigital) +
+                        Number(newMetaDia.realizadoTecnico || 0)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {[
+                {
+                  key: "Presencial",
+                  label: "Modalidade Presencial",
+                  color: "border-blue-100 bg-blue-50/10",
+                  aa: "aaPresencial",
+                  ytd: "ytdPresencial",
+                  realizado: "realizadoPresencial",
+                },
+                {
+                  key: "Semipresencial",
+                  label: "Modalidade Semipresencial",
+                  color: "border-orange-100 bg-orange-50/10",
+                  aa: "aaSemipresencial",
+                  ytd: "ytdSemipresencial",
+                  realizado: "realizadoSemipresencial",
+                },
+                {
+                  key: "Digital",
+                  label: "Modalidade Digital",
+                  color: "border-indigo-100 bg-indigo-50/10",
+                  aa: "aaDigital",
+                  ytd: "ytdDigital",
+                  realizado: "realizadoDigital",
+                },
+                {
+                  key: "Tecnico",
+                  label: "Curso TÃ©cnico",
+                  color: "border-emerald-100 bg-emerald-50/10",
+                  aa: "aaTecnico",
+                  ytd: "ytdTecnico",
+                  realizado: "realizadoTecnico",
+                },
+                {
+                  key: "PosGraduacao",
+                  label: "PÃ³s-GraduaÃ§Ã£o",
+                  color: "border-purple-100 bg-purple-50/10",
+                  aa: "aaPosGraduacao",
+                  ytd: "ytdPosGraduacao",
+                  realizado: "realizadoPosGraduacao",
+                },
+              ].map((modal) => (
+                <div
+                  key={modal.key}
+                  className="p-4 rounded-2xl border border-slate-100 bg-slate-50/30"
+                >
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4">
+                    {modal.label}
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                        A.A (Ano Anterior) *
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        value={newMetaDia[modal.aa as keyof typeof newMetaDia]}
+                        onChange={(e) =>
+                          setNewMetaDia({
+                            ...newMetaDia,
+                            [modal.aa]: Number(e.target.value),
+                          })
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                        YTD (Meta Dia) *
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        value={newMetaDia[modal.ytd as keyof typeof newMetaDia]}
+                        onChange={(e) =>
+                          setNewMetaDia({
+                            ...newMetaDia,
+                            [modal.ytd]: Number(e.target.value),
+                          })
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                        Realizado no Dia *
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        value={
+                          newMetaDia[modal.realizado as keyof typeof newMetaDia]
+                        }
+                        onChange={(e) =>
+                          setNewMetaDia({
+                            ...newMetaDia,
+                            [modal.realizado]: Number(e.target.value),
+                          })
+                        }
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-blue-100 flex items-center justify-center space-x-2 text-sm"
+              >
+                <span>
+                  {editingMetaDia
+                    ? "Salvar AlteraÃ§Ãµes"
+                    : "Salvar Registro de Meta Dia"}
+                </span>
+              </button>
+            </form>
+          </section>
+
+          {/* Table display */}
+          <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <h3 className="text-lg font-bold text-slate-900">
+                HistÃ³rico de Metas DiÃ¡rias
+              </h3>
+              <p className="text-xs text-slate-400 font-medium">
+                Registrados: {metaDia.length}
+              </p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-bold uppercase text-slate-400 tracking-wider">
+                    <th className="p-4">Data</th>
+                    <th className="p-4 text-center text-teal-600 bg-teal-50/20">
+                      B.U Presencial (A.A / YTD / Real)
+                    </th>
+                    <th className="p-4 text-center text-blue-600">
+                      Presencial (A.A / YTD / Real)
+                    </th>
+                    <th className="p-4 text-center text-orange-600">
+                      Semipresencial (A.A / YTD / Real)
+                    </th>
+                    <th className="p-4 text-center text-indigo-600">
+                      EAD (A.A / YTD / Real)
+                    </th>
+                    <th className="p-4 text-center text-emerald-600">
+                      Curso TÃ©cnico (A.A / YTD / Real)
+                    </th>
+                    <th className="p-4 text-center text-purple-600">
+                      PÃ³s-GraduaÃ§Ã£o (A.A / YTD / Real)
+                    </th>
+                    <th className="p-4 text-center bg-slate-50/50">
+                      Total (A.A / YTD / Real)
+                    </th>
+                    <th className="p-4 text-center">AÃ§Ãµes</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs text-slate-600">
+                  {metaDia.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={7}
+                        className="p-8 text-center text-slate-400 italic"
+                      >
+                        Nenhum registro de Meta DiÃ¡ria encontrado.
+                      </td>
+                    </tr>
+                  ) : (
+                    [...metaDia]
+                      .sort((a, b) => b.data.localeCompare(a.data))
+                      .map((item) => {
+                        const totAA =
+                          item.aaPresencial +
+                          item.aaSemipresencial +
+                          item.aaDigital +
+                          (item.aaTecnico || 0) +
+                          (item.aaPosGraduacao || 0);
+                        const totYTD =
+                          item.ytdPresencial +
+                          item.ytdSemipresencial +
+                          item.ytdDigital +
+                          (item.ytdTecnico || 0) +
+                          (item.ytdPosGraduacao || 0);
+                        const totReal =
+                          item.realizadoPresencial +
+                          item.realizadoSemipresencial +
+                          item.realizadoDigital +
+                          (item.realizadoTecnico || 0) +
+                          (item.realizadoPosGraduacao || 0);
+
+                        // Function to get color class comparison Realizado vs YTD
+                        const getColorClass = (real: number, ytd: number) => {
+                          if (real > ytd)
+                            return "text-emerald-600 font-extrabold";
+                          if (real < ytd) return "text-rose-600 font-extrabold";
+                          return "text-blue-600 font-extrabold";
+                        };
+
+                        return (
+                          <tr
+                            key={item.id}
+                            className="hover:bg-slate-50/30 transition-colors"
+                          >
+                            <td className="p-4 font-bold text-slate-800 whitespace-nowrap">
+                              {new Date(
+                                item.data + "T00:00:00",
+                              ).toLocaleDateString("pt-BR")}
+                            </td>
+                            <td className="p-4 text-center bg-teal-50/20">
+                              <span className="text-slate-400">
+                                {item.aaPresencial + item.aaSemipresencial}
+                              </span>
+                              <span className="mx-1 text-slate-300">/</span>
+                              <span className="text-slate-600 font-semibold">
+                                {item.ytdPresencial + item.ytdSemipresencial}
+                              </span>
+                              <span className="mx-1 text-slate-300">/</span>
+                              <span
+                                className={cn(
+                                  getColorClass(
+                                    item.realizadoPresencial +
+                                      item.realizadoSemipresencial,
+                                    item.ytdPresencial + item.ytdSemipresencial,
+                                  ),
+                                )}
+                              >
+                                {item.realizadoPresencial +
+                                  item.realizadoSemipresencial}
+                              </span>
+                            </td>
+                            <td className="p-4 text-center">
+                              <span className="text-slate-400">
+                                {item.aaPresencial}
+                              </span>
+                              <span className="mx-1 text-slate-300">/</span>
+                              <span className="text-slate-600 font-semibold">
+                                {item.ytdPresencial}
+                              </span>
+                              <span className="mx-1 text-slate-300">/</span>
+                              <span
+                                className={cn(
+                                  getColorClass(
+                                    item.realizadoPresencial,
+                                    item.ytdPresencial,
+                                  ),
+                                )}
+                              >
+                                {item.realizadoPresencial}
+                              </span>
+                            </td>
+                            <td className="p-4 text-center">
+                              <span className="text-slate-400">
+                                {item.aaSemipresencial}
+                              </span>
+                              <span className="mx-1 text-slate-300">/</span>
+                              <span className="text-slate-600 font-semibold">
+                                {item.ytdSemipresencial}
+                              </span>
+                              <span className="mx-1 text-slate-300">/</span>
+                              <span
+                                className={cn(
+                                  getColorClass(
+                                    item.realizadoSemipresencial,
+                                    item.ytdSemipresencial,
+                                  ),
+                                )}
+                              >
+                                {item.realizadoSemipresencial}
+                              </span>
+                            </td>
+                            <td className="p-4 text-center">
+                              <span className="text-slate-400">
+                                {item.aaDigital}
+                              </span>
+                              <span className="mx-1 text-slate-300">/</span>
+                              <span className="text-slate-600 font-semibold">
+                                {item.ytdDigital}
+                              </span>
+                              <span className="mx-1 text-slate-300">/</span>
+                              <span
+                                className={cn(
+                                  getColorClass(
+                                    item.realizadoDigital,
+                                    item.ytdDigital,
+                                  ),
+                                )}
+                              >
+                                {item.realizadoDigital}
+                              </span>
+                            </td>
+                            <td className="p-4 text-center">
+                              <span className="text-slate-400">
+                                {item.aaTecnico || 0}
+                              </span>
+                              <span className="mx-1 text-slate-300">/</span>
+                              <span className="text-slate-600 font-semibold">
+                                {item.ytdTecnico || 0}
+                              </span>
+                              <span className="mx-1 text-slate-300">/</span>
+                              <span
+                                className={cn(
+                                  getColorClass(
+                                    item.realizadoTecnico || 0,
+                                    item.ytdTecnico || 0,
+                                  ),
+                                )}
+                              >
+                                {item.realizadoTecnico || 0}
+                              </span>
+                            </td>
+                            <td className="p-4 text-center">
+                              <span className="text-slate-400">
+                                {item.aaPosGraduacao || 0}
+                              </span>
+                              <span className="mx-1 text-slate-300">/</span>
+                              <span className="text-slate-600 font-semibold">
+                                {item.ytdPosGraduacao || 0}
+                              </span>
+                              <span className="mx-1 text-slate-300">/</span>
+                              <span
+                                className={cn(
+                                  getColorClass(
+                                    item.realizadoPosGraduacao || 0,
+                                    item.ytdPosGraduacao || 0,
+                                  ),
+                                )}
+                              >
+                                {item.realizadoPosGraduacao || 0}
+                              </span>
+                            </td>
+                            <td className="p-4 text-center bg-slate-50/20 font-bold">
+                              <span className="text-slate-400">{totAA}</span>
+                              <span className="mx-1 text-slate-300">/</span>
+                              <span className="text-slate-600 font-semibold">
+                                {totYTD}
+                              </span>
+                              <span className="mx-1 text-slate-300">/</span>
+                              <span
+                                className={cn(getColorClass(totReal, totYTD))}
+                              >
+                                {totReal}
+                              </span>
+                            </td>
+                            <td className="p-4 text-center whitespace-nowrap">
+                              <div className="flex items-center justify-center space-x-2">
+                                <button
+                                  onClick={() => {
+                                    setEditingMetaDia(item);
+                                    setNewMetaDia({
+                                      data: item.data,
+                                      aaPresencial: item.aaPresencial,
+                                      ytdPresencial: item.ytdPresencial,
+                                      realizadoPresencial:
+                                        item.realizadoPresencial,
+                                      aaSemipresencial: item.aaSemipresencial,
+                                      ytdSemipresencial: item.ytdSemipresencial,
+                                      realizadoSemipresencial:
+                                        item.realizadoSemipresencial,
+                                      aaDigital: item.aaDigital,
+                                      ytdDigital: item.ytdDigital,
+                                      realizadoDigital: item.realizadoDigital,
+                                      aaTecnico: item.aaTecnico || 0,
+                                      ytdTecnico: item.ytdTecnico || 0,
+                                      realizadoTecnico:
+                                        item.realizadoTecnico || 0,
+                                      aaPosGraduacao: item.aaPosGraduacao || 0,
+                                      ytdPosGraduacao:
+                                        item.ytdPosGraduacao || 0,
+                                      realizadoPosGraduacao:
+                                        item.realizadoPosGraduacao || 0,
+                                    });
+                                    // Scroll to form smoothly
+                                    window.scrollTo({
+                                      top: 0,
+                                      behavior: "smooth",
+                                    });
+                                  }}
+                                  className="p-1 px-2.5 text-blue-600 hover:bg-blue-50 rounded-lg font-bold hover:scale-105 transition-all text-xs"
+                                >
+                                  Editar
+                                </button>
+                                <button
+                                  onClick={async () => {
+                                    if (
+                                      window.confirm(
+                                        "Deseja excluir permanentemente este registro de Meta DiÃ¡ria?",
+                                      )
+                                    ) {
+                                      try {
+                                        await deleteDoc(
+                                          doc(
+                                            db,
+                                            COLLECTIONS.META_DIA,
+                                            item.id,
+                                          ),
+                                        );
+                                        onToast(
+                                          "Registro de Meta DiÃ¡ria excluÃ­do.",
+                                        );
+                                      } catch (err: any) {
+                                        onToast(
+                                          "Erro ao excluir registro.",
+                                          "error",
+                                        );
+                                      }
+                                    }
+                                  }}
+                                  className="p-1 px-2.5 text-rose-600 hover:bg-rose-50 rounded-lg font-bold hover:scale-105 transition-all text-xs"
+                                >
+                                  Excluir
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {activeTab === "qgLigacoes" && (
+        <div className="space-y-6">
+          <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-bold text-slate-900 flex items-center">
+                <span className="bg-emerald-100 text-emerald-600 p-2 rounded-xl mr-3">
+                  <Phone size={20} />
+                </span>
+                {editingQgLigacao
+                  ? "Editar Registro QG LigaÃ§Ãµes"
+                  : "Adicionar Novo Registro QG LigaÃ§Ãµes"}
+              </h3>
+              {editingQgLigacao && (
+                <button
+                  onClick={() => {
+                    setEditingQgLigacao(null);
+                    setNewQgLigacao({
+                      nome: "",
+                      diaSemana: [],
+                      horario: "",
+                    });
+                  }}
+                  className="text-sm font-bold text-slate-400 hover:text-slate-600 px-3 py-1 bg-slate-100 rounded-lg"
+                >
+                  Cancelar EdiÃ§Ã£o
+                </button>
+              )}
+            </div>
+
+            <form onSubmit={handleAddQgLigacao} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                    Nome
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newQgLigacao.nome}
+                    onChange={(e) =>
+                      setNewQgLigacao({ ...newQgLigacao, nome: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                    placeholder="Nome da pessoa"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                    Dias da Semana
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      "Segunda-feira",
+                      "TerÃ§a-feira",
+                      "Quarta-feira",
+                      "Quinta-feira",
+                      "Sexta-feira",
+                      "SÃ¡bado",
+                      "Domingo",
+                    ].map((dia) => (
+                      <label
+                        key={dia}
+                        className="flex items-center space-x-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={newQgLigacao.diaSemana.includes(dia)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setNewQgLigacao({
+                                ...newQgLigacao,
+                                diaSemana: [...newQgLigacao.diaSemana, dia],
+                              });
+                            } else {
+                              setNewQgLigacao({
+                                ...newQgLigacao,
+                                diaSemana: newQgLigacao.diaSemana.filter(
+                                  (d) => d !== dia,
+                                ),
+                              });
+                            }
+                          }}
+                          className="rounded text-emerald-600 focus:ring-emerald-500 border-slate-300"
+                        />
+                        <span className="text-xs font-semibold text-slate-700">
+                          {dia}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                    HorÃ¡rio
+                  </label>
+                  <input
+                    type="time"
+                    required
+                    value={newQgLigacao.horario}
+                    onChange={(e) =>
+                      setNewQgLigacao({
+                        ...newQgLigacao,
+                        horario: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                  />
+                </div>
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-emerald-100 flex items-center justify-center space-x-2 text-sm"
+              >
+                <span>
+                  {editingQgLigacao ? "Salvar AlteraÃ§Ãµes" : "Adicionar ao QG"}
+                </span>
+              </button>
+            </form>
+          </section>
+
+          <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <h3 className="text-lg font-bold text-slate-900">
+                Lista de Registros - QG LigaÃ§Ãµes
+              </h3>
+              <p className="text-xs text-slate-400 font-medium">
+                Total: {qgLigacoes.length}
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-bold uppercase text-slate-400 tracking-wider">
+                    <th className="p-4">Nome</th>
+                    <th className="p-4">Dia da Semana</th>
+                    <th className="p-4">HorÃ¡rio</th>
+                    <th className="p-4 text-center">AÃ§Ãµes</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs text-slate-600">
+                  {qgLigacoes.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="p-8 text-center text-slate-400 italic"
+                      >
+                        Nenhum registro cadastrado no QG LigaÃ§Ãµes.
+                      </td>
+                    </tr>
+                  ) : (
+                    [...qgLigacoes].map((item) => (
+                      <tr
+                        key={item.id}
+                        className="hover:bg-slate-50/30 transition-colors"
+                      >
+                        <td className="p-4 font-bold text-slate-800">
+                          {item.nome}
+                        </td>
+                        <td className="p-4">
+                          {Array.isArray(item.diaSemana)
+                            ? item.diaSemana.join(", ")
+                            : item.diaSemana}
+                        </td>
+                        <td className="p-4 font-medium text-emerald-600">
+                          {item.horario}
+                        </td>
+                        <td className="p-4 text-center whitespace-nowrap">
+                          <button
+                            onClick={() => {
+                              setEditingQgLigacao(item);
+                              setNewQgLigacao({
+                                nome: item.nome,
+                                diaSemana: Array.isArray(item.diaSemana)
+                                  ? item.diaSemana
+                                  : item.diaSemana
+                                    ? [item.diaSemana]
+                                    : [],
+                                horario: item.horario,
+                              });
+                              window.scrollTo({ top: 0, behavior: "smooth" });
+                            }}
+                            className="p-1 px-2.5 text-blue-600 hover:bg-blue-50 rounded-lg font-bold hover:scale-105 transition-all text-xs mr-2"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleDeleteQgLigacao(item.id)}
+                            className="p-1 px-2.5 text-rose-600 hover:bg-rose-50 rounded-lg font-bold hover:scale-105 transition-all text-xs"
+                          >
+                            Excluir
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {activeTab === "folgas" &&
+        (() => {
+          const currentUserUid = auth.currentUser?.uid;
+          const userProfile = users.find((u) => u.uid === currentUserUid);
+
+          const filteredRequests = adminRequests.filter((req) => {
+            if (!userProfile) return false;
+            if (userProfile.role === "Admin Master") return true;
+            if (userProfile.role === "LÃ­der/FDV") {
+              return (
+                req.solicitanteRole === "Sala de MatrÃ­cula" ||
+                (req.solicitanteRole === "LÃ­der/FDV" &&
+                  req.solicitanteId !== userProfile.uid)
+              );
+            }
+            if (
+              userProfile.role === "Gestor Comercial" ||
+              userProfile.role === "Gerente Comercial (Comercial)"
+            ) {
+              return (
+                req.solicitanteRole === "FDV" ||
+                req.solicitanteRole === "FDV (Comercial)"
+              );
+            }
+            return false;
+          });
+
+          const pendingCount = filteredRequests.filter(
+            (r) => r.status === "Pendente",
+          ).length;
+          const approvedCount = filteredRequests.filter(
+            (r) => r.status === "Aprovado",
+          ).length;
+          const rejectedCount = filteredRequests.filter(
+            (r) => r.status === "Recusado",
+          ).length;
+
+          return (
+            <div id="admin-folgas-section" className="space-y-6">
+              {/* Header Stats */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                  <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
+                    <Clock size={24} />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-slate-400 block uppercase tracking-wider">
+                      Pendentes
+                    </span>
+                    <span className="text-2xl font-black text-slate-800">
+                      {pendingCount}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                  <div className="p-3 bg-green-50 text-green-600 rounded-2xl">
+                    <CheckCircle2 size={24} />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-slate-400 block uppercase tracking-wider">
+                      Aprovados
+                    </span>
+                    <span className="text-2xl font-black text-slate-800">
+                      {approvedCount}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                  <div className="p-3 bg-red-50 text-red-600 rounded-2xl">
+                    <XCircle size={24} />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-slate-400 block uppercase tracking-wider">
+                      Recusados
+                    </span>
+                    <span className="text-2xl font-black text-slate-800">
+                      {rejectedCount}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900">
+                      SolicitaÃ§Ãµes de Folgas e FÃ©rias
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      LÃ­der/FDV aprova para Sala de MatrÃ­cula e outros
+                      LÃ­deres/FDV | Gestores aprovam para FDV / FDV Comercial
+                    </p>
+                  </div>
+
+                  {/* Filter controls */}
+                  <div className="flex bg-slate-50 border border-slate-100 p-1 rounded-xl font-bold text-xs">
+                    {(
+                      ["Todos", "Pendente", "Aprovado", "Recusado"] as const
+                    ).map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => setStatusFilter(f)}
+                        className={`px-3 py-1.5 rounded-lg transition-all ${
+                          statusFilter === f
+                            ? "bg-blue-600 text-white shadow-sm font-semibold"
+                            : "text-slate-500 hover:text-slate-800 font-semibold"
+                        }`}
+                      >
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {loadingAdminRequests ? (
+                  <div className="flex justify-center items-center py-12 text-slate-400">
+                    <RefreshCw
+                      size={28}
+                      className="animate-spin text-blue-600 mr-2"
+                    />
+                    <span className="font-semibold text-sm">
+                      Carregando solicitaÃ§Ãµes...
+                    </span>
+                  </div>
+                ) : filteredRequests.length === 0 ? (
+                  <div className="p-12 text-center text-slate-400 text-sm">
+                    Nenhuma solicitaÃ§Ã£o de folga ou fÃ©rias para exibir sob sua
+                    responsabilidade de aprovaÃ§Ã£o.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-100">
+                          <th className="px-6 py-4">FuncionÃ¡rio / Cargo</th>
+                          <th className="px-6 py-4">Tipo</th>
+                          <th className="px-6 py-4">PerÃ­odo</th>
+                          <th className="px-6 py-4">Justificativa</th>
+                          <th className="px-6 py-4">Status</th>
+                          <th className="px-6 py-4">AÃ§Ãµes</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
+                        {filteredRequests
+                          .filter(
+                            (r) =>
+                              statusFilter === "Todos" ||
+                              r.status === statusFilter,
+                          )
+                          .map((request) => {
+                            const isApproved = request.status === "Aprovado";
+                            const isRejected = request.status === "Recusado";
+                            const isPending = request.status === "Pendente";
+
+                            // Helper to format date with DD/MM/YYYY
+                            const formatBrDate = (d: string) => {
+                              if (!d) return "";
+                              const parts = d.split("-");
+                              return parts.length === 3
+                                ? `${parts[2]}/${parts[1]}/${parts[0]}`
+                                : d;
+                            };
+
+                            return (
+                              <tr
+                                key={request.id}
+                                className="hover:bg-slate-50/50 transition-colors"
+                              >
+                                <td className="px-6 py-4">
+                                  <div className="flex items-center space-x-3">
+                                    <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs mt-0.5">
+                                      {request.solicitanteNome?.charAt(0) ||
+                                        "U"}
+                                    </div>
+                                    <div>
+                                      <span className="font-bold text-slate-900 block">
+                                        {request.solicitanteNome}
+                                      </span>
+                                      <span className="text-[10px] text-slate-400 font-medium block">
+                                        {request.solicitanteRole}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </td>
+
+                                <td className="px-6 py-4">
+                                  <span
+                                    className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                      request.tipo === "FÃ©rias"
+                                        ? "bg-purple-100 text-purple-700"
+                                        : "bg-blue-100 text-blue-700"
+                                    }`}
+                                  >
+                                    {request.tipo}
+                                  </span>
+                                </td>
+
+                                <td className="px-6 py-4 font-semibold text-slate-800">
+                                  <span className="text-blue-600 font-bold">
+                                    {formatBrDate(request.dataInicio)}
+                                  </span>
+                                  <span className="mx-1 text-slate-400">
+                                    atÃ©
+                                  </span>
+                                  <span className="text-blue-600 font-bold">
+                                    {formatBrDate(request.dataFim)}
+                                  </span>
+                                </td>
+
+                                <td className="px-6 py-4 max-w-xs truncate text-[11px] text-slate-500 italic">
+                                  {request.justificativa
+                                    ? `"${request.justificativa}"`
+                                    : "-"}
+                                </td>
+
+                                <td className="px-6 py-4">
+                                  <span
+                                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                      isApproved
+                                        ? "bg-green-100 text-green-700"
+                                        : isRejected
+                                          ? "bg-red-100 text-red-700"
+                                          : "bg-amber-100 text-amber-700"
+                                    }`}
+                                  >
+                                    {isApproved && <Check size={10} />}
+                                    {isRejected && <X size={10} />}
+                                    {isPending && <Clock size={10} />}
+                                    {request.status}
+                                  </span>
+                                  {request.aprovadoPorNome && (
+                                    <span className="block text-[9px] text-slate-400 mt-0.5 font-medium">
+                                      Por {request.aprovadoPorNome}
+                                    </span>
+                                  )}
+                                </td>
+
+                                <td className="px-6 py-4">
+                                  {isPending ? (
+                                    <div className="flex items-center space-x-2">
+                                      <button
+                                        onClick={() =>
+                                          handleDecideRequest(
+                                            request,
+                                            "Aprovado",
+                                          )
+                                        }
+                                        className="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold text-[10px] flex items-center gap-1 transition-all"
+                                      >
+                                        <Check size={10} />
+                                        <span>Aprovar</span>
+                                      </button>
+                                      <button
+                                        onClick={() =>
+                                          handleDecideRequest(
+                                            request,
+                                            "Recusado",
+                                          )
+                                        }
+                                        className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-[10px] flex items-center gap-1 transition-all"
+                                      >
+                                        <X size={10} />
+                                        <span>Recusar</span>
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <span className="text-[10px] text-slate-400 font-medium">
+                                      Decidido
+                                    </span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </section>
+            </div>
+          );
+        })()}
+
+      {activeTab === "bomDia" && (
+        <div className="space-y-8">
+          <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 max-w-4xl mx-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-slate-900">
+                {editingBomDia ? "Editar Card" : "Adicionar Novo Card"}
+              </h3>
+              {editingBomDia && (
+                <button
+                  onClick={() => {
+                    setEditingBomDia(null);
+                    setNewBomDia({
+                      titulo: "",
+                      metaFinal: { insc: 0, matFin: 0, matAcad: 0 },
+                      metaDia: { insc: 0, matFin: 0, matAcad: 0 },
+                      anoAnterior: { insc: 0, matFin: 0, matAcad: 0 },
+                      real: { insc: 0, matFin: 0, matAcad: 0 },
+                    });
+                  }}
+                  className="text-slate-400 hover:text-slate-600 text-sm font-bold"
+                >
+                  Cancelar EdiÃ§Ã£o
+                </button>
+              )}
+            </div>
+            <form onSubmit={handleAddBomDia} className="space-y-6">
+              <div>
+                <label className="flex items-center space-x-2 text-xs font-bold text-slate-500 mb-2">
+                  <TrendingUp size={14} className="text-blue-600" />
+                  <span>TÃ­tulo do Card *</span>
+                </label>
+                <input
+                  required
+                  placeholder="Ex: CAPTAÃ‡ÃƒO BU PRESENCIAL 25.1"
+                  value={newBomDia.titulo}
+                  onChange={(e) =>
+                    setNewBomDia({ ...newBomDia, titulo: e.target.value })
+                  }
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                />
+              </div>
+
+              {[
+                {
+                  key: "metaFinal",
+                  label: "Meta Final",
+                  color: "border-orange-200 bg-orange-50/30",
+                },
+                {
+                  key: "metaDia",
+                  label: "Meta Dia",
+                  color: "border-slate-200 bg-slate-50/30",
+                },
+                {
+                  key: "anoAnterior",
+                  label: "Ano Anterior",
+                  color: "border-slate-200 bg-slate-50/30",
+                },
+                {
+                  key: "real",
+                  label: "Real",
+                  color: "border-blue-200 bg-blue-50/30",
+                },
+              ].map((section) => (
+                <div
+                  key={section.key}
+                  className={cn("p-4 rounded-2xl border", section.color)}
+                >
+                  <h4 className="text-sm font-bold text-slate-700 mb-4">
+                    {section.label}
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                        INSC *
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        value={
+                          (
+                            newBomDia[
+                              section.key as keyof typeof newBomDia
+                            ] as any
+                          ).insc
+                        }
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setNewBomDia({
+                            ...newBomDia,
+                            [section.key]: {
+                              ...(newBomDia[
+                                section.key as keyof typeof newBomDia
+                              ] as BomDiaMetrics),
+                              insc: val,
+                            },
+                          });
+                        }}
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                        MAT FIN *
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        value={
+                          (
+                            newBomDia[
+                              section.key as keyof typeof newBomDia
+                            ] as any
+                          ).matFin
+                        }
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setNewBomDia({
+                            ...newBomDia,
+                            [section.key]: {
+                              ...(newBomDia[
+                                section.key as keyof typeof newBomDia
+                              ] as BomDiaMetrics),
+                              matFin: val,
+                            },
+                          });
+                        }}
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                        MAT ACAD *
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        value={
+                          (
+                            newBomDia[
+                              section.key as keyof typeof newBomDia
+                            ] as any
+                          ).matAcad
+                        }
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setNewBomDia({
+                            ...newBomDia,
+                            [section.key]: {
+                              ...(newBomDia[
+                                section.key as keyof typeof newBomDia
+                              ] as BomDiaMetrics),
+                              matAcad: val,
+                            },
+                          });
+                        }}
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <button
+                type="submit"
+                className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
+              >
+                Salvar Card Bom Dia
+              </button>
+            </form>
+          </section>
+
+          <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="p-6 border-b border-slate-100">
+              <h3 className="text-xl font-bold text-slate-900">
+                Cards Cadastrados
+              </h3>
+            </div>
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              {bomDia.map((card) => (
+                <div
+                  key={card.id}
+                  className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center"
+                >
+                  <div>
+                    <p className="font-bold text-slate-900">{card.titulo}</p>
+                    <p className="text-[10px] text-slate-500">
+                      {formatLocalDateString(card.data)}
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => {
+                        setEditingBomDia(card);
+                        setNewBomDia({
+                          titulo: card.titulo,
+                          metaFinal: card.metaFinal,
+                          metaDia: card.metaDia,
+                          anoAnterior: card.anoAnterior,
+                          real: card.real,
+                        });
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-all"
+                    >
+                      <Edit2 size={18} />
+                    </button>
+                    <button
+                      onClick={async () => {
+                        try {
+                          await updateDoc(
+                            doc(db, COLLECTIONS.BOM_DIA, card.id),
+                            {
+                              oculto: !card.oculto,
+                            },
+                          );
+                          onToast(
+                            `Card ${card.oculto ? "exibido" : "ocultado"} da rotina.`,
+                          );
+                        } catch (err) {
+                          onToast("Erro ao alterar visibilidade.", "error");
+                        }
+                      }}
+                      className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-all"
+                      title={
+                        card.oculto ? "Mostrar na Rotina" : "Ocultar da Rotina"
+                      }
+                    >
+                      {card.oculto ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (window.confirm("Deseja excluir este card?")) {
+                          try {
+                            await deleteDoc(
+                              doc(db, COLLECTIONS.BOM_DIA, card.id),
+                            );
+                            onToast("Card removido.");
+                          } catch (err: any) {
+                            onToast("Erro ao excluir card.", "error");
+                          }
+                        }
+                      }}
+                      className="text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-all"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {bomDia.length === 0 && (
+                <p className="col-span-full text-center text-slate-400 italic py-8">
+                  Nenhum card cadastrado.
+                </p>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
+
+      {activeTab === "forecast" && (
+        <div className="space-y-8">
+          <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 max-w-4xl mx-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-slate-900">
+                {editingForecast ? "Editar Forecast" : "Novo Forecast"}
+              </h3>
+              {editingForecast && (
+                <button
+                  onClick={() => {
+                    setEditingForecast(null);
+                    setNewForecast({
+                      nome: "",
+                      dataInicio: new Date().toISOString().split("T")[0],
+                      dataFim: new Date().toISOString().split("T")[0],
+                      metaDiaYTD: 0,
+                      realizado: 0,
+                      metaFechamento: 0,
+                    });
+                  }}
+                  className="text-slate-400 hover:text-slate-600 text-sm font-bold"
+                >
+                  Cancelar EdiÃ§Ã£o
+                </button>
+              )}
+            </div>
+            <form
+              onSubmit={handleAddForecast}
+              className="grid grid-cols-1 md:grid-cols-3 gap-4"
+            >
+              <div className="md:col-span-3">
+                <label className="block text-xs font-bold text-slate-500 mb-1">
+                  Nome do Forecast
+                </label>
+                <input
+                  required
+                  value={newForecast.nome}
+                  onChange={(e) =>
+                    setNewForecast({ ...newForecast, nome: e.target.value })
+                  }
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                  placeholder="Ex: CaptaÃ§Ã£o 2024.2"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">
+                  Data InÃ­cio
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={newForecast.dataInicio}
+                  onChange={(e) =>
+                    setNewForecast({
+                      ...newForecast,
+                      dataInicio: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">
+                  Data Final
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={newForecast.dataFim}
+                  onChange={(e) =>
+                    setNewForecast({ ...newForecast, dataFim: e.target.value })
+                  }
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">
+                  Meta Dia (YTD)
+                </label>
+                <input
+                  type="number"
+                  required
+                  value={newForecast.metaDiaYTD}
+                  onChange={(e) =>
+                    setNewForecast({
+                      ...newForecast,
+                      metaDiaYTD: Number(e.target.value),
+                    })
+                  }
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">
+                  Realizado
+                </label>
+                <input
+                  type="number"
+                  required
+                  value={newForecast.realizado}
+                  onChange={(e) =>
+                    setNewForecast({
+                      ...newForecast,
+                      realizado: Number(e.target.value),
+                    })
+                  }
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">
+                  Meta Fechamento
+                </label>
+                <input
+                  type="number"
+                  required
+                  value={newForecast.metaFechamento}
+                  onChange={(e) =>
+                    setNewForecast({
+                      ...newForecast,
+                      metaFechamento: Number(e.target.value),
+                    })
+                  }
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                />
+              </div>
+              <button
+                type="submit"
+                className="md:col-span-3 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all"
+              >
+                Criar Forecast
+              </button>
+            </form>
+          </section>
+
+          <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="p-6 border-b border-slate-100">
+              <h3 className="text-xl font-bold text-slate-900">
+                Forecasts Ativos
+              </h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider">
+                    <th className="px-4 py-4">Nome</th>
+                    <th className="px-4 py-4">PerÃ­odo</th>
+                    <th className="px-4 py-4">YTD (Meta Dia)</th>
+                    <th className="px-4 py-4">Realizado</th>
+                    <th className="px-4 py-4">% YTD</th>
+                    <th className="px-4 py-4">Meta Fech.</th>
+                    <th className="px-4 py-4">% Fech.</th>
+                    <th className="px-4 py-4">Gap Fech.</th>
+                    <th className="px-4 py-4">Pacing</th>
+                    <th className="px-4 py-4">AÃ§Ã£o</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {[...forecast]
+                    .sort((a, b) => a.nome.localeCompare(b.nome))
+                    .map((f) => {
+                      const percYTD =
+                        f.metaDiaYTD > 0
+                          ? ((f.realizado / f.metaDiaYTD) * 100).toFixed(1)
+                          : "0";
+                      const percFech =
+                        f.metaFechamento > 0
+                          ? ((f.realizado / f.metaFechamento) * 100).toFixed(1)
+                          : "0";
+                      const gapFech = f.realizado - f.metaFechamento;
+
+                      const diasRestantes = getWorkingDaysRemaining(f.dataFim);
+                      const pacing =
+                        f.realizado >= f.metaFechamento
+                          ? "0"
+                          : (
+                              Math.abs(gapFech) / Math.max(1, diasRestantes)
+                            ).toFixed(1);
+
+                      return (
+                        <tr
+                          key={f.id}
+                          className="hover:bg-slate-50 transition-colors"
+                        >
+                          <td className="px-4 py-4 font-bold text-slate-900">
+                            {f.nome}
+                          </td>
+                          <td className="px-4 py-4 text-slate-500">
+                            {f.dataInicio
+                              .split("T")[0]
+                              .split("-")
+                              .reverse()
+                              .join("/")}{" "}
+                            -{" "}
+                            {f.dataFim
+                              .split("T")[0]
+                              .split("-")
+                              .reverse()
+                              .join("/")}
+                          </td>
+                          <td className="px-4 py-4 font-bold text-blue-600">
+                            {f.metaDiaYTD}
+                          </td>
+                          <td className="px-4 py-4 font-bold text-emerald-600">
+                            {f.realizado}
+                          </td>
+                          <td className="px-4 py-4">
+                            <span
+                              className={`px-2 py-1 rounded-full font-bold ${Number(percYTD) >= 100 ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"}`}
+                            >
+                              {percYTD}%
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 font-bold text-slate-700">
+                            {f.metaFechamento}
+                          </td>
+                          <td className="px-4 py-4 font-bold text-blue-600">
+                            {percFech}%
+                          </td>
+                          <td
+                            className={`px-4 py-4 font-bold ${gapFech >= 0 ? "text-emerald-600" : "text-rose-600"}`}
+                          >
+                            {gapFech}
+                          </td>
+                          <td className="px-4 py-4 font-bold text-slate-900">
+                            {pacing}/dia
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="flex items-center space-x-1">
+                              <button
+                                onClick={() => {
+                                  setEditingForecast(f);
+                                  setNewForecast({
+                                    nome: f.nome,
+                                    dataInicio: f.dataInicio,
+                                    dataFim: f.dataFim,
+                                    metaDiaYTD: f.metaDiaYTD,
+                                    realizado: f.realizado,
+                                    metaFechamento: f.metaFechamento,
+                                  });
+                                  window.scrollTo({
+                                    top: 0,
+                                    behavior: "smooth",
+                                  });
+                                }}
+                                className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-all"
+                              >
+                                <Edit2 size={16} />
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await updateDoc(
+                                      doc(db, COLLECTIONS.FORECAST, f.id),
+                                      {
+                                        oculto: !f.oculto,
+                                      },
+                                    );
+                                    onToast(
+                                      `Forecast ${f.oculto ? "exibido" : "ocultado"} da rotina.`,
+                                    );
+                                  } catch (err) {
+                                    onToast(
+                                      "Erro ao alterar visibilidade.",
+                                      "error",
+                                    );
+                                  }
+                                }}
+                                className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-all"
+                                title={
+                                  f.oculto
+                                    ? "Mostrar na Rotina"
+                                    : "Ocultar da Rotina"
+                                }
+                              >
+                                {f.oculto ? (
+                                  <EyeOff size={16} />
+                                ) : (
+                                  <Eye size={16} />
+                                )}
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  if (
+                                    window.confirm(
+                                      "Deseja excluir este forecast?",
+                                    )
+                                  ) {
+                                    try {
+                                      await deleteDoc(
+                                        doc(db, COLLECTIONS.FORECAST, f.id),
+                                      );
+                                      onToast("Forecast removido.");
+                                    } catch (err: any) {
+                                      onToast(
+                                        "Erro ao excluir forecast.",
+                                        "error",
+                                      );
+                                    }
+                                  }
+                                }}
+                                className="text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-all"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {activeTab === "planner" && (
+        <div className="space-y-8">
+          <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 max-w-4xl mx-auto">
+            <h3 className="text-xl font-bold text-slate-900 mb-4">
+              Novo Planner
+            </h3>
+            <form
+              onSubmit={handleAddPlanner}
+              className="grid grid-cols-1 md:grid-cols-3 gap-4"
+            >
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">
+                  Nome do Atendente
+                </label>
+                <input
+                  required
+                  value={newPlanner.atendenteName}
+                  onChange={(e) =>
+                    setNewPlanner({
+                      ...newPlanner,
+                      atendenteName: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">
+                  Base a ser Trabalhada
+                </label>
+                <input
+                  required
+                  value={newPlanner.baseName}
+                  onChange={(e) =>
+                    setNewPlanner({ ...newPlanner, baseName: e.target.value })
+                  }
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">
+                  Dia da Semana
+                </label>
+                <select
+                  value={newPlanner.dayOfWeek}
+                  onChange={(e) =>
+                    setNewPlanner({ ...newPlanner, dayOfWeek: e.target.value })
+                  }
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                >
+                  {[
+                    "Segunda-feira",
+                    "TerÃ§a-feira",
+                    "Quarta-feira",
+                    "Quinta-feira",
+                    "Sexta-feira",
+                    "SÃ¡bado",
+                  ].map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="submit"
+                className="md:col-span-3 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all"
+              >
+                Adicionar ao Planner
+              </button>
+            </form>
+          </section>
+
+          <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="p-6 border-b border-slate-100">
+              <h3 className="text-xl font-bold text-slate-900">
+                Planner Configurado
+              </h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider">
+                    <th className="px-4 py-4">Dia</th>
+                    <th className="px-4 py-4">Atendente</th>
+                    <th className="px-4 py-4">Base</th>
+                    <th className="px-4 py-4">AÃ§Ã£o</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {[...planner]
+                    .sort((a, b) => {
+                      const days = [
+                        "Segunda-feira",
+                        "TerÃ§a-feira",
+                        "Quarta-feira",
+                        "Quinta-feira",
+                        "Sexta-feira",
+                        "SÃ¡bado",
+                        "Domingo",
+                      ];
+                      return (
+                        days.indexOf(a.dayOfWeek) - days.indexOf(b.dayOfWeek)
+                      );
+                    })
+                    .map((p) => (
+                      <tr
+                        key={p.id}
+                        className="hover:bg-slate-50 transition-colors"
+                      >
+                        <td className="px-4 py-4 font-bold text-slate-900">
+                          {p.dayOfWeek}
+                        </td>
+                        <td className="px-4 py-4 text-slate-700">
+                          {p.atendenteName}
+                        </td>
+                        <td className="px-4 py-4 text-slate-500">
+                          {p.baseName}
+                        </td>
+                        <td className="px-4 py-4">
+                          <button
+                            onClick={async () => {
+                              if (window.confirm("Deseja excluir este item?")) {
+                                await deleteDoc(
+                                  doc(db, COLLECTIONS.PLANNER, p.id),
+                                );
+                                onToast("Item removido.");
+                              }
+                            }}
+                            className="text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-all"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {activeTab === "periodo" && (
+        <div className="space-y-8">
+          <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 max-w-4xl mx-auto">
+            <h3 className="text-xl font-bold text-slate-900 mb-4">
+              Novo PerÃ­odo de CaptaÃ§Ã£o
+            </h3>
+            <form
+              onSubmit={handleAddPeriodo}
+              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+            >
+              <div className="md:col-span-2">
+                <label className="block text-xs font-bold text-slate-500 mb-1">
+                  Nome do PerÃ­odo
+                </label>
+                <input
+                  required
+                  value={newPeriodo.nome}
+                  onChange={(e) =>
+                    setNewPeriodo({ ...newPeriodo, nome: e.target.value })
+                  }
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                  placeholder="Ex: 2024.2"
+                />
+              </div>
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+                <h4 className="text-sm font-bold text-slate-700">InscriÃ§Ã£o</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                      InÃ­cio
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={newPeriodo.inicioInscricao}
+                      onChange={(e) =>
+                        setNewPeriodo({
+                          ...newPeriodo,
+                          inicioInscricao: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                      Fim
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={newPeriodo.fimInscricao}
+                      onChange={(e) =>
+                        setNewPeriodo({
+                          ...newPeriodo,
+                          fimInscricao: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+                <h4 className="text-sm font-bold text-slate-700">Mat Fin</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                      InÃ­cio
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={newPeriodo.inicioMatFin}
+                      onChange={(e) =>
+                        setNewPeriodo({
+                          ...newPeriodo,
+                          inicioMatFin: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                      Fim
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={newPeriodo.fimMatFin}
+                      onChange={(e) =>
+                        setNewPeriodo({
+                          ...newPeriodo,
+                          fimMatFin: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+                <h4 className="text-sm font-bold text-slate-700">Mat Acad</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                      InÃ­cio
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={newPeriodo.inicioMatAcad}
+                      onChange={(e) =>
+                        setNewPeriodo({
+                          ...newPeriodo,
+                          inicioMatAcad: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                      Fim
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={newPeriodo.fimMatAcad}
+                      onChange={(e) =>
+                        setNewPeriodo({
+                          ...newPeriodo,
+                          fimMatAcad: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+              <button
+                type="submit"
+                className="md:col-span-2 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all"
+              >
+                Salvar PerÃ­odo
+              </button>
+            </form>
+          </section>
+
+          <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="p-6 border-b border-slate-100">
+              <h3 className="text-xl font-bold text-slate-900">
+                PerÃ­odos Cadastrados
+              </h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider">
+                    <th className="px-4 py-4">Nome</th>
+                    <th className="px-4 py-4">InscriÃ§Ã£o (Dias)</th>
+                    <th className="px-4 py-4">Mat Fin (Dias)</th>
+                    <th className="px-4 py-4">Mat Acad (Dias)</th>
+                    <th className="px-4 py-4">AÃ§Ã£o</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {periodos.map((p) => (
+                    <tr
+                      key={p.id}
+                      className="hover:bg-slate-50 transition-colors"
+                    >
+                      <td className="px-4 py-4 font-bold text-slate-900">
+                        {p.nome}
+                      </td>
+                      <td className="px-4 py-4">
+                        <p className="text-slate-700">
+                          {formatLocalDateString(p.inicioInscricao)} -{" "}
+                          {formatLocalDateString(p.fimInscricao)}
+                        </p>
+                        <p className="text-blue-600 font-bold">
+                          {getWorkingDaysBetween(
+                            p.inicioInscricao,
+                            p.fimInscricao,
+                          )}{" "}
+                          dias Ãºteis
+                        </p>
+                      </td>
+                      <td className="px-4 py-4">
+                        <p className="text-slate-700">
+                          {formatLocalDateString(p.inicioMatFin)} -{" "}
+                          {formatLocalDateString(p.fimMatFin)}
+                        </p>
+                        <p className="text-blue-600 font-bold">
+                          {getWorkingDaysBetween(p.inicioMatFin, p.fimMatFin)}{" "}
+                          dias Ãºteis
+                        </p>
+                      </td>
+                      <td className="px-4 py-4">
+                        <p className="text-slate-700">
+                          {formatLocalDateString(p.inicioMatAcad)} -{" "}
+                          {formatLocalDateString(p.fimMatAcad)}
+                        </p>
+                        <p className="text-blue-600 font-bold">
+                          {getWorkingDaysBetween(p.inicioMatAcad, p.fimMatAcad)}{" "}
+                          dias Ãºteis
+                        </p>
+                      </td>
+                      <td className="px-4 py-4">
+                        <button
+                          onClick={async () => {
+                            if (
+                              window.confirm("Deseja excluir este perÃ­odo?")
+                            ) {
+                              await deleteDoc(
+                                doc(db, COLLECTIONS.PERIODO_CAPTACAO, p.id),
+                              );
+                              onToast("PerÃ­odo removido.");
+                            }
+                          }}
+                          className="text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-all"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {activeTab === "whatsapp" && (
+        <div className="space-y-6">
+          <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="p-6 border-b border-slate-100">
+              <h3 className="text-xl font-bold text-slate-900">
+                IntegraÃ§Ã£o Bot ARGO'S
+              </h3>
+              <p className="text-slate-500 text-sm">
+                Configure a conexÃ£o com a inteligÃªncia artificial
+              </p>
+            </div>
+            <div className="p-6">
+              <div className="flex flex-col gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">
+                    URL do App Railway (API do Bot)
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="https://seu-app-no-railway.app"
+                      defaultValue={botConfig.url}
+                      onBlur={async (e) => {
+                        let newUrl = e.target.value.trim();
+                        if (
+                          newUrl &&
+                          !newUrl.startsWith("http://") &&
+                          !newUrl.startsWith("https://")
+                        ) {
+                          newUrl = `https://${newUrl}`;
+                          e.target.value = newUrl;
+                        }
+                        if (newUrl === botConfig.url) return;
+                        try {
+                          await setDoc(
+                            doc(db, COLLECTIONS.BOT_CONFIG, "main"),
+                            {
+                              url: newUrl,
+                              active: botConfig.active || false,
+                              updatedAt: serverTimestamp(),
+                            },
+                            { merge: true },
+                          );
+                          onToast("URL do Bot atualizada!");
+                        } catch (err: any) {
+                          onToast(
+                            `Erro ao salvar URL: ${err.message}`,
+                            "error",
+                          );
+                        }
+                      }}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                    />
+                    <button
+                      onClick={async () => {
+                        if (!botConfig.url) {
+                          onToast("Insira uma URL primeiro.", "error");
+                          return;
+                        }
+                        try {
+                          const data = await callBotApi("/api/status");
+                          onToast(
+                            `Servidor online! Status: ${data.name || "OK"}`,
+                            "success",
+                          );
+                        } catch (e: any) {
+                          onToast(
+                            `Falha de rede (CORS/Offline): O Railway pode estar reiniciando o bot ou o bot estÃ¡ quebrado. Erro: ${e.message}`,
+                            "error",
+                          );
+                        }
+                      }}
+                      className="bg-blue-100 text-blue-700 px-4 py-3 rounded-xl hover:bg-blue-200 transition-colors whitespace-nowrap text-sm font-bold"
+                    >
+                      Testar ConexÃ£o
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Insira a URL base do servidor onde seu bot estÃ¡ rodando (ex:
+                    https://meubot.up.railway.app).
+                  </p>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100">
+                  <label className="block text-sm font-bold text-slate-700 mb-1">
+                    Chave de API do OpenRouter (OPENROUTER_API_KEY)
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="sk-or-v1-..."
+                    defaultValue={botConfig.openRouterApiKey || ""}
+                    onBlur={async (e) => {
+                      const newKey = e.target.value.trim();
+                      if (newKey === (botConfig.openRouterApiKey || "")) return;
+                      try {
+                        await setDoc(
+                          doc(db, COLLECTIONS.BOT_CONFIG, "main"),
+                          {
+                            openRouterApiKey: newKey,
+                            updatedAt: serverTimestamp(),
+                          },
+                          { merge: true },
+                        );
+                        onToast(
+                          "Chave da API do OpenRouter atualizada com sucesso!",
+                        );
+                      } catch (err: any) {
+                        onToast(
+                          `Erro ao salvar chave da API do OpenRouter: ${err.message}`,
+                          "error",
+                        );
+                      }
+                    }}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Esta chave Ã© a nova preferÃªncia para o processamento de IA
+                    (relatÃ³rios e insumos) atravÃ©s do OpenRouter.
+                  </p>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100">
+                  <label className="block text-sm font-bold text-slate-700 mb-1">
+                    Modelo de IA (OpenRouter)
+                  </label>
+                  <select
+                    value={botConfig.aiModel || ""}
+                    onChange={async (e) => {
+                      const newModel = e.target.value;
+                      try {
+                        await setDoc(
+                          doc(db, COLLECTIONS.BOT_CONFIG, "main"),
+                          {
+                            aiModel: newModel,
+                            updatedAt: serverTimestamp(),
+                          },
+                          { merge: true },
+                        );
+                        onToast("Modelo de IA atualizado!");
+                      } catch (err: any) {
+                        onToast(
+                          `Erro ao salvar modelo de IA: ${err.message}`,
+                          "error",
+                        );
+                      }
+                    }}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white"
+                  >
+                    <option value="">Selecione um modelo (PadrÃ£o: Gemini 2.0 Flash)</option>
+                    {OPENROUTER_MODELS.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Escolha qual modelo serÃ¡ usado para as anÃ¡lises inteligentes.
+                  </p>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100">
+                  <label className="block text-sm font-bold text-slate-700 mb-1">
+                    URL do Bot do Telegram (Railway)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="https://seu-bot.up.railway.app/api/enviar-aviso"
+                    defaultValue={botConfig.telegramBotUrl || ""}
+                    onBlur={async (e) => {
+                      const newUrl = e.target.value.trim();
+                      if (newUrl === (botConfig.telegramBotUrl || "")) return;
+                      try {
+                        await setDoc(
+                          doc(db, COLLECTIONS.BOT_CONFIG, "main"),
+                          {
+                            telegramBotUrl: newUrl,
+                            updatedAt: serverTimestamp(),
+                          },
+                          { merge: true },
+                        );
+                        onToast("URL do Bot do Telegram atualizada!");
+                      } catch (err: any) {
+                        onToast(
+                          `Erro ao salvar URL do Telegram: ${err.message}`,
+                          "error",
+                        );
+                      }
+                    }}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Insira a URL completa do endpoint de envio de mensagens do
+                    seu bot Telegram (ex:
+                    https://meu-bot.up.railway.app/api/enviar-aviso).
+                  </p>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100">
+                  <label className="block text-sm font-bold text-slate-700 mb-1">
+                    Senha API do Bot do Telegram (x-api-key)
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="minha_senha_super_secreta_123"
+                    defaultValue={botConfig.telegramApiKey || ""}
+                    onBlur={async (e) => {
+                      const newKey = e.target.value.trim();
+                      if (newKey === (botConfig.telegramApiKey || "")) return;
+                      try {
+                        await setDoc(
+                          doc(db, COLLECTIONS.BOT_CONFIG, "main"),
+                          {
+                            telegramApiKey: newKey,
+                            updatedAt: serverTimestamp(),
+                          },
+                          { merge: true },
+                        );
+                        onToast("Chave API do Bot do Telegram atualizada!");
+                      } catch (err: any) {
+                        onToast(
+                          `Erro ao salvar Chave API do Telegram: ${err.message}`,
+                          "error",
+                        );
+                      }
+                    }}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    A mesma senha configurada na variÃ¡vel de ambiente do seu bot
+                    Telegram no Railway.
+                  </p>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-bold text-slate-800">
+                      GestÃ£o de SessÃµes WhatsApp (Multi-Device)
+                    </h3>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={async () => {
+                          if (!botConfig.url) return;
+                          if (
+                            window.confirm(
+                              "Tem certeza que deseja resetar TODAS as sessÃµes criptografadas? (Esta aÃ§Ã£o apagarÃ¡ a pasta corrompida e solicitarÃ¡ nova conexÃ£o em todos os nÃºmeros)",
+                            )
+                          ) {
+                            try {
+                              await callBotApi("/api/reset", {
+                                method: "POST",
+                              });
+                              onToast(
+                                "A Rota MÃ¡gica de Reset foi ativada. Todas as sessÃµes foram apagadas e o bot serÃ¡ reiniciado.",
+                                "success",
+                              );
+                              setBotStatuses({});
+                            } catch (err: any) {
+                              onToast(
+                                `Erro ao resetar: ${err.message}`,
+                                "error",
+                              );
+                            }
+                          }
+                        }}
+                        className="bg-red-600 text-white text-xs px-3 py-2 rounded-lg font-bold hover:bg-red-700 transition"
+                      >
+                        Resetar SessÃµes (Pasta Corrompida)
+                      </button>
+                      <button
+                        onClick={() => setShowInjectModal(true)}
+                        className="bg-blue-600 text-white text-xs px-3 py-2 rounded-lg font-bold hover:bg-blue-700 transition"
+                      >
+                        Injetar SessÃ£o (JSON)
+                      </button>
+                      <button
+                        onClick={async () => {
+                          const num = prompt(
+                            "Digite o nÃºmero no formato 5511999999999:",
+                          );
+                          if (num) {
+                            const botNumber = num.replace(/\D/g, "");
+                            if (!botNumber) return;
+                            if (!botConfig || !botConfig.url) {
+                              onToast(
+                                "Configura a URL do bot primeiro.",
+                                "error",
+                              );
+                              return;
+                            }
+                            try {
+                              await callBotApi("/api/connect", {
+                                method: "POST",
+                                body: { botNumber },
+                              });
+                              onToast(
+                                "SolicitaÃ§Ã£o enviada! Aguarde alguns segundos o QR Code.",
+                              );
+                              // Force a status check after 3 seconds
+                              setTimeout(async () => {
+                                try {
+                                  const data = await callBotApi("/api/status");
+                                  if (data && data.bots)
+                                    setBotStatuses(data.bots);
+                                } catch (e) {}
+                              }, 3000);
+                            } catch (err: any) {
+                              onToast(
+                                `Servidor offline ou reiniciando... ${err.message}`,
+                                "error",
+                              );
+                            }
+                          }
+                        }}
+                        className="bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-bold hover:bg-green-700 transition"
+                      >
+                        + Novo NÃºmero
+                      </button>
+                    </div>
+                  </div>
+
+                  {Object.keys(botStatuses || {}).length === 0 ? (
+                    <p className="text-sm text-slate-500 italic">
+                      Nenhum nÃºmero conectado ou conectando. Adicione um
+                      clicando no botÃ£o acima.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.entries(botStatuses || {}).map(
+                        ([botNumber, info]) => {
+                          const userForBot = users.find(
+                            (u) =>
+                              u.botNumber &&
+                              String(u.botNumber).replace(/\D/g, "") ===
+                                String(botNumber).replace(/\D/g, ""),
+                          );
+                          const nameForBot = userForBot
+                            ? userForBot.name
+                            : botConfig.botNames?.[botNumber] || "";
+
+                          return (
+                            <div
+                              key={botNumber}
+                              className="border border-slate-200 rounded-xl p-4 flex flex-col gap-2"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex flex-col">
+                                  <div className="font-bold text-slate-700 text-lg">
+                                    {botNumber}
+                                  </div>
+                                  <div className="flex items-center mt-1">
+                                    <span className="text-[10px] text-slate-500 mr-1 uppercase font-bold tracking-wider">
+                                      Resp:
+                                    </span>
+                                    {userForBot ? (
+                                      <span className="text-xs font-bold text-blue-600 truncate max-w-[150px]">
+                                        {userForBot.name} (Auto)
+                                      </span>
+                                    ) : (
+                                      <input
+                                        type="text"
+                                        className="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-xs w-32 focus:ring-1 focus:ring-blue-500 focus:outline-none text-slate-600"
+                                        placeholder="Nome"
+                                        defaultValue={nameForBot}
+                                        onBlur={async (e) => {
+                                          const newName = e.target.value;
+                                          try {
+                                            await updateDoc(
+                                              doc(
+                                                db,
+                                                COLLECTIONS.BOT_CONFIG,
+                                                "main",
+                                              ),
+                                              {
+                                                [`botNames.${botNumber}`]:
+                                                  newName,
+                                              },
+                                            );
+                                          } catch (err) {}
+                                        }}
+                                      />
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <span
+                                    className={`px-2 py-1 rounded-full text-xs font-bold ${info?.status === "online" ? "bg-green-100 text-green-700" : info?.status === "pairing" ? "bg-orange-100 text-orange-700" : "bg-red-100 text-red-700"}`}
+                                  >
+                                    {info?.status?.toUpperCase() ||
+                                      "DESCONHECIDO"}
+                                  </span>
+                                  <button
+                                    onClick={async () => {
+                                      if (
+                                        window.confirm(
+                                          `Tem certeza que deseja apagar a sessÃ£o do bot ${botNumber}?`,
+                                        )
+                                      ) {
+                                        try {
+                                          await callBotApi("/api/reset", {
+                                            method: "POST",
+                                            body: { botNumber },
+                                          });
+                                          onToast(
+                                            `SessÃ£o ${botNumber} apagada.`,
+                                          );
+                                          setTimeout(async () => {
+                                            try {
+                                              const data =
+                                                await callBotApi("/api/status");
+                                              setBotStatuses(data.bots || {});
+                                            } catch (e) {}
+                                          }, 1000);
+                                        } catch (e: any) {
+                                          onToast(
+                                            `Erro ao apagar sessÃ£o: ${e.message}`,
+                                            "error",
+                                          );
+                                        }
+                                      }
+                                    }}
+                                    className="text-red-500 hover:text-red-700 px-2 py-1 bg-red-50 rounded-lg transition"
+                                    title="Apagar sessÃ£o do Railway"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </div>
+                              </div>
+
+                              {info?.status === "pairing" && (
+                                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 mt-2 text-center flex flex-col gap-2 items-center">
+                                  <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center animate-pulse">
+                                    <RefreshCw size={24} />
+                                  </div>
+                                  <p className="text-xs font-bold text-slate-700">
+                                    Aguardando injeÃ§Ã£o de sessÃ£o via extensÃ£o.
+                                  </p>
+                                  <p className="text-[10px] text-slate-500 max-w-[200px]">
+                                    O QR Code nativo estÃ¡ desabilitado. Use a
+                                    extensÃ£o PESK Linker para conectar.
+                                  </p>
+                                </div>
+                              )}
+
+                              {info?.status === "online" && (
+                                <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+                                  <span className="text-xs font-bold text-slate-600">
+                                    Auto-Reply (IA)
+                                  </span>
+                                  <div className="flex items-center space-x-2">
+                                    <button
+                                      onClick={async () => {
+                                        const currentActive =
+                                          (info as any)?.isAutoReplyActive ??
+                                          (info as any)?.active ??
+                                          false;
+                                        const newActive = !currentActive;
+
+                                        // Optimistic update
+                                        setBotStatuses((prev) => ({
+                                          ...prev,
+                                          [botNumber]: {
+                                            ...prev[botNumber],
+                                            active: newActive,
+                                            isAutoReplyActive: newActive,
+                                          },
+                                        }));
+
+                                        try {
+                                          await callBotApi("/api/toggle", {
+                                            method: "POST",
+                                            body: {
+                                              botNumber,
+                                              active: newActive,
+                                              isAutoReplyActive: newActive,
+                                            },
+                                          });
+                                          onToast(
+                                            `IA para ${botNumber} alterada para ${newActive ? "ON" : "OFF"}`,
+                                          );
+                                        } catch (e: any) {
+                                          onToast(
+                                            `Erro ao alterar IA para ${botNumber}: ${e.message}`,
+                                            "error",
+                                          );
+                                          // Revert back
+                                          setBotStatuses((prev) => ({
+                                            ...prev,
+                                            [botNumber]: {
+                                              ...prev[botNumber],
+                                              active: !newActive,
+                                              isAutoReplyActive: !newActive,
+                                            },
+                                          }));
+                                        }
+                                      }}
+                                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${((info as any)?.isAutoReplyActive ?? (info as any)?.active ?? false) ? "bg-blue-600" : "bg-slate-200"}`}
+                                    >
+                                      <span
+                                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${((info as any)?.isAutoReplyActive ?? (info as any)?.active ?? false) ? "translate-x-5" : "translate-x-1"}`}
+                                      />
+                                    </button>
+                                    <span className="text-[10px] text-slate-500">
+                                      {((info as any)?.isAutoReplyActive ??
+                                      (info as any)?.active ??
+                                      false)
+                                        ? "ON"
+                                        : "OFF"}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        },
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="p-6 border-b border-slate-100 bg-slate-50">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900">
+                    Mensagens PadrÃ£o do WhatsApp
+                  </h3>
+                  <p className="text-slate-500 text-sm">
+                    Gerencie mÃºltiplos modelos de mensagens para cada categoria
+                  </p>
+                </div>
+                <div className="flex overflow-x-auto pb-2 md:pb-0 gap-2 scrollbar-hide">
+                  {[
+                    { id: "historico", label: "HistÃ³rico", icon: <History size={16} /> },
+                    { id: "bases", label: "Bases", icon: <Database size={16} /> },
+                    { id: "gap", label: "GAP AcadÃªmico", icon: <GraduationCap size={16} /> },
+                    { id: "fiesProuni", label: "Fies/Prouni", icon: <FileText size={16} /> },
+                    { id: "bases_renovacao", label: "Base LÃ­quida", icon: <RefreshCw size={16} /> },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setActiveWhatsappTab(tab.id as any)}
+                      className={cn(
+                        "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shadow-sm",
+                        activeWhatsappTab === tab.id
+                          ? "bg-blue-600 text-white shadow-blue-100"
+                          : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                      )}
+                    >
+                      {tab.icon}
+                      <span>{tab.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="p-6">
+              {[
+                {
+                  id: "historico",
+                  label: "HistÃ³rico",
+                  multi: true,
+                  icon: <History size={18} />,
+                },
+                {
+                  id: "bases",
+                  label: "Bases",
+                  multi: true,
+                  icon: <Database size={18} />,
+                },
+                {
+                  id: "gap",
+                  label: "GAP AcadÃªmico",
+                  multi: false,
+                  icon: <GraduationCap size={18} />,
+                  subLabels: [
+                    "PadrÃ£o",
+                    "MatrÃ­cula AcadÃªmica OK",
+                    "IndicaÃ§Ã£o de Amigo",
+                  ],
+                },
+                {
+                  id: "fiesProuni",
+                  label: "Fies/Prouni",
+                  multi: false,
+                  icon: <FileText size={18} />,
+                  subLabels: ["PadrÃ£o", "MatrÃ­cula AcadÃªmica OK"],
+                },
+                {
+                  id: "bases_renovacao",
+                  label: "Base LÃ­quida",
+                  multi: true,
+                  icon: <RefreshCw size={18} />,
+                },
+              ]
+                .filter((tipo) => tipo.id === activeWhatsappTab)
+                .map((tipo) => {
+                  const messages = tipo.multi
+                    ? whatsappMessages.filter((m) => m.tipo === tipo.id)
+                    : (tipo.subLabels || []).map((label, idx) => {
+                        const subtypeId = `${tipo.id}_${idx}`;
+                        const msg = whatsappMessages.find(
+                          (m) => m.tipo === subtypeId,
+                        );
+                        return {
+                          id: msg?.id || subtypeId,
+                          tipo: subtypeId,
+                          texto: msg?.texto || "",
+                          nome: label,
+                          isVirtual: !msg,
+                        };
+                      });
+
+                  const selectedKey = activeWhatsappTemplates[tipo.id];
+                  const selectedMsg = messages.find((m) =>
+                    tipo.multi ? m.id === selectedKey : m.tipo === selectedKey,
+                  );
+
+                  return (
+                    <div key={tipo.id} className="space-y-6">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between bg-blue-50/50 p-5 rounded-2xl border border-blue-100 gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shadow-sm">
+                            {tipo.icon}
+                          </div>
+                          <div>
+                            <h4 className="text-base font-bold text-slate-800 uppercase tracking-wider">
+                              {tipo.label}
+                            </h4>
+                            <p className="text-xs text-slate-500">
+                              {messages.length} modelo(s) disponÃ­vel(is)
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 flex-1 md:max-w-md">
+                          <select
+                            value={selectedKey || ""}
+                            onChange={(e) =>
+                              setActiveWhatsappTemplates((prev) => ({
+                                ...prev,
+                                [tipo.id]: e.target.value,
+                              }))
+                            }
+                            className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none shadow-sm transition-all"
+                          >
+                            <option value="">Selecione um modelo...</option>
+                            {messages.map((m, idx) => (
+                              <option
+                                key={m.id}
+                                value={tipo.multi ? m.id : m.tipo}
+                              >
+                                {m.nome || `Modelo ${idx + 1}`}
+                              </option>
+                            ))}
+                          </select>
+
+                          {tipo.multi && (
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const docRef = await addDoc(
+                                    collection(
+                                      db,
+                                      COLLECTIONS.WHATSAPP_MESSAGES,
+                                    ),
+                                    {
+                                      tipo: tipo.id,
+                                      texto: "",
+                                      nome: `Novo Modelo ${messages.length + 1}`,
+                                      createdAt: serverTimestamp(),
+                                    },
+                                  );
+                                  setActiveWhatsappTemplates((prev) => ({
+                                    ...prev,
+                                    [tipo.id]: docRef.id,
+                                  }));
+                                  onToast("Novo modelo adicionado!");
+                                } catch (err: any) {
+                                  onToast("Erro ao adicionar modelo.", "error");
+                                }
+                              }}
+                              className="bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-xl shadow-sm transition-all flex-shrink-0"
+                              title="Adicionar Novo Modelo"
+                            >
+                              <Plus size={20} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-50/30 rounded-2xl border border-slate-100 p-6">
+                        {selectedMsg ? (
+                          <div className="space-y-6">
+                            <div className="flex items-center gap-4">
+                              <div className="flex-1">
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">
+                                  Nome do Modelo
+                                </label>
+                                <input
+                                  type="text"
+                                  value={selectedMsg.nome || ""}
+                                  readOnly={!tipo.multi}
+                                  onChange={async (e) => {
+                                    if (!tipo.multi) return;
+                                    const newName = e.target.value;
+                                    try {
+                                      await updateDoc(
+                                        doc(
+                                          db,
+                                          COLLECTIONS.WHATSAPP_MESSAGES,
+                                          selectedMsg.id,
+                                        ),
+                                        { nome: newName },
+                                      );
+                                    } catch (err) {}
+                                  }}
+                                  className={cn(
+                                    "w-full px-4 py-2 rounded-xl border border-slate-200 text-sm font-bold shadow-sm",
+                                    !tipo.multi
+                                      ? "bg-slate-100 text-slate-500 cursor-not-allowed"
+                                      : "bg-white text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none",
+                                  )}
+                                  placeholder="DÃª um nome a este modelo..."
+                                />
+                              </div>
+                              {tipo.multi && (
+                                <button
+                                  onClick={async () => {
+                                    if (
+                                      window.confirm("Excluir este modelo?")
+                                    ) {
+                                      await deleteDoc(
+                                        doc(
+                                          db,
+                                          COLLECTIONS.WHATSAPP_MESSAGES,
+                                          selectedMsg.id,
+                                        ),
+                                      );
+                                      setActiveWhatsappTemplates((prev) => {
+                                        const next = { ...prev };
+                                        delete next[tipo.id];
+                                        return next;
+                                      });
+                                      onToast("Modelo removido.");
+                                    }
+                                  }}
+                                  className="mt-5 p-2.5 text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                                  title="Excluir Modelo"
+                                >
+                                  <Trash2 size={20} />
+                                </button>
+                              )}
+                            </div>
+
+                            <WhatsAppMessageEditor
+                              key={selectedMsg.id}
+                              msgId={selectedMsg.id}
+                              initialText={selectedMsg.texto}
+                              label={`Editando: ${selectedMsg.nome || "Modelo"}`}
+                              onUpdate={async (novoTexto) => {
+                                if (novoTexto === selectedMsg.texto) return;
+                                try {
+                                  if ((selectedMsg as any).isVirtual) {
+                                    const docRef = await addDoc(
+                                      collection(
+                                        db,
+                                        COLLECTIONS.WHATSAPP_MESSAGES,
+                                      ),
+                                      {
+                                        tipo: (selectedMsg as any).tipo,
+                                        texto: novoTexto,
+                                        nome: selectedMsg.nome,
+                                        createdAt: serverTimestamp(),
+                                      },
+                                    );
+                                  } else {
+                                    await updateDoc(
+                                      doc(
+                                        db,
+                                        COLLECTIONS.WHATSAPP_MESSAGES,
+                                        selectedMsg.id,
+                                      ),
+                                      {
+                                        texto: novoTexto,
+                                        updatedAt: serverTimestamp(),
+                                      },
+                                    );
+                                  }
+                                  onToast("Modelo atualizado!");
+                                } catch (err: any) {
+                                  onToast("Erro ao salvar.", "error");
+                                }
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center py-20 text-slate-400 space-y-4">
+                            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                              <MessageSquare size={32} />
+                            </div>
+                            <p className="text-sm font-medium text-center">
+                              Selecione um modelo no menu acima para comeÃ§ar a
+                              editar e ver a prÃ©via.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </section>
+        </div>
+      )}
+
+      {activeTab === "treinamento" && (
+        <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden max-w-4xl mx-auto">
+          <div className="p-6 border-b border-slate-100">
+            <h3 className="text-xl font-bold text-slate-900">
+              Treinamento do Bot
+            </h3>
+            <p className="text-slate-500 text-sm">
+              Insira o texto sobre a sua empresa para refinar as respostas da
+              IA.
+            </p>
+          </div>
+          <div className="p-6 space-y-6">
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">
+                Contexto da Empresa
+              </label>
+              <textarea
+                placeholder="Insira aqui informaÃ§Ãµes sobre preÃ§os, cursos, polÃ­tica da empresa..."
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm min-h-[300px]"
+                defaultValue={botConfig.trainingContext || ""}
+                onBlur={async (e) => {
+                  const newContext = e.target.value.trim();
+                  if (newContext === botConfig.trainingContext) return;
+                  try {
+                    await setDoc(
+                      doc(db, COLLECTIONS.BOT_CONFIG, "main"),
+                      {
+                        trainingContext: newContext,
+                        updatedAt: serverTimestamp(),
+                      },
+                      { merge: true },
+                    );
+                    onToast("Treinamento do Bot atualizado!");
+                  } catch (err: any) {
+                    onToast(
+                      `Erro ao salvar treinamento: ${err.message}`,
+                      "error",
+                    );
+                  }
+                }}
+              />
+              <p className="text-xs text-slate-400 mt-2">
+                Dica: Quanto mais claro e objetivo for o texto, melhores serÃ£o
+                as respostas da IA.
+              </p>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center">
+              <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4">
+                {isProcessingPdf ? (
+                  <span className="animate-spin text-xl font-bold">...</span>
+                ) : (
+                  <span className="font-bold text-xl">PDF</span>
+                )}
+              </div>
+              <h4 className="font-bold text-slate-800 mb-2">
+                Treinamento via PDF
+              </h4>
+              <p className="text-xs text-slate-500 max-w-sm mb-4">
+                FaÃ§a o upload de um arquivo PDF para extrair o texto
+                automaticamente e anexÃ¡-lo ao contexto da empresa.
+              </p>
+              <label className="cursor-pointer bg-blue-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-blue-700 transition-colors">
+                {isProcessingPdf ? "Processando..." : "Selecionar PDF"}
+                <input
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={handlePdfUpload}
+                  disabled={isProcessingPdf}
+                />
+              </label>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {activeTab === "logo" && (
+        <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden max-w-4xl mx-auto">
+          <div className="p-6 border-b border-slate-100">
+            <h3 className="text-xl font-bold text-slate-900">
+              Customizar Logotipo de Login
+            </h3>
+            <p className="text-slate-500 text-sm">
+              FaÃ§a o upload da imagem ou marca que aparecerÃ¡ na tela de login de
+              todos os usuÃ¡rios.
+            </p>
+          </div>
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  Upload do Novo Logotipo
+                </label>
+
+                <div
+                  className={`border-2 border-dashed rounded-3xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all ${
+                    isUploadingLogo
+                      ? "border-blue-300 bg-blue-50/50"
+                      : "border-slate-200 hover:border-blue-400 hover:bg-slate-50"
+                  }`}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onDrop={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) {
+                      await handleLogoUploadProcess(file);
+                    }
+                  }}
+                  onClick={() => {
+                    document.getElementById("logo-file-input")?.click();
+                  }}
+                >
+                  <input
+                    type="file"
+                    id="logo-file-input"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        await handleLogoUploadProcess(file);
+                      }
+                    }}
+                  />
+                  <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-4">
+                    {isUploadingLogo ? (
+                      <span className="animate-spin text-sm">...</span>
+                    ) : (
+                      <Upload size={24} />
+                    )}
+                  </div>
+                  <h4 className="font-bold text-slate-800 text-sm mb-1">
+                    {isUploadingLogo
+                      ? "Processando imagem..."
+                      : "Arraste e solte o arquivo aqui"}
+                  </h4>
+                  <p className="text-xs text-slate-400">
+                    ou clique para navegar no seu computador
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-2 font-mono">
+                    Arquivos recomendados: PNG, JPG ou SVG (Max. 5MB)
+                  </p>
+                </div>
+              </div>
+
+              {logoPreview && (
+                <div className="pt-2">
+                  <button
+                    onClick={async () => {
+                      if (
+                        window.confirm(
+                          "Deseja realmente remover o logotipo personalizado e voltar ao Ã­cone padrÃ£o?",
+                        )
+                      ) {
+                        setIsUploadingLogo(true);
+                        try {
+                          await setDoc(
+                            doc(db, COLLECTIONS.BOT_CONFIG, "main"),
+                            {
+                              loginLogo: "",
+                            },
+                            { merge: true },
+                          );
+                          setLogoPreview(null);
+                          onToast("Logotipo removido com sucesso!");
+                        } catch (err: any) {
+                          onToast(
+                            `Erro ao remover logotipo: ${err.message}`,
+                            "error",
+                          );
+                        } finally {
+                          setIsUploadingLogo(false);
+                        }
+                      }
+                    }}
+                    className="w-full text-center text-sm font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-50 border border-rose-100 py-3 rounded-2xl transition-all cursor-pointer"
+                  >
+                    Remover Marca Customizada
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-[#011430] rounded-3xl p-8 flex flex-col justify-between border border-slate-800 min-h-[300px] text-white relative overflow-hidden select-none">
+              <div className="absolute top-2 right-2 px-3 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] font-mono tracking-widest rounded-full">
+                SIMULAÃ‡ÃƒO DE LOGIN
+              </div>
+              <div className="absolute inset-0 bg-[radial-gradient(#1e3a8a_1px,transparent_1px)] [background-size:16px_16px] opacity-10 pointer-events-none" />
+
+              <div className="my-auto space-y-4">
+                <div>
+                  {logoPreview ? (
+                    <div className="mb-4 flex">
+                      <img
+                        src={logoPreview}
+                        alt="Preview Logo"
+                        className="max-h-16 max-w-full rounded-xl object-contain drop-shadow-md border border-slate-700/50 p-1 bg-[#011a3c]"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 bg-gradient-to-tr from-sky-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg mb-4">
+                      <TrendingUp size={24} />
+                    </div>
+                  )}
+                  <h3 className="text-xl font-extrabold text-white tracking-tight">
+                    GestÃ£o Oeste pro
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Bem-vindo de volta! Insira suas credenciais:
+                  </p>
+                </div>
+
+                <div className="space-y-2 pointer-events-none opacity-20">
+                  <div className="w-full h-8 bg-slate-800 rounded-lg border border-slate-700" />
+                  <div className="w-full h-8 bg-slate-800 rounded-lg border border-slate-700" />
+                </div>
+
+                <div className="w-full h-9 bg-slate-700 rounded-lg pointer-events-none opacity-25 mt-4" />
+              </div>
+
+              <div className="text-center text-[8px] text-slate-500 font-mono tracking-wider mt-4">
+                OESTE HUNTER Â© 2026
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {activeTab === "links" && (
+        <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 max-w-2xl mx-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold text-slate-900">Links Ãšteis</h3>
+            {editingLink && (
+              <button
+                onClick={() => {
+                  setEditingLink(null);
+                  setNewLink({ nome: "", url: "", local: "" });
+                }}
+                className="text-slate-400 hover:text-slate-600 text-sm font-bold transition-colors"
+              >
+                Cancelar EdiÃ§Ã£o
+              </button>
+            )}
+          </div>
+          <form onSubmit={handleAddLink} className="flex flex-col sm:flex-row gap-2 mb-6">
+            <input
+              placeholder="Nome"
+              required
+              value={newLink.nome}
+              onChange={(e) => setNewLink({ ...newLink, nome: e.target.value })}
+              className="flex-1 px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+            />
+            <input
+              placeholder="URL"
+              required
+              value={newLink.url}
+              onChange={(e) => setNewLink({ ...newLink, url: e.target.value })}
+              className="flex-1 px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+            />
+            <input
+              placeholder="Local (Opcional)"
+              value={newLink.local || ""}
+              onChange={(e) => setNewLink({ ...newLink, local: e.target.value })}
+              className="flex-1 px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+            />
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-all font-bold flex items-center justify-center gap-2"
+            >
+              {editingLink ? <Save size={20} /> : <Plus size={20} />}
+            </button>
+          </form>
+          <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+            {links.map((l) => (
+              <div
+                key={l.id}
+                className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 group"
+              >
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold text-slate-700">
+                    {l.nome}
+                  </span>
+                  {l.local && (
+                    <span className="text-xs text-slate-400 font-medium uppercase mt-1">
+                      {l.local}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => {
+                      setEditingLink(l);
+                      setNewLink({ nome: l.nome, url: l.url, local: l.local || "" });
+                    }}
+                    className="text-slate-400 hover:text-blue-500 hover:bg-blue-50 p-2 rounded-lg transition-all"
+                  >
+                    <Edit size={18} />
+                  </button>
+                  <button
+                    onClick={async () => {
+                      await deleteDoc(doc(db, COLLECTIONS.LINKS, l.id));
+                      onToast("Link removido.");
+                    }}
+                    className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-all"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {activeTab === "funcionarios" && (
+        <AdminFuncionariosView
+          onToast={onToast}
+          uniqueUnidades={uniqueUnidades}
+        />
+      )}
+
+      {activeTab === "crescimentoAnual" && (
+        <CrescimentoAnualAdmin
+          schemes={analysisSchemes}
+          onSave={onSaveAnalysisScheme}
+          onDelete={onDeleteAnalysisScheme}
+        />
+      )}
+
+      {activeTab === "formularios" && (
+        <FormulariosView user={profile!} onToast={onToast} />
+      )}
+
+      {activeTab === "backup" && (
+        <section className="bg-rose-50 p-6 rounded-3xl border border-rose-100 max-w-2xl mx-auto">
+          <h3 className="text-xl font-bold text-rose-900 mb-4">
+            Backup e SeguranÃ§a
+          </h3>
+          <p className="text-sm text-rose-600 mb-6">
+            Gere um arquivo JSON contendo todos os dados do sistema para
+            seguranÃ§a ou migraÃ§Ã£o.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={handleBackup}
+              className="flex-1 bg-white text-rose-600 border border-rose-200 font-bold py-3 rounded-2xl hover:bg-rose-100 transition-all flex items-center justify-center space-x-2"
+            >
+              <Download size={20} />
+              <span>Gerar Backup</span>
+            </button>
+            <button className="flex-1 bg-rose-600 text-white font-bold py-3 rounded-2xl hover:bg-rose-700 transition-all flex items-center justify-center space-x-2">
+              <Upload size={20} />
+              <span>Restaurar Dados</span>
+            </button>
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
+
+// --- Controle de Pagamentos View ---
+interface ControlePagamentosViewProps {
+  calendarioAcoes: CalendarioAcao[];
+  users: UserProfile[];
+  onToast: (m: string, t?: "success" | "error") => void;
+  profile?: UserProfile | null;
+}
+
+export function ControlePagamentosView({
+  calendarioAcoes = [],
+  users = [],
+  onToast,
+  profile,
+}: ControlePagamentosViewProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [empresaFilter, setEmpresaFilter] = useState<"all" | "GR15" | "RP7">(
+    "all",
+  );
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "Pendente" | "Recusada" | "Realizada"
+  >("all");
+  const [regionFilter, setRegionFilter] = useState("all");
+
+  const getDiarias = (startStr: string, endStr: string) => {
+    if (!startStr || !endStr) return 1;
+    const s = new Date(startStr + "T00:00:00");
+    const e = new Date(endStr + "T00:00:00");
+    const diffTime = Math.abs(e.getTime() - s.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    return isNaN(diffDays) ? 1 : diffDays;
+  };
+
+  const paymentRows = useMemo(() => {
+    const result: any[] = [];
+    calendarioAcoes.forEach((action) => {
+      if (!action.precisaPromotor || !action.promotoresSelecionados) return;
+      action.promotoresSelecionados.forEach((pUid) => {
+        // Apenas promotores que compareceram (presenca === true)
+        if (!action.presencaPromotores?.[pUid]) return;
+
+        const promoterObj = users.find((u) => u.uid === pUid);
+        const creatorObj = users.find((u) => u.uid === action.creatorId);
+
+        const details = action.dadosPresencaPromotores?.[pUid] || {
+          empresa: "GR15",
+          horas: 4,
+        };
+        let statusPgt =
+          (action.statusPagamentoPromotores?.[pUid] as string) || "Pendente";
+        if (statusPgt === "Agendada") statusPgt = "Pendente";
+
+        const diarias = getDiarias(action.dataInicio, action.dataFim);
+        const valorPromotor = action.valorPromotor || 0;
+        const horasAtuadas = details.horas || 4;
+        let valorDia = action.valorPromotor || 0;
+        if (horasAtuadas === 4) valorDia = 60;
+        else if (horasAtuadas === 6) valorDia = 90;
+        else if (horasAtuadas === 8) valorDia = 100;
+        else if (horasAtuadas === 10) valorDia = 150;
+
+        const custoTotal = diarias * valorDia;
+
+        const collaborators = (action.colaboradoresIds || []).map(id => users.find(u => u.uid === id)).filter(Boolean);
+        const fdvResponsavel = collaborators.find(u => u?.role === "FDV (Comercial)" || u?.role === "Gestor Comercial");
+        
+        result.push({
+          actionId: action.id,
+          promoterUid: pUid,
+          empresa: details.empresa || "GR15",
+          promoterName: promoterObj?.name || "NÃ£o cadastrado",
+          promoterPhone: promoterObj?.phone || "Sem celular",
+          promoterPix: promoterObj?.chavePix || "Sem Pix cadastrado",
+          promoterUnit: promoterObj?.servidor
+            ? promoterObj.servidor.charAt(0).toUpperCase() +
+              promoterObj.servidor.slice(1)
+            : "Principal",
+          diarias,
+          horas: horasAtuadas,
+          solicitante:
+            fdvResponsavel?.name ||
+            (action.colaboradoresNomes?.length
+              ? action.colaboradoresNomes.join(", ")
+              : action.colaboradorNome) ||
+            (action.colaboradorId
+              ? users.find((u) => u.uid === action.colaboradorId)?.name
+              : null) ||
+            (creatorObj?.role === "FDV (Comercial)" || creatorObj?.role === "Gestor Comercial" ? creatorObj?.name : null) ||
+            "Sem FDV ResponsÃ¡vel",
+          tipoAcao: action.nome,
+          dataInicio: action.dataInicio,
+          dataFim: action.dataFim,
+          valorDia,
+          custoTotal,
+          valorOrcado: action.valorOrcado || 0,
+          statusPagamento: statusPgt,
+        });
+      });
+    });
+    return result;
+  }, [calendarioAcoes, users]);
+
+  // RegiÃµes disponÃ­veis de atuaÃ§Ã£o para o filtro
+  const uniqueRegions = useMemo(() => {
+    const set = new Set<string>();
+    paymentRows.forEach((r) => {
+      if (r.promoterUnit) set.add(r.promoterUnit);
+    });
+    return Array.from(set);
+  }, [paymentRows]);
+
+  // Dados filtrados
+  const filteredRows = useMemo(() => {
+    return paymentRows.filter((row) => {
+      const matchSearch =
+        row.promoterName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        row.tipoAcao.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        row.solicitante.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchEmpresa =
+        empresaFilter === "all" ? true : row.empresa === empresaFilter;
+      const matchStatus =
+        statusFilter === "all" ? true : row.statusPagamento === statusFilter;
+      const matchRegion =
+        regionFilter === "all" ? true : row.promoterUnit === regionFilter;
+
+      return matchSearch && matchEmpresa && matchStatus && matchRegion;
+    });
+  }, [paymentRows, searchTerm, empresaFilter, statusFilter, regionFilter]);
+
+  const isReadOnly =
+    profile?.role === ROLES.FDV_COMERCIAL ||
+    profile?.role === ROLES.SALA_MATRICULA;
+
+  // MÃ©tricas acumuladas
+  const metrics = useMemo(() => {
+    let totalCusto = 0;
+    let totalRealizado = 0;
+    let totalAgendado = 0;
+    let totalRecusado = 0;
+
+    filteredRows.forEach((row) => {
+      totalCusto += row.custoTotal;
+      if (row.statusPagamento === "Realizada") {
+        totalRealizado += row.custoTotal;
+      } else if (row.statusPagamento === "Pendente") {
+        totalAgendado += row.custoTotal;
+      } else {
+        totalRecusado += row.custoTotal;
+      }
+    });
+
+    return {
+      totalCusto,
+      totalRealizado,
+      totalAgendado,
+      totalRecusado,
+      count: filteredRows.length,
+    };
+  }, [filteredRows]);
+
+  const updatePaymentStatus = async (
+    actionId: string,
+    promoterUid: string,
+    status: "Pendente" | "Recusada" | "Realizada",
+  ) => {
+    try {
+      const action = calendarioAcoes.find((a) => a.id === actionId);
+      if (!action) return;
+      const currentStatus = action.statusPagamentoPromotores || {};
+      const updatedStatus = {
+        ...currentStatus,
+        [promoterUid]: status,
+      };
+      await updateDoc(doc(db, COLLECTIONS.CALENDARIO_ACOES, actionId), {
+        statusPagamentoPromotores: updatedStatus,
+      });
+      onToast("Status de pagamento atualizado com sucesso!", "success");
+    } catch (err) {
+      onToast("Erro ao atualizar status de pagamento.", "error");
+    }
+  };
+
+  const handleExportExcel = () => {
+    try {
+      const dataToExport = filteredRows.map((r) => ({
+        Empresa: r.empresa,
+        "Nome do Promotor": r.promoterName,
+        Telefone: r.promoterPhone,
+        PIX: r.promoterPix,
+        DiÃ¡rias: r.diarias,
+        "Horas de AtuaÃ§Ã£o": `${r.horas} Horas`,
+        Solicitante: r.solicitante,
+        "RegiÃ£o de AtuaÃ§Ã£o": r.promoterUnit,
+        "Tipo de AÃ§Ã£o": r.tipoAcao,
+        "Data de InÃ­cio": r.dataInicio,
+        "Data Final": r.dataFim,
+        "Valor Dia (R$)": r.valorDia,
+        "Custo Total (R$)": r.custoTotal,
+        "Valor OrÃ§ado (R$)": r.valorOrcado,
+        "Status de Pagamento": r.statusPagamento,
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Controle de Pagamentos",
+      );
+      XLSX.writeFile(
+        workbook,
+        `Controle_Pagamentos_${new Date().toISOString().split("T")[0]}.xlsx`,
+      );
+      onToast("RelatÃ³rio exportado para Excel com sucesso!", "success");
+    } catch (err) {
+      onToast("Erro ao exportar relatÃ³rio.", "error");
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+            Controle de Pagamentos
+          </h2>
+          <p className="text-sm text-slate-500">
+            GestÃ£o e liquidaÃ§Ã£o financeira diÃ¡ria de promotores de aÃ§Ãµes
+          </p>
+        </div>
+        <button
+          onClick={handleExportExcel}
+          className="flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-3 rounded-2xl shadow-sm transition-all text-sm self-start md:self-auto"
+        >
+          <Download size={18} />
+          <span>Exportar RelatÃ³rio Excel</span>
+        </button>
+      </div>
+
+      {/* MÃ©tricas / KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-5 bg-white border border-slate-100 rounded-3xl shadow-sm space-y-2">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+            Registros ElegÃ­veis
+          </span>
+          <div className="flex items-baseline space-x-2">
+            <span className="text-3xl font-extrabold text-slate-800">
+              {metrics.count}
+            </span>
+            <span className="text-xs text-slate-400">atuaÃ§Ãµes</span>
+          </div>
+        </div>
+
+        <div className="p-5 bg-white border border-slate-100 rounded-3xl shadow-sm space-y-2">
+          <span className="text-xs font-bold text-amber-500 uppercase tracking-wider block">
+            Total Pendente / Agendado
+          </span>
+          <div className="flex items-baseline space-x-2">
+            <span className="text-3xl font-extrabold text-amber-600">
+              R$ {metrics.totalAgendado.toFixed(2).replace(".", ",")}
+            </span>
+          </div>
+        </div>
+
+        <div className="p-5 bg-white border border-slate-100 rounded-3xl shadow-sm space-y-2">
+          <span className="text-xs font-bold text-emerald-500 uppercase tracking-wider block">
+            Total Realizado / Pago
+          </span>
+          <div className="flex items-baseline space-x-2">
+            <span className="text-3xl font-extrabold text-emerald-600">
+              R$ {metrics.totalRealizado.toFixed(2).replace(".", ",")}
+            </span>
+          </div>
+        </div>
+
+        <div className="p-5 bg-white border border-slate-100 rounded-3xl shadow-sm space-y-2">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block font-bold">
+            Custo de DiÃ¡rias Total
+          </span>
+          <div className="flex items-baseline space-x-2">
+            <span className="text-3xl font-extrabold text-slate-700">
+              R$ {metrics.totalCusto.toFixed(2).replace(".", ",")}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Filtros */}
+      <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm space-y-4">
+        <span className="text-sm font-bold text-slate-700 block uppercase tracking-wider">
+          Filtros de Pesquisa
+        </span>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="relative">
+            <Search
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+              size={18}
+            />
+            <input
+              type="text"
+              placeholder="Buscar por Promotor, AÃ§Ã£o ou Solicitante..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-slate-300 transition-all border-none outline-none"
+            />
+          </div>
+
+          <div>
+            <select
+              value={empresaFilter}
+              onChange={(e) => setEmpresaFilter(e.target.value as any)}
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 appearance-none focus:bg-white focus:ring-2 focus:ring-slate-300 transition-all border-none outline-none cursor-pointer"
+            >
+              <option value="all">Todas as Empresas (GR15 / RP7)</option>
+              <option value="GR15">Empresa: GR15</option>
+              <option value="RP7">Empresa: RP7</option>
+            </select>
+          </div>
+
+          <div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 appearance-none focus:bg-white focus:ring-2 focus:ring-slate-300 transition-all border-none outline-none cursor-pointer"
+            >
+              <option value="all">Todos os Status de Pagamento</option>
+              <option value="Pendente">Status: Pendente</option>
+              <option value="Recusada">Status: Recusada</option>
+              <option value="Realizada">Status: Realizada</option>
+            </select>
+          </div>
+
+          <div>
+            <select
+              value={regionFilter}
+              onChange={(e) => setRegionFilter(e.target.value)}
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 appearance-none focus:bg-white focus:ring-2 focus:ring-slate-300 transition-all border-none outline-none cursor-pointer"
+            >
+              <option value="all">Todas as RegiÃµes de AtuaÃ§Ã£o</option>
+              {uniqueRegions.map((region) => (
+                <option key={region} value={region}>
+                  {region}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabela de Pagamentos */}
+      <div className="bg-white border border-slate-100 rounded-3xl shadow-sm overflow-hidden whitespace-normal">
+        {filteredRows.length === 0 ? (
+          <div className="p-12 text-center space-y-3">
+            <span className="text-slate-400 text-lg block">
+              Nenhum registro de pagamento qualificado.
+            </span>
+            <span className="text-slate-400 text-xs block max-w-md mx-auto">
+              Certifique-se de que os promotores estÃ£o escalados nas aÃ§Ãµes do
+              Plano de AÃ§Ã£o e marque o comparecimento deles como confirmado
+              ("Compareceu").
+            </span>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left text-xs">
+              <thead className="bg-slate-50/70 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                <tr>
+                  <th className="px-5 py-4">Empresa</th>
+                  <th className="px-5 py-4">Promotor</th>
+                  <th className="px-5 py-4">Telefone</th>
+                  <th className="px-5 py-4">Chave Pix</th>
+                  <th className="px-5 py-4 text-center">DiÃ¡rias</th>
+                  <th className="px-5 py-4 text-center">Horas</th>
+                  <th className="px-5 py-4">ResponsÃ¡vel (FDV)</th>
+                  <th className="px-5 py-4">RegiÃ£o</th>
+                  <th className="px-5 py-4">AÃ§Ã£o</th>
+                  <th className="px-5 py-4">Datas</th>
+                  <th className="px-5 py-4 text-right">Valor Dia</th>
+                  <th className="px-5 py-4 text-right bg-slate-50 font-bold text-slate-600">
+                    Custo Total
+                  </th>
+                  <th className="px-5 py-4 text-right">Valor OrÃ§ado</th>
+                  <th className="px-5 py-4 text-center min-w-[200px]">
+                    Status Pagamento
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-slate-600 font-medium">
+                {filteredRows.map((row, idx) => {
+                  const d = new Date();
+                  const year = d.getFullYear();
+                  const month = String(d.getMonth() + 1).padStart(2, "0");
+                  const day = String(d.getDate()).padStart(2, "0");
+                  const todayStr = `${year}-${month}-${day}`;
+                  const isOverdue =
+                    row.dataFim < todayStr &&
+                    row.statusPagamento === "Pendente";
+
+                  return (
+                    <tr
+                      key={`${row.actionId}-${row.promoterUid}-${idx}`}
+                      className={cn(
+                        "hover:bg-slate-50/50 transition-colors",
+                        isOverdue && "bg-rose-50/25",
+                      )}
+                    >
+                      {/* Empresa */}
+                      <td className="px-5 py-4 font-bold">
+                        <span
+                          className={cn(
+                            "px-2.5 py-1 rounded-full text-[10px] uppercase tracking-wide",
+                            row.empresa === "GR15"
+                              ? "bg-purple-100 text-purple-700"
+                              : "bg-amber-100 text-amber-700",
+                          )}
+                        >
+                          {row.empresa}
+                        </span>
+                      </td>
+
+                      {/* Promotor */}
+                      <td className="px-5 py-4 font-semibold text-slate-800">
+                        {row.promoterName}
+                      </td>
+
+                      {/* Telefone */}
+                      <td className="px-5 py-4 font-mono">
+                        {row.promoterPhone}
+                      </td>
+
+                      {/* Chave Pix */}
+                      <td
+                        className="px-5 py-4 font-mono select-all truncate max-w-[120px]"
+                        title={row.promoterPix}
+                      >
+                        {row.promoterPix}
+                      </td>
+
+                      {/* DiÃ¡rias */}
+                      <td className="px-5 py-4 text-center font-bold">
+                        {row.diarias}
+                      </td>
+
+                      {/* Horas */}
+                      <td className="px-5 py-4 text-center">{row.horas}h</td>
+
+                      {/* Solicitante */}
+                      <td className="px-5 py-4">{row.solicitante}</td>
+
+                      {/* RegiÃ£o */}
+                      <td className="px-5 py-4">
+                        <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md font-semibold">
+                          {row.promoterUnit}
+                        </span>
+                      </td>
+
+                      {/* AÃ§Ã£o */}
+                      <td
+                        className="px-5 py-4 font-semibold text-slate-700 truncate max-w-[150px]"
+                        title={row.tipoAcao}
+                      >
+                        {row.tipoAcao}
+                      </td>
+
+                      {/* Datas */}
+                      <td className="px-5 py-4 font-mono text-[10px]">
+                        <div className="flex items-center space-x-1.5">
+                          <div className="flex-1">
+                            <div>
+                              {row.dataInicio.split("-").reverse().join("/")}
+                            </div>
+                            <div
+                              className={cn(
+                                "text-[9px]",
+                                isOverdue
+                                  ? "text-rose-500 font-bold"
+                                  : "text-slate-400",
+                              )}
+                            >
+                              atÃ© {row.dataFim.split("-").reverse().join("/")}
+                            </div>
+                          </div>
+                          {isOverdue && (
+                            <span
+                              className="text-rose-500 animate-pulse shrink-0"
+                              title="PerÃ­odo da aÃ§Ã£o finalizado"
+                            >
+                              <AlertCircle size={15} />
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Valor Dia */}
+                      <td className="px-5 py-4 text-right font-mono font-bold">
+                        R$ {row.valorDia.toFixed(2).replace(".", ",")}
+                      </td>
+
+                      {/* Custo Total */}
+                      <td className="px-5 py-4 text-right font-mono font-extrabold bg-slate-50 text-slate-800 text-sm">
+                        R$ {row.custoTotal.toFixed(2).replace(".", ",")}
+                      </td>
+
+                      {/* Valor OrÃ§ado */}
+                      <td className="px-5 py-4 text-right font-mono">
+                        R$ {row.valorOrcado.toFixed(2).replace(".", ",")}
+                      </td>
+
+                      {/* Status de Pagamento */}
+                      <td className="px-5 py-4 text-center">
+                        <div className="flex items-center justify-center space-x-2">
+                          <div className="flex items-center justify-center space-x-1.5 bg-slate-50/80 p-1.5 rounded-full border border-slate-100 w-fit">
+                            {(
+                              ["Pendente", "Recusada", "Realizada"] as const
+                            ).map((st) => {
+                              const isSelected = row.statusPagamento === st;
+                              let btnClass =
+                                "px-2 py-1 rounded-full text-[9px] font-bold uppercase transition-all ";
+
+                              if (isSelected) {
+                                if (st === "Realizada")
+                                  btnClass +=
+                                    "bg-emerald-600 text-white shadow-sm";
+                                else if (st === "Pendente")
+                                  btnClass +=
+                                    "bg-amber-500 text-white shadow-sm";
+                                else
+                                  btnClass +=
+                                    "bg-rose-500 text-white shadow-sm";
+                              } else {
+                                btnClass +=
+                                  "text-slate-400 hover:text-slate-600 hover:bg-slate-200/50";
+                              }
+
+                              if (isReadOnly && !isSelected) {
+                                btnClass += " opacity-50 cursor-not-allowed";
+                              }
+
+                              return (
+                                <button
+                                  key={st}
+                                  onClick={() =>
+                                    !isReadOnly &&
+                                    updatePaymentStatus(
+                                      row.actionId,
+                                      row.promoterUid,
+                                      st,
+                                    )
+                                  }
+                                  disabled={isReadOnly}
+                                  className={btnClass}
+                                >
+                                  {st === "Realizada"
+                                    ? "Paga"
+                                    : st === "Pendente"
+                                      ? "Pendente"
+                                      : "Recusada"}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          {isOverdue && (
+                            <div
+                              className="flex items-center space-x-1 bg-rose-50 text-rose-700 px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase border border-rose-200 animate-pulse shrink-0"
+                              title="Alerta: AÃ§Ã£o concluÃ­da, pagamento ainda pendente!"
+                            >
+                              <AlertCircle size={12} className="shrink-0" />
+                              <span>Atrasado</span>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
